@@ -1,14 +1,19 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 
 import '../l10n/app_strings.dart';
 import '../models/economy.dart';
 import '../services/api_client.dart';
+import '../theme/app_fonts.dart';
 import 'paypal_checkout_screen.dart';
 
 /// Real shop backed by `GET /shop/items`, with purchases going through
 /// PayPal via `POST /shop/orders` (create) -> [PaypalCheckoutScreen]
 /// (approval) -> `POST /shop/orders/{id}/capture` (finalize, which is what
-/// actually grants the item server-side).
+/// actually grants the item server-side). Items are grouped by category
+/// (turret skins, bullet effects, ...) in a 2-column grid of square,
+/// gold-bordered cards — same gold as the splash logo's badge.
 class ShopScreen extends StatefulWidget {
   const ShopScreen({super.key, required this.economy});
 
@@ -37,6 +42,24 @@ class _ShopScreenState extends State<ShopScreen> {
   Future<void> _reload() async {
     setState(() => _items = _fetchItems());
     await _items;
+  }
+
+  /// The shop item's preview image, generated from the base game sprites
+  /// (see assets/images/shop/) and referenced by the `asset_key` in the
+  /// item's `metadata` JSON. Bundles don't carry their own asset_key (their
+  /// metadata just lists what they include), so fall back to the shared
+  /// bundle icon.
+  String? _imagePathFor(Map<String, dynamic> item) {
+    final rawMetadata = item['metadata'];
+    if (rawMetadata is! String || rawMetadata.isEmpty) return null;
+    try {
+      final metadata = jsonDecode(rawMetadata) as Map<String, dynamic>;
+      final assetKey = metadata['asset_key'] as String?;
+      if (assetKey == null) return null;
+      return 'assets/images/shop/$assetKey.png';
+    } catch (_) {
+      return null;
+    }
   }
 
   Future<void> _buy(Map<String, dynamic> item, Strings s) async {
@@ -119,24 +142,50 @@ class _ShopScreenState extends State<ShopScreen> {
                 ],
               );
             }
-            return ListView.separated(
+
+            final byCategory = <String, List<Map<String, dynamic>>>{};
+            for (final item in items) {
+              final category = item['category']?.toString() ?? '';
+              byCategory.putIfAbsent(category, () => []).add(item);
+            }
+
+            return ListView(
               padding: const EdgeInsets.all(16),
-              itemCount: items.length,
-              separatorBuilder: (_, _) => const SizedBox(height: 12),
-              itemBuilder: (context, index) {
-                final item = items[index];
-                final itemId = (item['id'] as num).toInt();
-                final busy = _purchasing.contains(itemId);
-                final price = item['price_amount']?.toString() ?? '0';
-                final currency = item['price_currency']?.toString() ?? 'USD';
-                return _ShopItemCard(
-                  name: item['name']?.toString() ?? '',
-                  description: item['description']?.toString() ?? '',
-                  busy: busy,
-                  buyLabel: s.buyItem(price, currency),
-                  onBuy: busy ? null : () => _buy(item, s),
-                );
-              },
+              children: [
+                for (final entry in byCategory.entries) ...[
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 10, top: 6),
+                    child: Text(
+                      s.categoryLabel(entry.key).toUpperCase(),
+                      style: AppFonts.title(color: const Color(0xFFCB7B2A), fontSize: 15, letterSpacing: 1),
+                    ),
+                  ),
+                  GridView.count(
+                    crossAxisCount: 2,
+                    shrinkWrap: true,
+                    physics: const NeverScrollableScrollPhysics(),
+                    mainAxisSpacing: 14,
+                    crossAxisSpacing: 14,
+                    childAspectRatio: 0.85,
+                    children: [
+                      for (final item in entry.value)
+                        _ShopItemCard(
+                          imagePath: _imagePathFor(item),
+                          name: item['name']?.toString() ?? '',
+                          buyLabel: s.buyItem(
+                            item['price_amount']?.toString() ?? '0',
+                            item['price_currency']?.toString() ?? 'USD',
+                          ),
+                          busy: _purchasing.contains((item['id'] as num).toInt()),
+                          onBuy: _purchasing.contains((item['id'] as num).toInt())
+                              ? null
+                              : () => _buy(item, s),
+                        ),
+                    ],
+                  ),
+                  const SizedBox(height: 20),
+                ],
+              ],
             );
           },
         ),
@@ -145,58 +194,86 @@ class _ShopScreenState extends State<ShopScreen> {
   }
 }
 
+/// Square item card: gold border like the splash logo's badge, preview
+/// image on top, name + price on a translucent strip at the bottom. The
+/// whole card is the buy target (there isn't room for a separate button at
+/// this size).
 class _ShopItemCard extends StatelessWidget {
   const _ShopItemCard({
+    required this.imagePath,
     required this.name,
-    required this.description,
-    required this.busy,
     required this.buyLabel,
+    required this.busy,
     required this.onBuy,
   });
 
+  final String? imagePath;
   final String name;
-  final String description;
-  final bool busy;
   final String buyLabel;
+  final bool busy;
   final VoidCallback? onBuy;
+
+  static const _gold = Color(0xFFFFC94D);
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: const Color(0xFF3A2A1C),
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: const Color(0xFF54402C)),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(name, style: const TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold)),
-          if (description.isNotEmpty) ...[
-            const SizedBox(height: 6),
-            Text(description, style: const TextStyle(color: Colors.white60, fontSize: 13)),
+    return GestureDetector(
+      onTap: onBuy,
+      child: Container(
+        decoration: BoxDecoration(
+          color: const Color(0xFF241a11),
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: _gold, width: 3),
+          boxShadow: const [
+            BoxShadow(color: Color(0x55FFC94D), blurRadius: 10, spreadRadius: 1),
           ],
-          const SizedBox(height: 12),
-          SizedBox(
-            width: double.infinity,
-            child: ElevatedButton(
-              onPressed: onBuy,
-              style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFFCB7B2A),
-                padding: const EdgeInsets.symmetric(vertical: 12),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+        ),
+        clipBehavior: Clip.antiAlias,
+        child: Stack(
+          children: [
+            Positioned.fill(
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(14, 14, 14, 34),
+                child: imagePath != null
+                    ? Image.asset(imagePath!, fit: BoxFit.contain)
+                    : const Icon(Icons.redeem_rounded, color: _gold, size: 48),
               ),
-              child: busy
-                  ? const SizedBox(
-                      width: 18,
-                      height: 18,
-                      child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2.2),
-                    )
-                  : Text(buyLabel, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
             ),
-          ),
-        ],
+            if (busy)
+              Positioned.fill(
+                child: Container(
+                  color: Colors.black54,
+                  alignment: Alignment.center,
+                  child: const CircularProgressIndicator(color: Colors.white),
+                ),
+              ),
+            Positioned(
+              left: 0,
+              right: 0,
+              bottom: 0,
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+                color: Colors.black.withValues(alpha: 0.68),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      name,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: AppFonts.title(color: Colors.white, fontSize: 12),
+                    ),
+                    Text(
+                      buyLabel,
+                      style: const TextStyle(color: _gold, fontSize: 11, fontWeight: FontWeight.bold),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
