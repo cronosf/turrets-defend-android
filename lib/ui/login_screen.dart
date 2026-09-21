@@ -188,11 +188,6 @@ class _LoginScreenState extends State<LoginScreen> {
 
     return Scaffold(
       backgroundColor: const Color(0xFF2A2018),
-      appBar: AppBar(
-        backgroundColor: const Color(0xFF3A2A1C),
-        foregroundColor: Colors.white,
-        title: Text(s.loginTitle),
-      ),
       body: SafeArea(
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(24),
