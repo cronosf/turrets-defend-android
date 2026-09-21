@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../l10n/app_strings.dart';
 import '../models/economy.dart';
 import '../services/api_client.dart';
+import '../services/update_checker.dart';
 import 'game_screen.dart';
 import 'login_screen.dart';
 import 'profile_screen.dart';
@@ -26,6 +28,46 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   Economy get _economy => widget.economy;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) => _checkForUpdate());
+  }
+
+  Future<void> _checkForUpdate() async {
+    final update = await UpdateChecker.check();
+    if (update == null || !mounted) return;
+
+    final s = Strings(_economy.language);
+    await showDialog<void>(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: const Color(0xFF3A2A1C),
+        title: Text(s.updateAvailableTitle, style: const TextStyle(color: Colors.white)),
+        content: Text(
+          update.notes.isNotEmpty
+              ? '${s.updateAvailableBody(update.version)}\n\n${update.notes}'
+              : s.updateAvailableBody(update.version),
+          style: const TextStyle(color: Colors.white70),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: Text(s.updateLater, style: const TextStyle(color: Colors.white54)),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              Navigator.of(context).pop();
+              launchUrl(Uri.parse(update.downloadUrl), mode: LaunchMode.externalApplication);
+            },
+            style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFFCB7B2A)),
+            child: Text(s.updateDownload, style: const TextStyle(color: Colors.white)),
+          ),
+        ],
+      ),
+    );
+  }
 
   void _play() {
     Navigator.of(context).push(

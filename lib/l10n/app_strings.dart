@@ -162,6 +162,13 @@ class Strings {
       ? 'Inicia sesión para comprar en la tienda.'
       : 'Log in to buy from the shop.';
 
+  // --- Actualizaciones -----------------------------------------------------
+  String get updateAvailableTitle => _es ? 'Nueva versión disponible' : 'New version available';
+  String updateAvailableBody(String version) =>
+      _es ? 'Hay una nueva versión ($version) de TuerretCro lista para descargar.' : 'A new version ($version) of TuerretCro is ready to download.';
+  String get updateDownload => _es ? 'DESCARGAR' : 'DOWNLOAD';
+  String get updateLater => _es ? 'Más tarde' : 'Later';
+
   // --- Mi Perfil -----------------------------------------------------------
   String get profileTitle => _es ? 'Mi Perfil' : 'My Profile';
   String get greetingHello => _es ? 'Hola' : 'Hello';

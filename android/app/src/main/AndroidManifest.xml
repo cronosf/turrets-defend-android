@@ -44,5 +44,11 @@
             <data
                 android:mimeType="text/plain"/>
         </intent>
+        <!-- Needed by url_launcher on Android 11+ to open the browser for
+             the update-download link (see UpdateChecker / HomeScreen). -->
+        <intent>
+            <action android:name="android.intent.action.VIEW"/>
+            <data android:scheme="https"/>
+        </intent>
     </queries>
 </manifest>
