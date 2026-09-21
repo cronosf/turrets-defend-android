@@ -98,8 +98,15 @@ class GameAudio {
   }
 
   Future<AudioPlayer> _createSfxPlayer(String file) async {
+    // Deliberately NOT calling setReleaseMode(stop) here: lowLatency mode
+    // never fires playback-completion events (that's inherent to the mode,
+    // see PlayerMode's own docs), and combining it with ReleaseMode.stop is
+    // a known audioplayers bug (bluefireteam/audioplayers#1489) — the sound
+    // plays once and then goes silent on every call after. Leaving the
+    // default ReleaseMode.release is safe here since its behavior is also
+    // driven by that same completion event, which just never fires either
+    // way in this mode.
     final player = AudioPlayer()..audioCache = FlameAudio.audioCache;
-    await player.setReleaseMode(ReleaseMode.stop);
     await player.setPlayerMode(PlayerMode.lowLatency);
     await player.setSource(AssetSource(file));
     return player;

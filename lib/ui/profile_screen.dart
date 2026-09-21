@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../l10n/app_strings.dart';
 import '../models/economy.dart';
 import '../services/api_client.dart';
+import '../services/nav_guard.dart';
 import 'avatar_initials.dart';
 import 'customize_screen.dart';
 import 'edit_profile_screen.dart';
@@ -44,6 +45,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 
   Future<void> _openEditProfile(Map<String, dynamic> user) async {
+    if (!NavGuard.allow()) return;
     final changed = await Navigator.of(context).push<bool>(
       MaterialPageRoute(builder: (_) => EditProfileScreen(economy: widget.economy, user: user)),
     );
@@ -145,28 +147,37 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 _MenuTile(
                   icon: Icons.receipt_long_rounded,
                   label: s.menuMyPurchases,
-                  onTap: () => Navigator.of(context).push(
-                    MaterialPageRoute(builder: (_) => MyPurchasesScreen(economy: widget.economy)),
-                  ),
+                  onTap: () {
+                    if (!NavGuard.allow()) return;
+                    Navigator.of(context).push(
+                      MaterialPageRoute(builder: (_) => MyPurchasesScreen(economy: widget.economy)),
+                    );
+                  },
                 ),
                 _MenuTile(
                   icon: Icons.brush_rounded,
                   label: s.menuCustomize,
-                  onTap: () => Navigator.of(context).push(
-                    MaterialPageRoute(builder: (_) => CustomizeScreen(economy: widget.economy)),
-                  ),
+                  onTap: () {
+                    if (!NavGuard.allow()) return;
+                    Navigator.of(context).push(
+                      MaterialPageRoute(builder: (_) => CustomizeScreen(economy: widget.economy)),
+                    );
+                  },
                 ),
                 _MenuTile(
                   icon: Icons.flag_rounded,
                   label: s.menuNationalRanking,
-                  onTap: () => Navigator.of(context).push(
-                    MaterialPageRoute(
-                      builder: (_) => NationalRankingScreen(
-                        economy: widget.economy,
-                        countryCode: user['country_code']?.toString(),
+                  onTap: () {
+                    if (!NavGuard.allow()) return;
+                    Navigator.of(context).push(
+                      MaterialPageRoute(
+                        builder: (_) => NationalRankingScreen(
+                          economy: widget.economy,
+                          countryCode: user['country_code']?.toString(),
+                        ),
                       ),
-                    ),
-                  ),
+                    );
+                  },
                 ),
                 AnimatedBuilder(
                   animation: widget.economy,

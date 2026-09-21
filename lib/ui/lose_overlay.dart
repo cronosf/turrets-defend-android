@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../audio/game_audio.dart';
 import '../game/turret_defense_game.dart';
 import '../l10n/app_strings.dart';
 
@@ -11,6 +12,14 @@ class LoseOverlay extends StatelessWidget {
   void _retry() {
     game.overlays.remove('lose');
     game.startRun();
+  }
+
+  /// Pops GameScreen, returning to whatever pushed it — always Home (see
+  /// HomeScreen._play), never Login.
+  void _goHome(BuildContext context) {
+    game.overlays.remove('lose');
+    GameAudio.instance.playMenuMusic();
+    Navigator.of(context).pop();
   }
 
   @override
@@ -60,6 +69,25 @@ class LoseOverlay extends StatelessWidget {
                 ),
                 child: Text(
                   s.playAgain,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 16,
+                  ),
+                ),
+              ),
+            ),
+            const SizedBox(height: 12),
+            GestureDetector(
+              onTap: () => _goHome(context),
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 12),
+                decoration: BoxDecoration(
+                  color: const Color(0xFF3B82C4),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Text(
+                  s.backToHome,
                   style: const TextStyle(
                     color: Colors.white,
                     fontWeight: FontWeight.bold,

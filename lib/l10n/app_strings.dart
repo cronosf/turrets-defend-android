@@ -38,6 +38,7 @@ class Strings {
   String get baseDestroyed => _es ? 'BASE DESTRUIDA' : 'BASE DESTROYED';
   String waveReached(int n) => _es ? 'Oleada alcanzada: $n' : 'Wave reached: $n';
   String get playAgain => _es ? 'JUGAR DE NUEVO' : 'PLAY AGAIN';
+  String get backToHome => _es ? 'VOLVER' : 'BACK';
 
   String get developedBy => _es ? 'Desarrollado por' : 'Developed by';
   String get allRightsReserved =>

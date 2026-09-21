@@ -21,9 +21,18 @@ class ApiException implements Exception {
 }
 
 /// Central HTTP client for the TuerretCro backend (`server/api_turret`).
-/// Requests go through [WebBridge] rather than `package:http` directly, to
-/// avoid being blocked by the hosting's Imunify360 firewall. Holds the
-/// bearer token + logged-in user in memory, persisting them to
+///
+/// Requests go straight over `package:http` first — the `.htaccess` on
+/// `/api_turret/` already disables the hosting's Imunify360 firewall for
+/// this path, confirmed by extensive direct testing with zero blocks. Only
+/// if a response actually looks WAF-blocked does a call retry through
+/// [WebBridge]'s headless WebView, which is slow to spin up (a real
+/// browser engine booting) but survives a live Imunify360 challenge. Doing
+/// it this way instead of always going through the WebView keeps every
+/// screen's first load fast in the common case, while still self-healing
+/// if the WAF ever does kick in.
+///
+/// Holds the bearer token + logged-in user in memory, persisting them to
 /// SharedPreferences only when the caller asks to be "remembered".
 class ApiClient {
   ApiClient._();
@@ -158,27 +167,44 @@ class ApiClient {
   }
 
   static Future<dynamic> get(String path, {Map<String, dynamic>? query}) {
-    return _send(() => WebBridge.request(
-          method: 'GET',
-          url: _uri(path, query).toString(),
-          headers: _headers(json: false),
-        ));
+    final uri = _uri(path, query);
+    return _send(
+      direct: () => http.get(uri, headers: _headers(json: false)),
+      viaBridge: () => WebBridge.request(method: 'GET', url: uri.toString(), headers: _headers(json: false)),
+    );
   }
 
   static Future<dynamic> post(String path, {Map<String, dynamic>? body}) {
-    return _send(() => WebBridge.request(
-          method: 'POST',
-          url: _uri(path).toString(),
-          headers: _headers(),
-          body: jsonEncode(body ?? {}),
-        ));
+    final uri = _uri(path);
+    final encodedBody = jsonEncode(body ?? {});
+    return _send(
+      direct: () => http.post(uri, headers: _headers(), body: encodedBody),
+      viaBridge: () => WebBridge.request(method: 'POST', url: uri.toString(), headers: _headers(), body: encodedBody),
+    );
   }
 
   // ─── Núcleo ──────────────────────────────────────────────────────────────
 
-  static Future<dynamic> _send(Future<http.Response> Function() request) async {
+  static Future<dynamic> _send({
+    required Future<http.Response> Function() direct,
+    required Future<http.Response> Function() viaBridge,
+  }) async {
     try {
-      final response = await request().timeout(const Duration(seconds: 60));
+      final response = await direct().timeout(const Duration(seconds: 15));
+      if (!_looksWafBlocked(response)) return _parse(response);
+    } on ApiException {
+      // A real API error (4xx/5xx business logic, e.g. wrong password) —
+      // not a connectivity/WAF issue, so don't waste time retrying.
+      rethrow;
+    } catch (_) {
+      // Direct call failed outright (timeout, no connection, WAF hanging
+      // the connection, etc.) — fall through to the WebView bridge below
+      // rather than failing outright; a genuine no-internet failure will
+      // fail there too, just slower.
+    }
+
+    try {
+      final response = await viaBridge().timeout(const Duration(seconds: 60));
       return _parse(response);
     } on ApiException {
       rethrow;
@@ -189,6 +215,10 @@ class ApiClient {
     } catch (e) {
       throw ApiException('Fallo de red: $e', 0);
     }
+  }
+
+  static bool _looksWafBlocked(http.Response response) {
+    return response.body.contains('Imunify360');
   }
 
   static dynamic _parse(http.Response response) {

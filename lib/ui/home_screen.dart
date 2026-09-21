@@ -4,6 +4,7 @@ import 'package:url_launcher/url_launcher.dart';
 import '../l10n/app_strings.dart';
 import '../models/economy.dart';
 import '../services/api_client.dart';
+import '../services/nav_guard.dart';
 import '../services/update_checker.dart';
 import 'game_screen.dart';
 import 'login_screen.dart';
@@ -70,6 +71,7 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   void _play() {
+    if (!NavGuard.allow()) return;
     Navigator.of(context).push(
       MaterialPageRoute(builder: (_) => GameScreen(economy: _economy)),
     );
@@ -78,12 +80,14 @@ class _HomeScreenState extends State<HomeScreen> {
   Future<void> _openSettings() => showSettingsDialog(context, _economy);
 
   void _openRanking() {
+    if (!NavGuard.allow()) return;
     Navigator.of(context).push(
       MaterialPageRoute(builder: (_) => RankingScreen(economy: _economy)),
     );
   }
 
   void _openProfileOrLogin() {
+    if (!NavGuard.allow()) return;
     Navigator.of(context).push(
       MaterialPageRoute(
         builder: (_) => ApiClient.hasToken
@@ -94,6 +98,7 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   void _openShop() {
+    if (!NavGuard.allow()) return;
     Navigator.of(context).push(
       MaterialPageRoute(builder: (_) => ShopScreen(economy: _economy)),
     );

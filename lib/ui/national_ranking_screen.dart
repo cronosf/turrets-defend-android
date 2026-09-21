@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../l10n/app_strings.dart';
 import '../models/economy.dart';
 import '../services/api_client.dart';
+import 'leaderboard_row.dart';
 
 /// Same leaderboard shape as [RankingScreen], but scoped to the player's own
 /// country (`GET /ranking?country=XX`), with rank numbers computed within
@@ -89,34 +90,15 @@ class _NationalRankingScreenState extends State<NationalRankingScreen> {
                       ],
                     );
                   }
-                  return ListView.separated(
+                  return ListView.builder(
                     padding: const EdgeInsets.all(20),
                     itemCount: entries.length,
-                    separatorBuilder: (_, _) => const Divider(color: Colors.white12, height: 1),
                     itemBuilder: (context, index) {
                       final entry = entries[index];
-                      final rank = (entry['rank_position'] as num?)?.toInt() ?? 0;
-                      final username = entry['username']?.toString() ?? '?';
-                      final bestWave = (entry['best_wave'] as num?)?.toInt() ?? 0;
-                      return Padding(
-                        padding: const EdgeInsets.symmetric(vertical: 6),
-                        child: Row(
-                          children: [
-                            SizedBox(
-                              width: 36,
-                              child: Text('#$rank',
-                                  style: const TextStyle(color: Color(0xFFCB7B2A), fontWeight: FontWeight.bold)),
-                            ),
-                            Expanded(
-                              child: Text(username,
-                                  style: const TextStyle(color: Colors.white, fontSize: 14),
-                                  overflow: TextOverflow.ellipsis),
-                            ),
-                            Text('$bestWave',
-                                style: const TextStyle(
-                                    color: Colors.white70, fontSize: 14, fontWeight: FontWeight.w600)),
-                          ],
-                        ),
+                      return LeaderboardRow(
+                        rank: (entry['rank_position'] as num?)?.toInt() ?? 0,
+                        username: entry['username']?.toString() ?? '?',
+                        bestWave: (entry['best_wave'] as num?)?.toInt() ?? 0,
                       );
                     },
                   );

@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../l10n/app_strings.dart';
 import '../models/economy.dart';
 import '../services/api_client.dart';
+import 'leaderboard_row.dart';
 
 /// Local player stats (best score, best wave, last run) plus the real
 /// global leaderboard fetched from `GET /ranking` (backed by the
@@ -139,7 +140,7 @@ class _RankingScreenState extends State<RankingScreen> {
                     return Column(
                       children: [
                         for (final entry in entries)
-                          _LeaderboardRow(
+                          LeaderboardRow(
                             rank: (entry['rank_position'] as num?)?.toInt() ?? 0,
                             username: entry['username']?.toString() ?? '?',
                             countryCode: entry['country_code']?.toString(),
@@ -154,49 +155,6 @@ class _RankingScreenState extends State<RankingScreen> {
           ),
         );
       },
-    );
-  }
-}
-
-class _LeaderboardRow extends StatelessWidget {
-  const _LeaderboardRow({
-    required this.rank,
-    required this.username,
-    required this.countryCode,
-    required this.bestWave,
-  });
-
-  final int rank;
-  final String username;
-  final String? countryCode;
-  final int bestWave;
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 6),
-      child: Row(
-        children: [
-          SizedBox(
-            width: 36,
-            child: Text(
-              '#$rank',
-              style: const TextStyle(color: Color(0xFFCB7B2A), fontWeight: FontWeight.bold),
-            ),
-          ),
-          Expanded(
-            child: Text(
-              countryCode != null && countryCode!.isNotEmpty ? '$username · $countryCode' : username,
-              style: const TextStyle(color: Colors.white, fontSize: 14),
-              overflow: TextOverflow.ellipsis,
-            ),
-          ),
-          Text(
-            '$bestWave',
-            style: const TextStyle(color: Colors.white70, fontSize: 14, fontWeight: FontWeight.w600),
-          ),
-        ],
-      ),
     );
   }
 }
