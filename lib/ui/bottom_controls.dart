@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../l10n/app_strings.dart';
 import '../models/economy.dart';
 import '../models/turret_stats.dart';
+import '../theme/app_fonts.dart';
 
 class BottomControls extends StatelessWidget {
   const BottomControls({
@@ -134,11 +135,7 @@ class _ControlButton extends StatelessWidget {
               child: Text(
                 label,
                 overflow: TextOverflow.ellipsis,
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontWeight: FontWeight.bold,
-                  fontSize: 13,
-                ),
+                style: AppFonts.title(color: Colors.white, fontSize: 13),
               ),
             ),
           ],

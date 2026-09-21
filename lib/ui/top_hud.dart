@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../l10n/app_strings.dart';
 import '../models/economy.dart';
+import '../theme/app_fonts.dart';
 import 'stat_bar.dart';
 
 class TopHud extends StatelessWidget {
@@ -53,11 +54,7 @@ class TopHud extends StatelessWidget {
                     const Spacer(),
                     Text(
                       s.level(economy.wave),
-                      style: const TextStyle(
-                        color: Colors.amberAccent,
-                        fontWeight: FontWeight.bold,
-                        fontSize: 16,
-                      ),
+                      style: AppFonts.title(color: Colors.amberAccent, fontSize: 16),
                     ),
                     const Spacer(),
                     GestureDetector(

@@ -4,6 +4,7 @@ import '../l10n/app_strings.dart';
 import '../models/economy.dart';
 import '../services/api_client.dart';
 import '../services/nav_guard.dart';
+import '../theme/app_fonts.dart';
 import 'avatar_initials.dart';
 import 'customize_screen.dart';
 import 'edit_profile_screen.dart';
@@ -242,7 +243,7 @@ class _MenuTile extends StatelessWidget {
       leading: Icon(icon, color: color, size: 22),
       title: Text(
         label,
-        style: TextStyle(color: color == Colors.redAccent ? Colors.redAccent : Colors.white, fontSize: 15),
+        style: AppFonts.title(color: color == Colors.redAccent ? Colors.redAccent : Colors.white, fontSize: 15),
       ),
       trailing: const Icon(Icons.chevron_right_rounded, color: Colors.white38),
       onTap: onTap,

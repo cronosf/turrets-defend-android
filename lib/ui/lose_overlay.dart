@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../audio/game_audio.dart';
 import '../game/turret_defense_game.dart';
 import '../l10n/app_strings.dart';
+import '../theme/app_fonts.dart';
 
 class LoseOverlay extends StatelessWidget {
   const LoseOverlay({super.key, required this.game});
@@ -42,12 +43,7 @@ class LoseOverlay extends StatelessWidget {
           children: [
             Text(
               s.baseDestroyed,
-              style: const TextStyle(
-                color: Colors.redAccent,
-                fontSize: 24,
-                fontWeight: FontWeight.bold,
-                letterSpacing: 1.1,
-              ),
+              style: AppFonts.title(color: Colors.redAccent, fontSize: 24, letterSpacing: 1.1),
             ),
             const SizedBox(height: 12),
             Text(
@@ -69,11 +65,7 @@ class LoseOverlay extends StatelessWidget {
                 ),
                 child: Text(
                   s.playAgain,
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontWeight: FontWeight.bold,
-                    fontSize: 16,
-                  ),
+                  style: AppFonts.title(color: Colors.white, fontSize: 16),
                 ),
               ),
             ),
@@ -88,11 +80,7 @@ class LoseOverlay extends StatelessWidget {
                 ),
                 child: Text(
                   s.backToHome,
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontWeight: FontWeight.bold,
-                    fontSize: 16,
-                  ),
+                  style: AppFonts.title(color: Colors.white, fontSize: 16),
                 ),
               ),
             ),

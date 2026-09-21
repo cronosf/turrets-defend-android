@@ -6,6 +6,7 @@ import '../models/economy.dart';
 import '../services/api_client.dart';
 import '../services/nav_guard.dart';
 import '../services/update_checker.dart';
+import '../theme/app_fonts.dart';
 import 'game_screen.dart';
 import 'login_screen.dart';
 import 'profile_screen.dart';
@@ -146,10 +147,9 @@ class _HomeScreenState extends State<HomeScreen> {
                                   Opacity(opacity: value, child: child),
                               child: Text(
                                 s.tapToPlay,
-                                style: const TextStyle(
+                                style: AppFonts.title(
                                   color: Colors.white,
                                   fontSize: 22,
-                                  fontWeight: FontWeight.bold,
                                   letterSpacing: 1.2,
                                 ),
                               ),
@@ -237,7 +237,7 @@ class _NavItem extends StatelessWidget {
             const SizedBox(height: 4),
             Text(
               label,
-              style: const TextStyle(color: Colors.white70, fontSize: 11, fontWeight: FontWeight.w600),
+              style: AppFonts.title(color: Colors.white70, fontSize: 11),
             ),
           ],
         ),
