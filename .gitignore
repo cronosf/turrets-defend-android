@@ -1,0 +1,70 @@
+# Miscellaneous
+*.class
+*.log
+*.pyc
+*.swp
+.DS_Store
+.atom/
+.build/
+.buildlog/
+.history
+.svn/
+.swiftpm/
+migrate_working_dir/
+
+# IntelliJ related
+*.iml
+*.ipr
+*.iws
+.idea/
+
+# The .vscode folder contains launch configuration and tasks you configure in
+# VS Code which you may wish to be included in version control, so this line
+# is commented out by default.
+#.vscode/
+
+# Flutter/Dart/Pub related
+**/doc/api/
+**/ios/Flutter/.last_build_id
+.dart_tool/
+.flutter-plugins-dependencies
+.pub-cache/
+.pub/
+/build/
+/coverage/
+
+# Symbolication related
+app.*.symbols
+
+# Obfuscation related
+app.*.map.json
+
+# Android Studio will place build artifacts here
+/android/app/debug
+/android/app/profile
+/android/app/release
+/android/build/
+/android/app/build/
+
+# Widget Preview related
+.widget_preview/
+
+# Backend + deployment artifacts — this repo is app code only. The PHP API,
+# DB schema and any secrets (.env, PayPal/DB credentials) live in
+# server/ and stay out of git entirely; see server/api_turret/README.md for
+# how that gets deployed (uploaded directly to the host, not via git).
+/server/
+*.zip
+
+# Raw CraftPix source kit (.ai/.eps originals) — not used by the app
+# (pubspec.yaml only references assets/images/, assets/audio/, etc.), and
+# redistributing the purchased kit's source files publicly is very likely
+# outside what https://craftpix.net/file-licenses/ allows. The processed
+# assets the app actually ships with (assets/images/, audio/, logo/, music/)
+# are NOT excluded here — only this original/unused source folder is.
+/assets/Merge Turrets/
+
+# Raw/uncompressed music source (.wav, ~85MB) — not referenced anywhere in
+# pubspec.yaml or lib/ (the app actually ships the compressed assets/audio/
+# .mp3 files). Unused bulk, so it stays out of the repo.
+/assets/music/
