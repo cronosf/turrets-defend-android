@@ -3,7 +3,11 @@ import 'package:flutter/material.dart';
 import '../l10n/app_strings.dart';
 import '../models/economy.dart';
 import '../theme/app_fonts.dart';
-import 'stat_bar.dart';
+
+/// A generic enemy icon for the wave counter — doesn't need to match the
+/// specific mob type spawning, same idea as the turret sprite used for the
+/// Free button.
+const _enemyIconAsset = 'assets/images/enemies/ground/redbeetle/RedBeetle-move_00.png';
 
 class TopHud extends StatelessWidget {
   const TopHud({super.key, required this.economy, required this.onSettingsTap});
@@ -16,9 +20,6 @@ class TopHud extends StatelessWidget {
     return AnimatedBuilder(
       animation: economy,
       builder: (context, _) {
-        final waveRatio = economy.waveEnemiesTotal == 0
-            ? 0.0
-            : (economy.waveEnemiesResolved / economy.waveEnemiesTotal).clamp(0.0, 1.0);
         final s = Strings(economy.language);
         return Container(
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
@@ -64,10 +65,15 @@ class TopHud extends StatelessWidget {
                   ],
                 ),
                 const SizedBox(height: 6),
-                StatBar(
-                  ratio: waveRatio,
-                  fillColor: const Color(0xFFE08A2E),
-                  label: s.enemiesLabel(economy.waveEnemiesResolved, economy.waveEnemiesTotal),
+                Row(
+                  children: [
+                    Image.asset(_enemyIconAsset, width: 24, height: 24),
+                    const SizedBox(width: 6),
+                    Text(
+                      '${economy.waveEnemiesResolved}/${economy.waveEnemiesTotal}',
+                      style: AppFonts.title(color: Colors.white, fontSize: 14),
+                    ),
+                  ],
                 ),
               ],
             ),

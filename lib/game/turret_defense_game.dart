@@ -273,6 +273,10 @@ class TurretDefenseGame extends FlameGame {
   void onEnemyReachedBase(EnemyComponent enemy) {
     economy.damageBase(enemy.damage);
     GameAudio.instance.playBarrierLowered();
+    // A visible hit right where the mob crashed into the base line, on top
+    // of BaseHealthBar's own shake/flash — the collision was previously
+    // silent/invisible on the canvas itself.
+    spawnExplosion(Vector2(enemy.position.x, baseLineY), size: Vector2(46, 46));
     _resolveEnemy();
   }
 

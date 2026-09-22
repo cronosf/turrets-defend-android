@@ -126,7 +126,7 @@ class _ControlButton extends StatelessWidget {
             if (iconData != null)
               Icon(iconData, color: Colors.white, size: 20)
             else if (iconAsset != null)
-              Image.asset(iconAsset!, width: 22, height: 22),
+              Image.asset(iconAsset!, width: 33, height: 33),
             const SizedBox(width: 6),
             Flexible(
               child: Text(
