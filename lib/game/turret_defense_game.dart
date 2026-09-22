@@ -2,6 +2,7 @@ import 'dart:math' as math;
 import 'dart:ui';
 
 import 'package:flame/components.dart';
+import 'package:flame/flame.dart';
 import 'package:flame/game.dart';
 
 import '../audio/game_audio.dart';
@@ -22,9 +23,21 @@ class TurretDefenseGame extends FlameGame {
   final TurretGrid grid = TurretGrid();
   final math.Random _random = math.Random();
 
-  late SpriteComponent _background;
+  // The background art bakes the dirt (mob field) and the metal tray
+  // (turret grid backing) into one fixed-proportion image. The grid's
+  // on-screen height changes with slotSize, so instead of stretching that
+  // whole image we crop it into two pieces and resize each independently:
+  // dirt fills everything above the grid, tray fills everything from the
+  // grid up to the screen bottom. That keeps the mob field maximized and
+  // the tray hugging the grid with no leftover gray space.
+  static const double _traySplitFrac = 1552 / 2404;
+  late SpriteComponent _dirtBg;
+  late SpriteComponent _trayBg;
   late SpriteComponent _baseSprite;
-  late List<Sprite> _backgroundSprites;
+  late List<Sprite> _dirtSprites;
+  late List<Sprite> _traySprites;
+  late Sprite _boltSprite;
+  final List<SpriteComponent> _trayBolts = [];
   late Sprite _projectileSprite;
   late List<Sprite> _hitFxFrames;
   late List<Sprite> _explosionFrames;
@@ -50,23 +63,38 @@ class TurretDefenseGame extends FlameGame {
 
     await GameAssets.init();
 
-    _backgroundSprites = await Future.wait([
-      GameAssets.loadSprite('backgrounds/1.png'),
-      GameAssets.loadSprite('backgrounds/2.png'),
-      GameAssets.loadSprite('backgrounds/3.png'),
-      GameAssets.loadSprite('backgrounds/4.png'),
+    final bgImages = await Future.wait([
+      Flame.images.load('backgrounds/1.png'),
+      Flame.images.load('backgrounds/2.png'),
+      Flame.images.load('backgrounds/3.png'),
+      Flame.images.load('backgrounds/4.png'),
     ]);
+    _dirtSprites = bgImages.map(_cropDirt).toList();
+    _traySprites = bgImages.map(_cropTray).toList();
+    _boltSprite = await GameAssets.loadSprite('ui/bolt.png');
     _projectileSprite = await GameAssets.loadSprite('projectile/Projectile1.png');
     _hitFxFrames = await GameAssets.loadFrames('explosion2');
     _explosionFrames = await GameAssets.loadFrames('explosion1');
 
-    _background = SpriteComponent(sprite: _backgroundSprites[0], priority: -10);
+    _dirtBg = SpriteComponent(sprite: _dirtSprites[0], priority: -10);
+    _trayBg = SpriteComponent(sprite: _traySprites[0], priority: -10);
     _baseSprite = SpriteComponent(
       sprite: await GameAssets.loadSprite('ground/Ground-Base.png'),
       priority: -5,
     );
 
-    await world.addAll([_background, _baseSprite]);
+    await world.addAll([_dirtBg, _trayBg, _baseSprite]);
+
+    for (var i = 0; i < 4; i++) {
+      final bolt = SpriteComponent(
+        sprite: _boltSprite,
+        size: Vector2.all(18),
+        anchor: Anchor.center,
+        priority: -4,
+      );
+      _trayBolts.add(bolt);
+    }
+    await world.addAll(_trayBolts);
 
     for (var r = 0; r < TurretGrid.rows; r++) {
       for (var c = 0; c < TurretGrid.cols; c++) {
@@ -99,14 +127,46 @@ class TurretDefenseGame extends FlameGame {
     }
   }
 
-  void _relayout() {
-    _background.size = size.clone();
-    _background.position = Vector2.zero();
+  Sprite _cropDirt(Image image) {
+    final w = image.width.toDouble();
+    final splitY = image.height * _traySplitFrac;
+    return Sprite(image, srcPosition: Vector2.zero(), srcSize: Vector2(w, splitY));
+  }
 
+  Sprite _cropTray(Image image) {
+    final w = image.width.toDouble();
+    final h = image.height.toDouble();
+    final splitY = h * _traySplitFrac;
+    return Sprite(image, srcPosition: Vector2(0, splitY), srcSize: Vector2(w, h - splitY));
+  }
+
+  void _relayout() {
     grid.layout(size);
+
+    final trayTop = grid.topY - 34;
+    _dirtBg.size = Vector2(size.x, trayTop);
+    _dirtBg.position = Vector2.zero();
+
+    _trayBg.size = Vector2(size.x, size.y - trayTop);
+    _trayBg.position = Vector2(0, trayTop);
 
     _baseSprite.size = Vector2(size.x, 34);
     _baseSprite.position = Vector2(0, grid.topY - 34);
+
+    // Decorative bolts flank the two full-width grid rows on both sides,
+    // in the side margins left over once the grid is centered horizontally.
+    final leftX = grid.topLeft.x / 2;
+    final rightX = size.x - grid.topLeft.x / 2;
+    final rowYs = [grid.slotCenter(1, 0).y, grid.slotCenter(2, 0).y];
+    final boltPositions = [
+      Vector2(leftX, rowYs[0]),
+      Vector2(rightX, rowYs[0]),
+      Vector2(leftX, rowYs[1]),
+      Vector2(rightX, rowYs[1]),
+    ];
+    for (var i = 0; i < _trayBolts.length; i++) {
+      _trayBolts[i].position = boltPositions[i];
+    }
 
     for (var i = 0; i < _slotVisuals.length; i++) {
       final coords = _slotVisualCoords[i];
@@ -123,7 +183,8 @@ class TurretDefenseGame extends FlameGame {
     economy.resetRun();
     started = true;
     GameAudio.instance.playBattleMusicForWave(economy.wave);
-    _background.sprite = _backgroundSprites[0];
+    _dirtBg.sprite = _dirtSprites[0];
+    _trayBg.sprite = _traySprites[0];
     for (final t in grid.allTurrets) {
       t.removeFromParent();
     }
@@ -188,8 +249,9 @@ class TurretDefenseGame extends FlameGame {
       _waveBreakTimer = 3;
       economy.nextWave();
       GameAudio.instance.playBattleMusicForWave(economy.wave);
-      final bgIndex = ((economy.wave - 1) ~/ 3) % _backgroundSprites.length;
-      _background.sprite = _backgroundSprites[bgIndex];
+      final bgIndex = ((economy.wave - 1) ~/ 3) % _dirtSprites.length;
+      _dirtBg.sprite = _dirtSprites[bgIndex];
+      _trayBg.sprite = _traySprites[bgIndex];
     }
   }
 

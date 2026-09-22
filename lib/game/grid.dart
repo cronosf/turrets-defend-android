@@ -29,7 +29,7 @@ class TurretGrid {
   void layout(Vector2 fieldSize) {
     final gridWidth = cols * slotSize + (cols - 1) * gap;
     final x = (fieldSize.x - gridWidth) / 2;
-    final y = fieldSize.y - rows * slotSize - (rows - 1) * gap - 24;
+    final y = fieldSize.y - rows * slotSize - (rows - 1) * gap - 10;
     topLeft = Vector2(x, y);
   }
 

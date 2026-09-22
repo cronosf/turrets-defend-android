@@ -53,6 +53,7 @@ class BottomControls extends StatelessWidget {
                       child: _ControlButton(
                         label: adReady ? s.free : '${economy.adCooldown.ceil()}s',
                         iconAsset: 'assets/images/turrets/t1/T1-Shoot_00.png',
+                        iconSize: 66,
                         enabled: adReady,
                         onTap: onFree,
                         color: adReady ? const Color(0xFF3E9B4F) : const Color(0xFF555555),
@@ -63,6 +64,7 @@ class BottomControls extends StatelessWidget {
                       child: _ControlButton(
                         label: s.buyMenu,
                         iconAsset: 'assets/images/ui/MoneyIcon.png',
+                        iconSize: 16.5,
                         enabled: true,
                         onTap: onBuy,
                         color: const Color(0xFFCB7B2A),
@@ -99,11 +101,13 @@ class _ControlButton extends StatelessWidget {
     required this.color,
     this.iconAsset,
     this.iconData,
+    this.iconSize = 33,
   });
 
   final String label;
   final String? iconAsset;
   final IconData? iconData;
+  final double iconSize;
   final bool enabled;
   final VoidCallback onTap;
   final Color color;
@@ -113,7 +117,7 @@ class _ControlButton extends StatelessWidget {
     return GestureDetector(
       onTap: enabled ? onTap : null,
       child: Container(
-        height: 52,
+        height: 64,
         decoration: BoxDecoration(
           color: color,
           borderRadius: BorderRadius.circular(12),
@@ -125,7 +129,7 @@ class _ControlButton extends StatelessWidget {
             if (iconData != null)
               Icon(iconData, color: Colors.white, size: 20)
             else if (iconAsset != null)
-              Image.asset(iconAsset!, width: 33, height: 33),
+              Image.asset(iconAsset!, width: iconSize, height: iconSize),
             const SizedBox(width: 4),
             Flexible(
               child: Text(
