@@ -75,22 +75,25 @@ class _HomeScreenState extends State<HomeScreen> {
 
   void _play() {
     if (!NavGuard.allow()) return;
-    // Fire-and-forget: TurretComponent reacts live to
-    // economy.equippedTurretHue changing, so the tint just catches up
-    // moments after the run starts rather than blocking navigation on it.
-    _syncEquippedTurretSkin();
+    // Fire-and-forget: TurretComponent/ProjectileComponent react live to
+    // economy.equippedTurretHue/equippedBulletHue changing, so the tint
+    // just catches up moments after the run starts rather than blocking
+    // navigation on it.
+    _syncEquippedSkins();
     Navigator.of(context).push(
       MaterialPageRoute(builder: (_) => GameScreen(economy: _economy)),
     );
   }
 
-  /// Looks up the player's currently-equipped `turret_skin` item (if any)
-  /// and resolves its `tint_hue` from the owned-items list, so every
-  /// turret tier in the run gets reskinned via TurretComponent's runtime
-  /// color filter — not just tier 1.
-  Future<void> _syncEquippedTurretSkin() async {
+  /// Looks up the player's currently-equipped `turret_skin` and
+  /// `bullet_effect` items (if any) and resolves each one's `tint_hue`
+  /// from the owned-items list, so every turret tier and every shot fired
+  /// in the run gets reskinned via the runtime color filter — not just
+  /// tier 1, and not just a static shop preview.
+  Future<void> _syncEquippedSkins() async {
     if (!ApiClient.hasToken) {
       _economy.setEquippedTurretHue(null);
+      _economy.setEquippedBulletHue(null);
       return;
     }
     try {
@@ -99,31 +102,33 @@ class _HomeScreenState extends State<HomeScreen> {
       final equipped = (data['equipped'] as List<dynamic>? ?? []).cast<Map<String, dynamic>>();
 
       num? equippedTurretSkinId;
+      num? equippedBulletSkinId;
       for (final e in equipped) {
         if (e['category'] == 'turret_skin') {
           equippedTurretSkinId = e['shop_item_id'] as num?;
-          break;
+        } else if (e['category'] == 'bullet_effect') {
+          equippedBulletSkinId = e['shop_item_id'] as num?;
         }
-      }
-      if (equippedTurretSkinId == null) {
-        _economy.setEquippedTurretHue(null);
-        return;
       }
 
-      for (final item in items) {
-        if ((item['id'] as num?) != equippedTurretSkinId) continue;
-        final rawMetadata = item['metadata'];
-        if (rawMetadata is String && rawMetadata.isNotEmpty) {
-          final metadata = jsonDecode(rawMetadata) as Map<String, dynamic>;
-          final hue = (metadata['tint_hue'] as num?)?.toDouble();
-          _economy.setEquippedTurretHue(hue);
-          return;
-        }
-      }
-      _economy.setEquippedTurretHue(null);
+      _economy.setEquippedTurretHue(_hueFor(items, equippedTurretSkinId));
+      _economy.setEquippedBulletHue(_hueFor(items, equippedBulletSkinId));
     } catch (_) {
-      // Best-effort — worst case the run just uses the default turret art.
+      // Best-effort — worst case the run just uses the default art.
     }
+  }
+
+  double? _hueFor(List<Map<String, dynamic>> items, num? shopItemId) {
+    if (shopItemId == null) return null;
+    for (final item in items) {
+      if ((item['id'] as num?) != shopItemId) continue;
+      final rawMetadata = item['metadata'];
+      if (rawMetadata is String && rawMetadata.isNotEmpty) {
+        final metadata = jsonDecode(rawMetadata) as Map<String, dynamic>;
+        return (metadata['tint_hue'] as num?)?.toDouble();
+      }
+    }
+    return null;
   }
 
   Future<void> _openSettings() => showSettingsDialog(context, _economy);

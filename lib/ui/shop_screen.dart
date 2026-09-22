@@ -1,5 +1,3 @@
-import 'dart:convert';
-
 import 'package:flutter/material.dart';
 
 import '../l10n/app_strings.dart';
@@ -7,14 +5,15 @@ import '../models/economy.dart';
 import '../services/api_client.dart';
 import '../theme/app_fonts.dart';
 import 'paypal_checkout_screen.dart';
+import 'shop_item_card.dart';
 
 /// Real shop backed by `GET /shop/items`, with purchases going through
 /// PayPal via `POST /shop/orders` (create) -> [PaypalCheckoutScreen]
 /// (approval) -> `POST /shop/orders/{id}/capture` (finalize, which is what
-/// actually grants the item server-side). Items are grouped by category
-/// (turret skins, bullet effects, ...) in a 2-column grid; each card is a
-/// gold-bordered square image (same gold as the splash logo's badge) with
-/// the name, a short description and a Buy button below it.
+/// actually grants the item server-side). A left-side "Categories" rail
+/// picks which category's items show on the right, one category at a
+/// time, instead of one long scrolling list of every section — categories
+/// with no catalog items yet (mobs, bosses) show a "coming soon" message.
 class ShopScreen extends StatefulWidget {
   const ShopScreen({super.key, required this.economy});
 
@@ -25,8 +24,11 @@ class ShopScreen extends StatefulWidget {
 }
 
 class _ShopScreenState extends State<ShopScreen> {
+  static const categoryOrder = ['turret_skin', 'bullet_effect', 'mob_skin', 'boss_skin', 'bundle'];
+
   late Future<List<Map<String, dynamic>>> _items;
   final Set<int> _purchasing = {};
+  String _selectedCategory = categoryOrder.first;
 
   @override
   void initState() {
@@ -43,24 +45,6 @@ class _ShopScreenState extends State<ShopScreen> {
   Future<void> _reload() async {
     setState(() => _items = _fetchItems());
     await _items;
-  }
-
-  /// The shop item's preview image, generated from the base game sprites
-  /// (see assets/images/shop/) and referenced by the `asset_key` in the
-  /// item's `metadata` JSON. Bundles don't carry their own asset_key (their
-  /// metadata just lists what they include), so fall back to the shared
-  /// bundle icon.
-  String? _imagePathFor(Map<String, dynamic> item) {
-    final rawMetadata = item['metadata'];
-    if (rawMetadata is! String || rawMetadata.isEmpty) return null;
-    try {
-      final metadata = jsonDecode(rawMetadata) as Map<String, dynamic>;
-      final assetKey = metadata['asset_key'] as String?;
-      if (assetKey == null) return null;
-      return 'assets/images/shop/$assetKey.png';
-    } catch (_) {
-      return null;
-    }
   }
 
   Future<void> _buy(Map<String, dynamic> item, Strings s) async {
@@ -113,17 +97,17 @@ class _ShopScreenState extends State<ShopScreen> {
         foregroundColor: Colors.white,
         title: Text(s.shopTitle),
       ),
-      body: RefreshIndicator(
-        onRefresh: _reload,
-        color: const Color(0xFFCB7B2A),
-        child: FutureBuilder<List<Map<String, dynamic>>>(
-          future: _items,
-          builder: (context, snapshot) {
-            if (snapshot.connectionState != ConnectionState.done) {
-              return const Center(child: CircularProgressIndicator(color: Color(0xFFCB7B2A)));
-            }
-            if (snapshot.hasError) {
-              return ListView(
+      body: FutureBuilder<List<Map<String, dynamic>>>(
+        future: _items,
+        builder: (context, snapshot) {
+          if (snapshot.connectionState != ConnectionState.done) {
+            return const Center(child: CircularProgressIndicator(color: Color(0xFFCB7B2A)));
+          }
+          if (snapshot.hasError) {
+            return RefreshIndicator(
+              onRefresh: _reload,
+              color: const Color(0xFFCB7B2A),
+              child: ListView(
                 children: [
                   const SizedBox(height: 80),
                   Center(
@@ -132,64 +116,167 @@ class _ShopScreenState extends State<ShopScreen> {
                   const SizedBox(height: 12),
                   Center(child: OutlinedButton(onPressed: _reload, child: Text(s.retry))),
                 ],
-              );
-            }
-            final items = snapshot.data ?? [];
-            if (items.isEmpty) {
-              return ListView(
-                children: [
-                  const SizedBox(height: 80),
-                  Center(child: Text(s.shopEmpty, style: const TextStyle(color: Colors.white54))),
-                ],
-              );
-            }
-
-            final byCategory = <String, List<Map<String, dynamic>>>{};
-            for (final item in items) {
-              final category = item['category']?.toString() ?? '';
-              byCategory.putIfAbsent(category, () => []).add(item);
-            }
-
-            return ListView(
-              padding: const EdgeInsets.all(16),
-              children: [
-                for (final entry in byCategory.entries) ...[
-                  Padding(
-                    padding: const EdgeInsets.only(bottom: 10, top: 6),
-                    child: Text(
-                      s.categoryLabel(entry.key).toUpperCase(),
-                      style: AppFonts.title(color: const Color(0xFFCB7B2A), fontSize: 15, letterSpacing: 1),
-                    ),
-                  ),
-                  GridView.count(
-                    crossAxisCount: 2,
-                    shrinkWrap: true,
-                    physics: const NeverScrollableScrollPhysics(),
-                    mainAxisSpacing: 18,
-                    crossAxisSpacing: 14,
-                    childAspectRatio: 0.62,
-                    children: [
-                      for (final item in entry.value)
-                        _ShopItemCard(
-                          imagePath: _imagePathFor(item),
-                          name: item['name']?.toString() ?? '',
-                          description: item['description']?.toString() ?? '',
-                          buyLabel: s.buyItem(
-                            item['price_amount']?.toString() ?? '0',
-                            item['price_currency']?.toString() ?? 'USD',
-                          ),
-                          busy: _purchasing.contains((item['id'] as num).toInt()),
-                          onBuy: _purchasing.contains((item['id'] as num).toInt())
-                              ? null
-                              : () => _buy(item, s),
-                        ),
-                    ],
-                  ),
-                  const SizedBox(height: 20),
-                ],
-              ],
+              ),
             );
-          },
+          }
+
+          final items = snapshot.data ?? [];
+          final byCategory = <String, List<Map<String, dynamic>>>{};
+          for (final item in items) {
+            final category = item['category']?.toString() ?? '';
+            byCategory.putIfAbsent(category, () => []).add(item);
+          }
+          final selectedItems = byCategory[_selectedCategory] ?? [];
+
+          return Row(
+            children: [
+              _CategoryRail(
+                selected: _selectedCategory,
+                onSelect: (c) => setState(() => _selectedCategory = c),
+                s: s,
+              ),
+              Expanded(
+                child: RefreshIndicator(
+                  onRefresh: _reload,
+                  color: const Color(0xFFCB7B2A),
+                  child: selectedItems.isEmpty
+                      ? ListView(
+                          children: [
+                            const SizedBox(height: 80),
+                            Center(
+                              child: Text(s.comingSoon, style: const TextStyle(color: Colors.white54)),
+                            ),
+                          ],
+                        )
+                      : GridView.count(
+                          padding: const EdgeInsets.all(16),
+                          crossAxisCount: 2,
+                          mainAxisSpacing: 18,
+                          crossAxisSpacing: 14,
+                          childAspectRatio: 0.68,
+                          children: [
+                            for (final item in selectedItems)
+                              _ShopItemCard(
+                                imagePath: shopItemImagePath(item),
+                                name: s.shopItemName(
+                                  item['sku']?.toString() ?? '',
+                                  item['name']?.toString() ?? '',
+                                ),
+                                description: s.shopItemDescription(
+                                  item['sku']?.toString() ?? '',
+                                  item['description']?.toString() ?? '',
+                                ),
+                                buyLabel: s.buyItem(
+                                  item['price_amount']?.toString() ?? '0',
+                                  item['price_currency']?.toString() ?? 'USD',
+                                ),
+                                busy: _purchasing.contains((item['id'] as num).toInt()),
+                                onBuy: _purchasing.contains((item['id'] as num).toInt())
+                                    ? null
+                                    : () => _buy(item, s),
+                              ),
+                          ],
+                        ),
+                ),
+              ),
+            ],
+          );
+        },
+      ),
+    );
+  }
+}
+
+/// Left-side "Categories" navigation: one entry per catalog category,
+/// always shown (even for categories with no items yet) so mobs/bosses
+/// are visible with their "coming soon" state instead of just missing.
+class _CategoryRail extends StatelessWidget {
+  const _CategoryRail({required this.selected, required this.onSelect, required this.s});
+
+  final String selected;
+  final ValueChanged<String> onSelect;
+  final Strings s;
+
+  static const _icons = {
+    'turret_skin': Icons.gps_fixed_rounded,
+    'bullet_effect': Icons.bolt_rounded,
+    'mob_skin': Icons.bug_report_rounded,
+    'boss_skin': Icons.emoji_events_rounded,
+    'bundle': Icons.card_giftcard_rounded,
+  };
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: 84,
+      color: const Color(0xFF241a11),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Padding(
+            padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 4),
+            child: Text(
+              s.shopCategoriesTitle.toUpperCase(),
+              textAlign: TextAlign.center,
+              style: AppFonts.title(color: const Color(0xFFCB7B2A), fontSize: 11, letterSpacing: 0.5),
+            ),
+          ),
+          for (final category in _ShopScreenState.categoryOrder)
+            _CategoryButton(
+              label: s.shopCategoryShortLabel(category),
+              icon: _icons[category] ?? Icons.category_rounded,
+              selected: category == selected,
+              onTap: () => onSelect(category),
+            ),
+        ],
+      ),
+    );
+  }
+}
+
+class _CategoryButton extends StatelessWidget {
+  const _CategoryButton({
+    required this.label,
+    required this.icon,
+    required this.selected,
+    required this.onTap,
+  });
+
+  final String label;
+  final IconData icon;
+  final bool selected;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 4),
+        decoration: BoxDecoration(
+          color: selected ? const Color(0xFF3A2A1C) : Colors.transparent,
+          border: Border(
+            left: BorderSide(
+              color: selected ? const Color(0xFFCB7B2A) : Colors.transparent,
+              width: 3,
+            ),
+          ),
+        ),
+        child: Column(
+          children: [
+            Icon(icon, color: selected ? const Color(0xFFCB7B2A) : Colors.white54, size: 22),
+            const SizedBox(height: 4),
+            Text(
+              label,
+              textAlign: TextAlign.center,
+              maxLines: 2,
+              style: TextStyle(
+                color: selected ? Colors.white : Colors.white54,
+                fontSize: 10,
+                fontWeight: selected ? FontWeight.bold : FontWeight.normal,
+              ),
+            ),
+          ],
         ),
       ),
     );
@@ -224,23 +311,7 @@ class _ShopItemCard extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        AspectRatio(
-          aspectRatio: 1,
-          child: Container(
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: const Color(0xFF241a11),
-              borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: _gold, width: 3),
-              boxShadow: const [
-                BoxShadow(color: Color(0x55FFC94D), blurRadius: 10, spreadRadius: 1),
-              ],
-            ),
-            child: imagePath != null
-                ? Image.asset(imagePath!, fit: BoxFit.contain)
-                : const Icon(Icons.redeem_rounded, color: _gold, size: 48),
-          ),
-        ),
+        ShopItemImageTile(imagePath: imagePath),
         const SizedBox(height: 8),
         Text(
           name,

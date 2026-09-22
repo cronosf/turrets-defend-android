@@ -11,6 +11,11 @@ import 'package:flutter/painting.dart';
 /// assets/images/shop/).
 const double kTurretBaseHueTurns = 0.0795;
 
+/// Same idea as [kTurretBaseHueTurns] but measured from
+/// assets/images/projectile/Projectile1.png, for tinting bullet_effect
+/// skins onto the projectile sprite.
+const double kProjectileBaseHueTurns = 0.0863;
+
 /// A hue-rotation [ColorFilter] (same math as the CSS/SVG `hueRotate`
 /// filter) — used to reskin turret/bullet sprites at *runtime* instead of
 /// pre-baking every tier x color combination as static art, so a single

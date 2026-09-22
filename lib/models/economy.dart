@@ -51,6 +51,16 @@ class Economy extends ChangeNotifier {
     notifyListeners();
   }
 
+  /// Same idea as [equippedTurretHue] but for the equipped `bullet_effect`
+  /// skin, applied to the projectile sprite (see ProjectileComponent).
+  double? equippedBulletHue;
+
+  void setEquippedBulletHue(double? hue) {
+    if (equippedBulletHue == hue) return;
+    equippedBulletHue = hue;
+    notifyListeners();
+  }
+
   SharedPreferences? _prefs;
 
   Future<void> loadPersisted() async {

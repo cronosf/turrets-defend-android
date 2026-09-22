@@ -249,6 +249,71 @@ class Strings {
     }
   }
 
+  // --- Categorías de la tienda (menú lateral) ---------------------------
+  String get shopCategoriesTitle => _es ? 'Categorías' : 'Categories';
+  String shopCategoryShortLabel(String category) {
+    switch (category) {
+      case 'turret_skin':
+        return 'Turrets';
+      case 'bullet_effect':
+        return 'Bullets';
+      case 'mob_skin':
+        return 'Mobs';
+      case 'boss_skin':
+        return 'Bosses';
+      case 'bundle':
+        return 'Bundle';
+      default:
+        return category;
+    }
+  }
+
+  // --- Nombres/descripciones de items de la tienda ---------------------
+  // shop_items.name/description viven en español en la base de datos (ver
+  // server/database/seed.sql) — se traducen aquí por SKU en vez de
+  // depender de que el servidor devuelva el idioma correcto, ya que la
+  // tabla no tiene columnas por idioma. Un SKU sin entrada cae al texto
+  // que mandó el servidor tal cual.
+  String shopItemName(String sku, String fallback) {
+    if (!_es) {
+      switch (sku) {
+        case 'turret_skin_blue':
+          return 'Futuristic Blue Turret';
+        case 'turret_skin_green':
+          return 'Neon Green Turret';
+        case 'turret_skin_crimson':
+          return 'Crimson Turret';
+        case 'bullet_fx_laser_red':
+          return 'Red Laser Shot';
+        case 'bullet_fx_plasma_purple':
+          return 'Purple Plasma Shot';
+        case 'bundle_blue_pack':
+          return 'Full Blue Pack';
+      }
+    }
+    return fallback;
+  }
+
+  String shopItemDescription(String sku, String fallback) {
+    if (!_es) {
+      switch (sku) {
+        case 'turret_skin_blue':
+          return 'Gives all your turrets a high-tech cyan-blue finish.';
+        case 'turret_skin_green':
+          return 'A neon green tint for all your turrets.';
+        case 'turret_skin_crimson':
+          return 'A bold red finish for your turrets.';
+        case 'bullet_fx_laser_red':
+          return 'Changes your shots into a red laser with a trail.';
+        case 'bullet_fx_plasma_purple':
+          return 'Shots with a bright purple plasma effect.';
+        case 'bundle_blue_pack':
+          return 'Futuristic Blue Turret + Red Laser Shot, bundled at a discount.';
+      }
+    }
+    return fallback;
+  }
+
   // --- Ranking nacional --------------------------------------------------
   String get nationalRankingTitle => menuNationalRanking;
   String get nationalRankingNoCountry => _es

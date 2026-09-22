@@ -1,7 +1,9 @@
 import 'dart:math' as math;
 
 import 'package:flame/components.dart';
+import 'package:flutter/material.dart' show Paint;
 
+import '../../theme/hue_rotate.dart';
 import '../turret_defense_game.dart';
 import 'enemy_component.dart';
 
@@ -24,6 +26,15 @@ class ProjectileComponent extends SpriteComponent
           size: Vector2(14, 14),
           anchor: Anchor.center,
         );
+
+  @override
+  Future<void> onLoad() async {
+    super.onLoad();
+    final hue = game.economy.equippedBulletHue;
+    if (hue != null) {
+      paint = Paint()..colorFilter = hueRotateFilter(hue, baseHueTurns: kProjectileBaseHueTurns);
+    }
+  }
 
   @override
   void update(double dt) {
