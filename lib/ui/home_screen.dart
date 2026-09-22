@@ -94,6 +94,7 @@ class _HomeScreenState extends State<HomeScreen> {
     if (!ApiClient.hasToken) {
       _economy.setEquippedTurretHue(null);
       _economy.setEquippedBulletHue(null);
+      _economy.setEquippedBulletAssetKey(null);
       return;
     }
     try {
@@ -111,24 +112,29 @@ class _HomeScreenState extends State<HomeScreen> {
         }
       }
 
-      _economy.setEquippedTurretHue(_hueFor(items, equippedTurretSkinId));
-      _economy.setEquippedBulletHue(_hueFor(items, equippedBulletSkinId));
+      _economy.setEquippedTurretHue(_metaFor(items, equippedTurretSkinId).hue);
+      final bulletMeta = _metaFor(items, equippedBulletSkinId);
+      _economy.setEquippedBulletHue(bulletMeta.hue);
+      _economy.setEquippedBulletAssetKey(bulletMeta.assetKey);
     } catch (_) {
       // Best-effort — worst case the run just uses the default art.
     }
   }
 
-  double? _hueFor(List<Map<String, dynamic>> items, num? shopItemId) {
-    if (shopItemId == null) return null;
+  ({double? hue, String? assetKey}) _metaFor(List<Map<String, dynamic>> items, num? shopItemId) {
+    if (shopItemId == null) return (hue: null, assetKey: null);
     for (final item in items) {
       if ((item['id'] as num?) != shopItemId) continue;
       final rawMetadata = item['metadata'];
       if (rawMetadata is String && rawMetadata.isNotEmpty) {
         final metadata = jsonDecode(rawMetadata) as Map<String, dynamic>;
-        return (metadata['tint_hue'] as num?)?.toDouble();
+        return (
+          hue: (metadata['tint_hue'] as num?)?.toDouble(),
+          assetKey: metadata['asset_key'] as String?,
+        );
       }
     }
-    return null;
+    return (hue: null, assetKey: null);
   }
 
   Future<void> _openSettings() => showSettingsDialog(context, _economy);

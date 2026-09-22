@@ -258,7 +258,6 @@ class Strings {
   }
 
   // --- Categorías de la tienda (menú lateral) ---------------------------
-  String get shopCategoriesTitle => _es ? 'Categorías' : 'Categories';
   String shopCategoryShortLabel(String category) {
     switch (category) {
       case 'turret_skin':
@@ -283,6 +282,18 @@ class Strings {
   // tabla no tiene columnas por idioma. Un SKU sin entrada cae al texto
   // que mandó el servidor tal cual.
   String shopItemName(String sku, String fallback) {
+    // Bullet effect names drop the generic "Disparo"/"Shot" prefix in
+    // both languages — the category header ("Bullets"/"Efectos de bala")
+    // already says what kind of item this is, repeating it in every
+    // single name was just noise.
+    switch (sku) {
+      case 'bullet_fx_laser_red':
+        return _es ? 'Láser Rojo' : 'Red Laser';
+      case 'bullet_fx_plasma_purple':
+        return _es ? 'Plasma Púrpura' : 'Purple Plasma';
+      case 'bullet_fx_neon_green':
+        return _es ? 'Verde Neón' : 'Neon Green';
+    }
     if (!_es) {
       switch (sku) {
         case 'turret_skin_blue':
@@ -291,10 +302,6 @@ class Strings {
           return 'Neon Green Turret';
         case 'turret_skin_crimson':
           return 'Crimson Turret';
-        case 'bullet_fx_laser_red':
-          return 'Red Laser Shot';
-        case 'bullet_fx_plasma_purple':
-          return 'Purple Plasma Shot';
         case 'bundle_blue_pack':
           return 'Full Blue Pack';
       }
@@ -315,8 +322,10 @@ class Strings {
           return 'Changes your shots into a red laser with a trail.';
         case 'bullet_fx_plasma_purple':
           return 'Shots with a bright purple plasma effect.';
+        case 'bullet_fx_neon_green':
+          return 'Shots with a glowing neon green effect.';
         case 'bundle_blue_pack':
-          return 'Futuristic Blue Turret + Red Laser Shot, bundled at a discount.';
+          return 'Futuristic Blue Turret + Red Laser, bundled at a discount.';
       }
     }
     return fallback;

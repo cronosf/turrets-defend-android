@@ -39,6 +39,19 @@ class TurretDefenseGame extends FlameGame {
   late Sprite _boltSprite;
   final List<SpriteComponent> _trayBolts = [];
   late Sprite _projectileSprite;
+
+  // Pre-baked colored projectile art (see assets/images/shop/bullet_*.png —
+  // the same files used as the shop preview image), keyed by the equipped
+  // bullet_effect item's asset_key. Used instead of tinting the base
+  // yellow-white sprite at runtime: a hue *rotation* can't meaningfully
+  // recolor a near-white pixel (its brightest pixels stayed pale/yellow no
+  // matter the target hue), so "red" looked washed out. Real colored art
+  // has no such limit. New bullet_effect items whose asset_key isn't in
+  // this map fall back to the old runtime hue-rotate tint (see
+  // fireProjectileFromTurret) until matching art is added here.
+  static const _bulletSkinAssetKeys = ['bullet_laser_red', 'bullet_plasma_purple', 'bullet_neon_green'];
+  late Map<String, Sprite> _bulletSkinSprites;
+
   late List<Sprite> _hitFxFrames;
   late List<Sprite> _explosionFrames;
   final List<RectangleComponent> _slotVisuals = [];
@@ -73,6 +86,9 @@ class TurretDefenseGame extends FlameGame {
     _traySprites = bgImages.map(_cropTray).toList();
     _boltSprite = await GameAssets.loadSprite('ui/bolt.png');
     _projectileSprite = await GameAssets.loadSprite('projectile/Projectile1.png');
+    _bulletSkinSprites = {
+      for (final key in _bulletSkinAssetKeys) key: await GameAssets.loadSprite('shop/$key.png'),
+    };
     _hitFxFrames = await GameAssets.loadFrames('explosion2');
     _explosionFrames = await GameAssets.loadFrames('explosion1');
 
@@ -305,8 +321,14 @@ class TurretDefenseGame extends FlameGame {
 
   void fireProjectileFromTurret(TurretComponent turret, EnemyComponent target, double damage) {
     final muzzle = turret.position - Vector2(0, 22);
+    final assetKey = economy.equippedBulletAssetKey;
+    final skinSprite = assetKey != null ? _bulletSkinSprites[assetKey] : null;
     world.add(ProjectileComponent(
-      sprite: _projectileSprite,
+      sprite: skinSprite ?? _projectileSprite,
+      // Only fall back to the runtime tint when there's no baked sprite
+      // for this asset_key — never both, that would double-tint art
+      // that's already the right color.
+      tintHue: skinSprite == null ? economy.equippedBulletHue : null,
       target: target,
       damage: damage,
       position: muzzle,

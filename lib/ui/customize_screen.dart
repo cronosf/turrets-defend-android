@@ -146,6 +146,7 @@ class _CustomizeScreenState extends State<CustomizeScreen> {
                 selected: _selectedCategory,
                 onSelect: (c) => setState(() => _selectedCategory = c),
                 s: s,
+                headerIcon: Icons.brush_rounded,
               ),
               Expanded(
                 child: RefreshIndicator(

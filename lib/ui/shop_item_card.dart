@@ -3,7 +3,6 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 
 import '../l10n/app_strings.dart';
-import '../theme/app_fonts.dart';
 
 /// The catalog's fixed category order, shared by the shop grid and "My
 /// customization" so both screens list categories the same way.
@@ -81,11 +80,23 @@ class ShopItemImageTile extends StatelessWidget {
 /// "nothing owned here" state per category instead of it just being
 /// missing from the list.
 class CategoryRail extends StatelessWidget {
-  const CategoryRail({super.key, required this.selected, required this.onSelect, required this.s});
+  const CategoryRail({
+    super.key,
+    required this.selected,
+    required this.onSelect,
+    required this.s,
+    required this.headerIcon,
+  });
 
   final String selected;
   final ValueChanged<String> onSelect;
   final Strings s;
+
+  /// Shown above the category list in place of a "Categories" text label —
+  /// that title used to wrap onto two lines in this narrow rail ("CATEGORÍA
+  /// / S"), so each screen instead shows a single icon representing itself
+  /// (a shop icon here, a brush icon in "My customization").
+  final IconData headerIcon;
 
   static const _icons = {
     'turret_skin': Icons.gps_fixed_rounded,
@@ -104,12 +115,8 @@ class CategoryRail extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           Padding(
-            padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 4),
-            child: Text(
-              s.shopCategoriesTitle.toUpperCase(),
-              textAlign: TextAlign.center,
-              style: AppFonts.title(color: const Color(0xFFCB7B2A), fontSize: 11, letterSpacing: 0.5),
-            ),
+            padding: const EdgeInsets.symmetric(vertical: 16),
+            child: Icon(headerIcon, color: const Color(0xFFCB7B2A), size: 26),
           ),
           for (final category in shopCategoryOrder)
             _CategoryButton(

@@ -52,12 +52,25 @@ class Economy extends ChangeNotifier {
   }
 
   /// Same idea as [equippedTurretHue] but for the equipped `bullet_effect`
-  /// skin, applied to the projectile sprite (see ProjectileComponent).
+  /// skin, applied to the projectile sprite (see ProjectileComponent) only
+  /// as a fallback when there's no pre-baked sprite for [equippedBulletAssetKey].
   double? equippedBulletHue;
 
   void setEquippedBulletHue(double? hue) {
     if (equippedBulletHue == hue) return;
     equippedBulletHue = hue;
+    notifyListeners();
+  }
+
+  /// The equipped bullet_effect item's `asset_key` (shop_items.metadata),
+  /// e.g. "bullet_laser_red" — TurretDefenseGame uses this to pick a
+  /// pre-baked colored projectile sprite (assets/images/shop/$key.png)
+  /// instead of tinting the base sprite at runtime.
+  String? equippedBulletAssetKey;
+
+  void setEquippedBulletAssetKey(String? key) {
+    if (equippedBulletAssetKey == key) return;
+    equippedBulletAssetKey = key;
     notifyListeners();
   }
 

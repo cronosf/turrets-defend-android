@@ -132,6 +132,7 @@ class _ShopScreenState extends State<ShopScreen> {
                 selected: _selectedCategory,
                 onSelect: (c) => setState(() => _selectedCategory = c),
                 s: s,
+                headerIcon: Icons.storefront_rounded,
               ),
               Expanded(
                 child: RefreshIndicator(
