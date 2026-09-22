@@ -12,8 +12,9 @@ import 'paypal_checkout_screen.dart';
 /// PayPal via `POST /shop/orders` (create) -> [PaypalCheckoutScreen]
 /// (approval) -> `POST /shop/orders/{id}/capture` (finalize, which is what
 /// actually grants the item server-side). Items are grouped by category
-/// (turret skins, bullet effects, ...) in a 2-column grid of square,
-/// gold-bordered cards — same gold as the splash logo's badge.
+/// (turret skins, bullet effects, ...) in a 2-column grid; each card is a
+/// gold-bordered square image (same gold as the splash logo's badge) with
+/// the name, a short description and a Buy button below it.
 class ShopScreen extends StatefulWidget {
   const ShopScreen({super.key, required this.economy});
 
@@ -164,14 +165,15 @@ class _ShopScreenState extends State<ShopScreen> {
                     crossAxisCount: 2,
                     shrinkWrap: true,
                     physics: const NeverScrollableScrollPhysics(),
-                    mainAxisSpacing: 14,
+                    mainAxisSpacing: 18,
                     crossAxisSpacing: 14,
-                    childAspectRatio: 0.85,
+                    childAspectRatio: 0.62,
                     children: [
                       for (final item in entry.value)
                         _ShopItemCard(
                           imagePath: _imagePathFor(item),
                           name: item['name']?.toString() ?? '',
+                          description: item['description']?.toString() ?? '',
                           buyLabel: s.buyItem(
                             item['price_amount']?.toString() ?? '0',
                             item['price_currency']?.toString() ?? 'USD',
@@ -194,14 +196,15 @@ class _ShopScreenState extends State<ShopScreen> {
   }
 }
 
-/// Square item card: gold border like the splash logo's badge, preview
-/// image on top, name + price on a translucent strip at the bottom. The
-/// whole card is the buy target (there isn't room for a separate button at
-/// this size).
+/// Item card matching the app icon's badge look: the gold border frames
+/// *only* the preview image (turret/bullet/effect sprite), nothing else —
+/// name, description and the Buy button (with its price) sit below it as
+/// their own separate elements, not overlaid on the image.
 class _ShopItemCard extends StatelessWidget {
   const _ShopItemCard({
     required this.imagePath,
     required this.name,
+    required this.description,
     required this.buyLabel,
     required this.busy,
     required this.onBuy,
@@ -209,6 +212,7 @@ class _ShopItemCard extends StatelessWidget {
 
   final String? imagePath;
   final String name;
+  final String description;
   final String buyLabel;
   final bool busy;
   final VoidCallback? onBuy;
@@ -217,64 +221,63 @@ class _ShopItemCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onBuy,
-      child: Container(
-        decoration: BoxDecoration(
-          color: const Color(0xFF241a11),
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: _gold, width: 3),
-          boxShadow: const [
-            BoxShadow(color: Color(0x55FFC94D), blurRadius: 10, spreadRadius: 1),
-          ],
-        ),
-        clipBehavior: Clip.antiAlias,
-        child: Stack(
-          children: [
-            Positioned.fill(
-              child: Padding(
-                padding: const EdgeInsets.fromLTRB(14, 14, 14, 34),
-                child: imagePath != null
-                    ? Image.asset(imagePath!, fit: BoxFit.contain)
-                    : const Icon(Icons.redeem_rounded, color: _gold, size: 48),
-              ),
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        AspectRatio(
+          aspectRatio: 1,
+          child: Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: const Color(0xFF241a11),
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: _gold, width: 3),
+              boxShadow: const [
+                BoxShadow(color: Color(0x55FFC94D), blurRadius: 10, spreadRadius: 1),
+              ],
             ),
-            if (busy)
-              Positioned.fill(
-                child: Container(
-                  color: Colors.black54,
-                  alignment: Alignment.center,
-                  child: const CircularProgressIndicator(color: Colors.white),
-                ),
-              ),
-            Positioned(
-              left: 0,
-              right: 0,
-              bottom: 0,
-              child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
-                color: Colors.black.withValues(alpha: 0.68),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Text(
-                      name,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: AppFonts.title(color: Colors.white, fontSize: 12),
-                    ),
-                    Text(
-                      buyLabel,
-                      style: const TextStyle(color: _gold, fontSize: 11, fontWeight: FontWeight.bold),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ],
+            child: imagePath != null
+                ? Image.asset(imagePath!, fit: BoxFit.contain)
+                : const Icon(Icons.redeem_rounded, color: _gold, size: 48),
+          ),
         ),
-      ),
+        const SizedBox(height: 8),
+        Text(
+          name,
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+          style: AppFonts.title(color: Colors.white, fontSize: 13),
+        ),
+        if (description.isNotEmpty) ...[
+          const SizedBox(height: 2),
+          Text(
+            description,
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+            style: const TextStyle(color: Colors.white54, fontSize: 11, height: 1.25),
+          ),
+        ],
+        const SizedBox(height: 8),
+        SizedBox(
+          width: double.infinity,
+          child: ElevatedButton(
+            onPressed: onBuy,
+            style: ElevatedButton.styleFrom(
+              backgroundColor: _gold,
+              foregroundColor: const Color(0xFF241a11),
+              padding: const EdgeInsets.symmetric(vertical: 10),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+            ),
+            child: busy
+                ? const SizedBox(
+                    width: 16,
+                    height: 16,
+                    child: CircularProgressIndicator(color: Color(0xFF241a11), strokeWidth: 2),
+                  )
+                : Text(buyLabel, style: const TextStyle(fontSize: 12)),
+          ),
+        ),
+      ],
     );
   }
 }

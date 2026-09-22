@@ -36,6 +36,21 @@ class Economy extends ChangeNotifier {
 
   bool gameOver = false;
 
+  /// Hue (0-1 turns) of the currently-equipped turret skin, fetched from
+  /// `GET /profile` — null means no skin equipped (turrets render with
+  /// their original art). Not persisted locally: it's server-owned state,
+  /// re-synced each time a run starts (see HomeScreen._play). Applying it
+  /// as a runtime color filter (see theme/hue_rotate.dart) rather than
+  /// swapping in pre-baked per-tier art is what makes an equipped skin
+  /// show up on every turret tier, not just tier 1.
+  double? equippedTurretHue;
+
+  void setEquippedTurretHue(double? hue) {
+    if (equippedTurretHue == hue) return;
+    equippedTurretHue = hue;
+    notifyListeners();
+  }
+
   SharedPreferences? _prefs;
 
   Future<void> loadPersisted() async {

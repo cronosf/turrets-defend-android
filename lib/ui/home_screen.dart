@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
 
@@ -73,9 +75,55 @@ class _HomeScreenState extends State<HomeScreen> {
 
   void _play() {
     if (!NavGuard.allow()) return;
+    // Fire-and-forget: TurretComponent reacts live to
+    // economy.equippedTurretHue changing, so the tint just catches up
+    // moments after the run starts rather than blocking navigation on it.
+    _syncEquippedTurretSkin();
     Navigator.of(context).push(
       MaterialPageRoute(builder: (_) => GameScreen(economy: _economy)),
     );
+  }
+
+  /// Looks up the player's currently-equipped `turret_skin` item (if any)
+  /// and resolves its `tint_hue` from the owned-items list, so every
+  /// turret tier in the run gets reskinned via TurretComponent's runtime
+  /// color filter — not just tier 1.
+  Future<void> _syncEquippedTurretSkin() async {
+    if (!ApiClient.hasToken) {
+      _economy.setEquippedTurretHue(null);
+      return;
+    }
+    try {
+      final data = await ApiClient.get('/profile') as Map<String, dynamic>;
+      final items = (data['items'] as List<dynamic>? ?? []).cast<Map<String, dynamic>>();
+      final equipped = (data['equipped'] as List<dynamic>? ?? []).cast<Map<String, dynamic>>();
+
+      num? equippedTurretSkinId;
+      for (final e in equipped) {
+        if (e['category'] == 'turret_skin') {
+          equippedTurretSkinId = e['shop_item_id'] as num?;
+          break;
+        }
+      }
+      if (equippedTurretSkinId == null) {
+        _economy.setEquippedTurretHue(null);
+        return;
+      }
+
+      for (final item in items) {
+        if ((item['id'] as num?) != equippedTurretSkinId) continue;
+        final rawMetadata = item['metadata'];
+        if (rawMetadata is String && rawMetadata.isNotEmpty) {
+          final metadata = jsonDecode(rawMetadata) as Map<String, dynamic>;
+          final hue = (metadata['tint_hue'] as num?)?.toDouble();
+          _economy.setEquippedTurretHue(hue);
+          return;
+        }
+      }
+      _economy.setEquippedTurretHue(null);
+    } catch (_) {
+      // Best-effort — worst case the run just uses the default turret art.
+    }
   }
 
   Future<void> _openSettings() => showSettingsDialog(context, _economy);

@@ -1,10 +1,11 @@
 import 'package:flame/components.dart';
 import 'package:flame/events.dart';
-import 'package:flutter/material.dart' show Colors, FontWeight, TextStyle;
+import 'package:flutter/material.dart' show Colors, FontWeight, Paint, TextStyle;
 
 import '../../game_assets.dart';
 import '../../l10n/app_strings.dart';
 import '../../models/turret_stats.dart';
+import '../../theme/hue_rotate.dart';
 import '../turret_defense_game.dart';
 
 /// A turret sitting in a grid slot. Auto-fires at the nearest enemy in
@@ -25,6 +26,7 @@ class TurretComponent extends PositionComponent
   late TextComponent _levelLabel;
   late TextComponent _levelLabelShadow;
   AppLanguage? _labelLanguage;
+  double? _appliedTurretHue;
   Vector2? _preDragPosition;
   bool _isDragging = false;
 
@@ -58,6 +60,7 @@ class TurretComponent extends PositionComponent
       playing: false,
     );
     add(_sprite);
+    _applyTurretSkin();
 
     _labelLanguage = game.economy.language;
     final labelText = Strings(_labelLanguage!).turretLevel(tier);
@@ -86,6 +89,15 @@ class TurretComponent extends PositionComponent
     stats = TurretStats(tier);
   }
 
+  /// Applies (or clears) the equipped turret skin's hue-rotate filter.
+  /// Runtime tinting rather than pre-baked art means the same equipped
+  /// skin uniformly reskins every tier, not just tier 1.
+  void _applyTurretSkin() {
+    final hue = game.economy.equippedTurretHue;
+    _appliedTurretHue = hue;
+    _sprite.paint = hue == null ? (Paint()) : (Paint()..colorFilter = hueRotateFilter(hue));
+  }
+
   @override
   void update(double dt) {
     super.update(dt);
@@ -95,6 +107,10 @@ class TurretComponent extends PositionComponent
       final labelText = Strings(_labelLanguage!).turretLevel(tier);
       _levelLabel.text = labelText;
       _levelLabelShadow.text = labelText;
+    }
+
+    if (game.economy.equippedTurretHue != _appliedTurretHue) {
+      _applyTurretSkin();
     }
 
     if (_firingTimeLeft > 0) {
