@@ -32,7 +32,28 @@ class _RankingScreenState extends State<RankingScreen> {
   @override
   void initState() {
     super.initState();
-    _leaderboard = _fetchLeaderboard();
+    _leaderboard = _syncThenFetch();
+  }
+
+  /// Catches up the server's best_wave/best_score with this device's local
+  /// history before fetching the leaderboard — otherwise a player whose
+  /// best run happened before server-side score tracking shipped would see
+  /// their own row show a much lower score than their "Best score" stat
+  /// above, until they beat their old record again. Best-effort: a failure
+  /// here just means the leaderboard shows whatever the server already had.
+  Future<void> _syncBestStats() async {
+    if (!ApiClient.hasToken) return;
+    try {
+      await ApiClient.post('/stats/sync', body: {
+        'wave': widget.economy.bestWave,
+        'score': widget.economy.bestScore,
+      });
+    } catch (_) {}
+  }
+
+  Future<_LeaderboardPage> _syncThenFetch() async {
+    await _syncBestStats();
+    return _fetchLeaderboard();
   }
 
   Future<_LeaderboardPage> _fetchLeaderboard() async {
@@ -45,7 +66,7 @@ class _RankingScreenState extends State<RankingScreen> {
   }
 
   Future<void> _reload() async {
-    setState(() => _leaderboard = _fetchLeaderboard());
+    setState(() => _leaderboard = _syncThenFetch());
     await _leaderboard;
   }
 

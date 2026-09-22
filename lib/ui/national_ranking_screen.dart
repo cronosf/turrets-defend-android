@@ -32,7 +32,26 @@ class _NationalRankingScreenState extends State<NationalRankingScreen> {
   @override
   void initState() {
     super.initState();
-    _leaderboard = _fetch();
+    _leaderboard = _syncThenFetch();
+  }
+
+  /// Same catch-up as RankingScreen — see its own doc comment for why this
+  /// is needed (best_score tracking shipped after some players' local
+  /// bests were already set). Best-effort, never blocks the leaderboard on
+  /// a failure.
+  Future<void> _syncBestStats() async {
+    if (!ApiClient.hasToken) return;
+    try {
+      await ApiClient.post('/stats/sync', body: {
+        'wave': widget.economy.bestWave,
+        'score': widget.economy.bestScore,
+      });
+    } catch (_) {}
+  }
+
+  Future<_LeaderboardPage> _syncThenFetch() async {
+    await _syncBestStats();
+    return _fetch();
   }
 
   Future<_LeaderboardPage> _fetch() async {
@@ -51,7 +70,7 @@ class _NationalRankingScreenState extends State<NationalRankingScreen> {
   }
 
   Future<void> _reload() async {
-    setState(() => _leaderboard = _fetch());
+    setState(() => _leaderboard = _syncThenFetch());
     await _leaderboard;
   }
 

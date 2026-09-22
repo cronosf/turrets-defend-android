@@ -159,42 +159,65 @@ class _CustomizeScreenState extends State<CustomizeScreen> {
                           padding: const EdgeInsets.only(bottom: 12),
                           child: Text(s.comingSoon, style: const TextStyle(color: Colors.white54)),
                         ),
-                      GridView.count(
-                        shrinkWrap: true,
-                        physics: const NeverScrollableScrollPhysics(),
-                        crossAxisCount: 2,
-                        mainAxisSpacing: 18,
-                        crossAxisSpacing: 14,
-                        childAspectRatio: 0.66,
-                        children: [
-                          _OwnedItemCard(
-                            imagePath: _basicImagePathFor(_selectedCategory),
-                            name: s.basicItemName,
-                            description: s.basicItemDescription,
-                            equipped: basicEquipped,
-                            busy: _equippingBasicCategory == _selectedCategory,
-                            equippedLabel: s.equippedLabel,
-                            equipLabel: s.equipAction,
-                            onTap: () => _equip(_selectedCategory, null, s),
-                          ),
-                          for (final item in selectedItems)
-                            _OwnedItemCard(
-                              imagePath: shopItemImagePath(item),
-                              name: s.shopItemName(
-                                item['sku']?.toString() ?? '',
-                                item['name']?.toString() ?? '',
-                              ),
-                              description: s.shopItemDescription(
-                                item['sku']?.toString() ?? '',
-                                item['description']?.toString() ?? '',
-                              ),
-                              equipped: equippedId == (item['id'] as num).toInt(),
-                              busy: _equippingItemId == (item['id'] as num).toInt(),
-                              equippedLabel: s.equippedLabel,
-                              equipLabel: s.equipAction,
-                              onTap: () => _equip(_selectedCategory, (item['id'] as num).toInt(), s),
+                      LayoutBuilder(
+                        builder: (context, constraints) {
+                          // See the identical comment in shop_screen.dart:
+                          // a fixed aspect ratio doesn't account for the
+                          // text area's fixed dp height, so cards could
+                          // overflow into the row below (the Equip button
+                          // underneath became untappable). An explicit
+                          // mainAxisExtent computed from the real column
+                          // width avoids that at any screen size. This
+                          // GridView sits inside the outer ListView's own
+                          // EdgeInsets.all(16), so constraints.maxWidth here
+                          // is already net of that padding.
+                          const columns = 2;
+                          const crossAxisSpacing = 14.0;
+                          const textAreaHeight = 116.0;
+                          final columnWidth =
+                              (constraints.maxWidth - crossAxisSpacing * (columns - 1)) / columns;
+                          final cardExtent = columnWidth + textAreaHeight;
+
+                          return GridView(
+                            shrinkWrap: true,
+                            physics: const NeverScrollableScrollPhysics(),
+                            gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                              crossAxisCount: columns,
+                              mainAxisSpacing: 18,
+                              crossAxisSpacing: crossAxisSpacing,
+                              mainAxisExtent: cardExtent,
                             ),
-                        ],
+                            children: [
+                              _OwnedItemCard(
+                                imagePath: _basicImagePathFor(_selectedCategory),
+                                name: s.basicItemName,
+                                description: s.basicItemDescription,
+                                equipped: basicEquipped,
+                                busy: _equippingBasicCategory == _selectedCategory,
+                                equippedLabel: s.equippedLabel,
+                                equipLabel: s.equipAction,
+                                onTap: () => _equip(_selectedCategory, null, s),
+                              ),
+                              for (final item in selectedItems)
+                                _OwnedItemCard(
+                                  imagePath: shopItemImagePath(item),
+                                  name: s.shopItemName(
+                                    item['sku']?.toString() ?? '',
+                                    item['name']?.toString() ?? '',
+                                  ),
+                                  description: s.shopItemDescription(
+                                    item['sku']?.toString() ?? '',
+                                    item['description']?.toString() ?? '',
+                                  ),
+                                  equipped: equippedId == (item['id'] as num).toInt(),
+                                  busy: _equippingItemId == (item['id'] as num).toInt(),
+                                  equippedLabel: s.equippedLabel,
+                                  equipLabel: s.equipAction,
+                                  onTap: () => _equip(_selectedCategory, (item['id'] as num).toInt(), s),
+                                ),
+                            ],
+                          );
+                        },
                       ),
                     ],
                   ),
@@ -298,12 +321,18 @@ class _OwnedItemCard extends StatelessWidget {
         else
           SizedBox(
             width: double.infinity,
+            // Pinned to the same 34px height as the busy/equipped states
+            // above (Material's default minimum tap target would otherwise
+            // make this taller than the other two, which would make the
+            // card's overall height inconsistent depending on its state).
+            height: 34,
             child: OutlinedButton(
               onPressed: onTap,
               style: OutlinedButton.styleFrom(
                 foregroundColor: const Color(0xFFCB7B2A),
                 side: const BorderSide(color: Color(0xFFCB7B2A)),
                 padding: const EdgeInsets.symmetric(vertical: 8),
+                tapTargetSize: MaterialTapTargetSize.shrinkWrap,
               ),
               child: Text(equipLabel, style: const TextStyle(fontSize: 12)),
             ),

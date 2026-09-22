@@ -11,6 +11,18 @@ class GameAssets {
 
   static List<String> _allKeys = [];
 
+  // Every enemy/turret spawn used to call loadFrames fresh — Flame.images
+  // already caches the decoded ui.Image, but this still re-scanned the
+  // manifest and, worse, allocated a brand new List<Sprite> every single
+  // spawn. Across a run with hundreds of spawns that's a lot of avoidable
+  // garbage, and it was visibly worse on a second consecutive "Play Again"
+  // run: the first run's garbage hadn't been collected yet, so the second
+  // run started under extra GC pressure on top of generating its own.
+  // Caching by dirPrefix means the Sprite list is built once and safely
+  // shared — SpriteAnimation.spriteList only reads the list (maps it into
+  // its own SpriteAnimationFrame list), it never mutates the input.
+  static final Map<String, List<Sprite>> _frameCache = {};
+
   static Future<void> init() async {
     final manifest = await AssetManifest.loadFromAssetBundle(rootBundle);
     _allKeys = manifest.listAssets();
@@ -30,9 +42,12 @@ class GameAssets {
     return list;
   }
 
-  /// Loads every frame under [dirPrefix] (relative to assets/images/) as a
-  /// [Sprite], sorted alphabetically.
+  /// Loads (and caches) every frame under [dirPrefix] (relative to
+  /// assets/images/) as a [Sprite], sorted alphabetically.
   static Future<List<Sprite>> loadFrames(String dirPrefix) async {
+    final cached = _frameCache[dirPrefix];
+    if (cached != null) return cached;
+
     final keys = _keysIn(dirPrefix);
     final sprites = <Sprite>[];
     for (final key in keys) {
@@ -40,6 +55,7 @@ class GameAssets {
       final image = await Flame.images.load(relative);
       sprites.add(Sprite(image));
     }
+    _frameCache[dirPrefix] = sprites;
     return sprites;
   }
 
