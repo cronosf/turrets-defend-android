@@ -158,6 +158,7 @@ class Strings {
   // wave column label switches (OLA/WAVE).
   String get rankingScoreColumnLabel => 'SCORE';
   String get rankingWaveColumnLabel => _es ? 'OLA' : 'WAVE';
+  String get rankingCountryColumnLabel => _es ? 'País' : 'Ctry';
 
   // --- Tienda (servidor + PayPal) ----------------------------------------
   String get shopTitle => navShop;
@@ -334,8 +335,8 @@ class Strings {
   // --- Ranking nacional --------------------------------------------------
   String get nationalRankingTitle => menuNationalRanking;
   String get nationalRankingNoCountry => _es
-      ? 'Agrega tu país en "Editar perfil" para ver el ranking de tu país.'
-      : 'Add your country in "Edit profile" to see your country\'s ranking.';
+      ? 'Primero selecciona tu país en tu perfil, en "Editar perfil".'
+      : 'First select your country in your profile, under "Edit profile".';
 
   // --- Modal de usuario para nuevas cuentas de Google -----------------------
   String get googleSetupTitle => _es ? 'Elige tu nombre de usuario' : 'Choose your username';

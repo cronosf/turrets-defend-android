@@ -48,16 +48,26 @@ class LeaderboardPagination extends StatelessWidget {
 /// Column widths shared by [LeaderboardHeader] and [LeaderboardRow] so the
 /// header labels line up exactly over their values.
 const double _rankColumnWidth = 36;
+const double _countryColumnWidth = 40;
 const double _scoreColumnWidth = 64;
 const double _waveColumnWidth = 48;
 
-/// Header labels ("SCORE" / "OLA"/"WAVE") shown once above the leaderboard
-/// list, aligned over [LeaderboardRow]'s two value columns.
+/// Header labels shown once above the leaderboard list, aligned over
+/// [LeaderboardRow]'s columns. [countryLabel] is only passed by the global
+/// ranking (every row there can be a different country) — the national
+/// ranking omits it since every row is already the same country shown in
+/// that screen's own title.
 class LeaderboardHeader extends StatelessWidget {
-  const LeaderboardHeader({super.key, required this.scoreLabel, required this.waveLabel});
+  const LeaderboardHeader({
+    super.key,
+    required this.scoreLabel,
+    required this.waveLabel,
+    this.countryLabel,
+  });
 
   final String scoreLabel;
   final String waveLabel;
+  final String? countryLabel;
 
   static const _labelStyle = TextStyle(
     color: Colors.white38,
@@ -74,6 +84,13 @@ class LeaderboardHeader extends StatelessWidget {
         children: [
           const SizedBox(width: _rankColumnWidth),
           const Expanded(child: SizedBox.shrink()),
+          if (countryLabel != null) ...[
+            SizedBox(
+              width: _countryColumnWidth,
+              child: Text(countryLabel!, textAlign: TextAlign.center, style: _labelStyle),
+            ),
+            const SizedBox(width: 10),
+          ],
           SizedBox(
             width: _scoreColumnWidth,
             child: Text(scoreLabel, textAlign: TextAlign.right, style: _labelStyle),
@@ -90,10 +107,10 @@ class LeaderboardHeader extends StatelessWidget {
 }
 
 /// A single leaderboard row: gold/silver/bronze trophy + highlight for
-/// ranks 1-3, a plain "#N" for everyone else, then the player's best score
-/// and best wave in two right-aligned columns matching
-/// [LeaderboardHeader]. Shared by [RankingScreen] (global) and
-/// [NationalRankingScreen] (per-country) so both use the same design.
+/// ranks 1-3, then the player's name, country (own column, only when
+/// [countryCode] is given — see [LeaderboardHeader]), best score and best
+/// wave. Shared by [RankingScreen] (global) and [NationalRankingScreen]
+/// (per-country) so both use the same design.
 class LeaderboardRow extends StatelessWidget {
   const LeaderboardRow({
     super.key,
@@ -130,8 +147,7 @@ class LeaderboardRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final trophyColor = _trophyColor;
-    final label =
-        (countryCode != null && countryCode!.isNotEmpty) ? '$username · $countryCode' : username;
+    final showCountry = countryCode != null && countryCode!.isNotEmpty;
 
     return Container(
       margin: const EdgeInsets.only(bottom: 8),
@@ -156,7 +172,7 @@ class LeaderboardRow extends StatelessWidget {
           ),
           Expanded(
             child: Text(
-              label,
+              username,
               style: TextStyle(
                 color: Colors.white,
                 fontSize: 14,
@@ -165,6 +181,17 @@ class LeaderboardRow extends StatelessWidget {
               overflow: TextOverflow.ellipsis,
             ),
           ),
+          if (showCountry) ...[
+            SizedBox(
+              width: _countryColumnWidth,
+              child: Text(
+                countryCode!,
+                textAlign: TextAlign.center,
+                style: const TextStyle(color: Colors.white70, fontSize: 12, fontWeight: FontWeight.w600),
+              ),
+            ),
+            const SizedBox(width: 10),
+          ],
           SizedBox(
             width: _scoreColumnWidth,
             child: Text(

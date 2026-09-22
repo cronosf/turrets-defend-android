@@ -190,6 +190,7 @@ class _RankingScreenState extends State<RankingScreen> {
                         LeaderboardHeader(
                           scoreLabel: s.rankingScoreColumnLabel,
                           waveLabel: s.rankingWaveColumnLabel,
+                          countryLabel: s.rankingCountryColumnLabel,
                         ),
                         for (final entry in entries)
                           LeaderboardRow(
