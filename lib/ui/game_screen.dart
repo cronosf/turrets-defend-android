@@ -1,5 +1,6 @@
 import 'package:flame/game.dart';
 import 'package:flutter/material.dart';
+import 'package:wakelock_plus/wakelock_plus.dart';
 
 import '../game/turret_defense_game.dart';
 import '../models/economy.dart';
@@ -32,11 +33,18 @@ class _GameScreenState extends State<GameScreen> {
     super.initState();
     _game = TurretDefenseGame(economy: widget.economy);
     widget.economy.addListener(_onEconomyChanged);
+    // Enemies keep coming even if the player isn't tapping anything — if
+    // the screen locks mid-run (no touches for a while), the base takes
+    // damage the whole time it's off and the run is lost with nobody
+    // watching. Keep the screen awake for as long as this screen is open,
+    // and let it sleep normally everywhere else in the app.
+    WakelockPlus.enable();
   }
 
   @override
   void dispose() {
     widget.economy.removeListener(_onEconomyChanged);
+    WakelockPlus.disable();
     super.dispose();
   }
 

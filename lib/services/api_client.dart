@@ -20,7 +20,7 @@ class ApiException implements Exception {
   String toString() => message;
 }
 
-/// Central HTTP client for the TuerretCro backend (`server/api_turret`).
+/// Central HTTP client for the TurretCron backend (`server/api_turret`).
 ///
 /// Requests go straight over `package:http` first — the `.htaccess` on
 /// `/api_turret/` already disables the hosting's Imunify360 firewall for

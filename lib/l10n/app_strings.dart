@@ -95,7 +95,7 @@ class Strings {
   String get termsLinkLabel => _es ? 'Términos y Condiciones' : 'Terms and Conditions';
   String get termsTitle => _es ? 'Términos y Condiciones de uso' : 'Terms and Conditions of use';
   String get termsBody => _es
-      ? 'TuerretCro es una aplicación desarrollada y de propiedad exclusiva de '
+      ? 'TurretCron es una aplicación desarrollada y de propiedad exclusiva de '
           'CRONOSF DEV.\n\n'
           '1. Propiedad intelectual: todo el contenido de la aplicación '
           '(código, diseño, marcas, arte y sonido) es propiedad de CRONOSF DEV '
@@ -113,7 +113,7 @@ class Strings {
           'por el proveedor de pago correspondiente y están sujetas a sus '
           'propios términos.\n\n'
           'Al crear una cuenta, confirmas que aceptas estos términos.'
-      : 'TuerretCro is an application developed and exclusively owned by '
+      : 'TurretCron is an application developed and exclusively owned by '
           'CRONOSF DEV.\n\n'
           '1. Intellectual property: all content in the application (code, '
           'design, trademarks, art and sound) is owned by CRONOSF DEV or its '
@@ -174,7 +174,7 @@ class Strings {
   // --- Actualizaciones -----------------------------------------------------
   String get updateAvailableTitle => _es ? 'Nueva versión disponible' : 'New version available';
   String updateAvailableBody(String version) =>
-      _es ? 'Hay una nueva versión ($version) de TuerretCro lista para descargar.' : 'A new version ($version) of TuerretCro is ready to download.';
+      _es ? 'Hay una nueva versión ($version) de TurretCron lista para descargar.' : 'A new version ($version) of TurretCron is ready to download.';
   String get updateDownload => _es ? 'DESCARGAR' : 'DOWNLOAD';
   String get updateLater => _es ? 'Más tarde' : 'Later';
 
