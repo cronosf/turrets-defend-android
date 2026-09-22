@@ -139,11 +139,16 @@ class _RankingScreenState extends State<RankingScreen> {
                     }
                     return Column(
                       children: [
+                        LeaderboardHeader(
+                          scoreLabel: s.rankingScoreColumnLabel,
+                          waveLabel: s.rankingWaveColumnLabel,
+                        ),
                         for (final entry in entries)
                           LeaderboardRow(
                             rank: (entry['rank_position'] as num?)?.toInt() ?? 0,
                             username: entry['username']?.toString() ?? '?',
                             countryCode: entry['country_code']?.toString(),
+                            bestScore: (entry['best_score'] as num?)?.toInt() ?? 0,
                             bestWave: (entry['best_wave'] as num?)?.toInt() ?? 0,
                           ),
                       ],

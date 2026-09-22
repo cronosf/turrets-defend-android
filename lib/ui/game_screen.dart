@@ -48,14 +48,17 @@ class _GameScreenState extends State<GameScreen> {
     super.dispose();
   }
 
-  /// Syncs the run's result to the server (best_wave feeds the global
-  /// ranking) the moment the base goes down. Only meaningful when logged
-  /// in; silently skipped/ignored otherwise since this is a background
-  /// sync, not something the player needs to see fail.
+  /// Syncs the run's result to the server (best_wave/best_score feed the
+  /// global ranking) the moment the base goes down. Only meaningful when
+  /// logged in; silently skipped/ignored otherwise since this is a
+  /// background sync, not something the player needs to see fail.
   void _onEconomyChanged() {
     final isOver = widget.economy.gameOver;
     if (isOver && !_wasGameOver && ApiClient.hasToken) {
-      ApiClient.post('/stats/run', body: {'wave': widget.economy.wave}).catchError((_) {});
+      ApiClient.post('/stats/run', body: {
+        'wave': widget.economy.wave,
+        'score': widget.economy.score,
+      }).catchError((_) {});
     }
     _wasGameOver = isOver;
   }

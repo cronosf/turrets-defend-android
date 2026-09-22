@@ -154,6 +154,10 @@ class Strings {
       ? 'Inicia sesión para guardar tu progreso en el ranking global.'
       : 'Log in to save your progress to the global ranking.';
   String rankPositionLabel(int n) => '#$n';
+  // "SCORE" reads the same in Spanish, so it's never translated — only the
+  // wave column label switches (OLA/WAVE).
+  String get rankingScoreColumnLabel => 'SCORE';
+  String get rankingWaveColumnLabel => _es ? 'OLA' : 'WAVE';
 
   // --- Tienda (servidor + PayPal) ----------------------------------------
   String get shopTitle => navShop;

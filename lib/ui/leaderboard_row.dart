@@ -1,20 +1,67 @@
 import 'package:flutter/material.dart';
 
+/// Column widths shared by [LeaderboardHeader] and [LeaderboardRow] so the
+/// header labels line up exactly over their values.
+const double _rankColumnWidth = 36;
+const double _scoreColumnWidth = 64;
+const double _waveColumnWidth = 48;
+
+/// Header labels ("SCORE" / "OLA"/"WAVE") shown once above the leaderboard
+/// list, aligned over [LeaderboardRow]'s two value columns.
+class LeaderboardHeader extends StatelessWidget {
+  const LeaderboardHeader({super.key, required this.scoreLabel, required this.waveLabel});
+
+  final String scoreLabel;
+  final String waveLabel;
+
+  static const _labelStyle = TextStyle(
+    color: Colors.white38,
+    fontSize: 11,
+    fontWeight: FontWeight.bold,
+    letterSpacing: 0.5,
+  );
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.only(left: 14, right: 14, bottom: 6),
+      child: Row(
+        children: [
+          const SizedBox(width: _rankColumnWidth),
+          const Expanded(child: SizedBox.shrink()),
+          SizedBox(
+            width: _scoreColumnWidth,
+            child: Text(scoreLabel, textAlign: TextAlign.right, style: _labelStyle),
+          ),
+          const SizedBox(width: 10),
+          SizedBox(
+            width: _waveColumnWidth,
+            child: Text(waveLabel, textAlign: TextAlign.right, style: _labelStyle),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
 /// A single leaderboard row: gold/silver/bronze trophy + highlight for
-/// ranks 1-3, a plain "#N" for everyone else. Shared by [RankingScreen]
-/// (global) and [NationalRankingScreen] (per-country) so both use the same
-/// design.
+/// ranks 1-3, a plain "#N" for everyone else, then the player's best score
+/// and best wave in two right-aligned columns matching
+/// [LeaderboardHeader]. Shared by [RankingScreen] (global) and
+/// [NationalRankingScreen] (per-country) so both use the same design.
 class LeaderboardRow extends StatelessWidget {
   const LeaderboardRow({
     super.key,
     required this.rank,
     required this.username,
+    required this.bestScore,
     required this.bestWave,
     this.countryCode,
   });
 
   final int rank;
   final String username;
+  final int bestScore;
   final int bestWave;
   final String? countryCode;
 
@@ -54,7 +101,7 @@ class LeaderboardRow extends StatelessWidget {
       child: Row(
         children: [
           SizedBox(
-            width: 36,
+            width: _rankColumnWidth,
             child: trophyColor != null
                 ? Icon(Icons.emoji_events_rounded, color: trophyColor, size: 26)
                 : Text(
@@ -73,12 +120,29 @@ class LeaderboardRow extends StatelessWidget {
               overflow: TextOverflow.ellipsis,
             ),
           ),
-          Text(
-            '$bestWave',
-            style: TextStyle(
-              color: trophyColor ?? Colors.white70,
-              fontSize: 14,
-              fontWeight: FontWeight.w700,
+          SizedBox(
+            width: _scoreColumnWidth,
+            child: Text(
+              '$bestScore',
+              textAlign: TextAlign.right,
+              style: TextStyle(
+                color: trophyColor ?? Colors.white70,
+                fontSize: 14,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+          ),
+          const SizedBox(width: 10),
+          SizedBox(
+            width: _waveColumnWidth,
+            child: Text(
+              '$bestWave',
+              textAlign: TextAlign.right,
+              style: TextStyle(
+                color: trophyColor ?? Colors.white70,
+                fontSize: 14,
+                fontWeight: FontWeight.w700,
+              ),
             ),
           ),
         ],

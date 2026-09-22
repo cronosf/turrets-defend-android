@@ -92,12 +92,19 @@ class _NationalRankingScreenState extends State<NationalRankingScreen> {
                   }
                   return ListView.builder(
                     padding: const EdgeInsets.all(20),
-                    itemCount: entries.length,
+                    itemCount: entries.length + 1,
                     itemBuilder: (context, index) {
-                      final entry = entries[index];
+                      if (index == 0) {
+                        return LeaderboardHeader(
+                          scoreLabel: s.rankingScoreColumnLabel,
+                          waveLabel: s.rankingWaveColumnLabel,
+                        );
+                      }
+                      final entry = entries[index - 1];
                       return LeaderboardRow(
                         rank: (entry['rank_position'] as num?)?.toInt() ?? 0,
                         username: entry['username']?.toString() ?? '?',
+                        bestScore: (entry['best_score'] as num?)?.toInt() ?? 0,
                         bestWave: (entry['best_wave'] as num?)?.toInt() ?? 0,
                       );
                     },

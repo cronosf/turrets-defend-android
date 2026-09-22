@@ -9,6 +9,7 @@ import 'auth_text_field.dart';
 import 'google_logo.dart';
 import 'google_username_setup_screen.dart';
 import 'home_screen.dart';
+import 'language_switch.dart';
 import 'register_screen.dart';
 
 /// The app's first screen after the native splash. If no [economy] is
@@ -141,11 +142,16 @@ class _LoginScreenState extends State<LoginScreen> {
         if (mounted) setState(() => _submitting = false);
         return;
       }
-      final result = await ApiClient.google(idToken: idToken, remember: _rememberMe);
+      final result = await ApiClient.google(
+        idToken: idToken,
+        remember: _rememberMe,
+      );
       if (!mounted) return;
       if (result['is_new_user'] == true) {
         final completed = await Navigator.of(context).push<bool>(
-          MaterialPageRoute(builder: (_) => GoogleUsernameSetupScreen(economy: _economy)),
+          MaterialPageRoute(
+            builder: (_) => GoogleUsernameSetupScreen(economy: _economy),
+          ),
         );
         if (!mounted || completed != true) {
           // They cancelled (logged out) instead of finishing setup.
@@ -177,149 +183,195 @@ class _LoginScreenState extends State<LoginScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final s = Strings(_economy.language);
-
     if (_checkingSession) {
       return const Scaffold(
         backgroundColor: Color(0xFF2A2018),
-        body: Center(child: CircularProgressIndicator(color: Color(0xFFCB7B2A))),
+        body: Center(
+          child: CircularProgressIndicator(color: Color(0xFFCB7B2A)),
+        ),
       );
     }
 
-    return Scaffold(
-      backgroundColor: const Color(0xFF2A2018),
-      body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(24),
-          child: Form(
-            key: _formKey,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                Center(
-                  child: Image.asset('assets/images/ui/MenuBanner.png', width: 200),
-                ),
-                const SizedBox(height: 28),
-                AuthTextField(
-                  controller: _identifierController,
-                  label: s.usernameOrEmail,
-                  keyboardType: TextInputType.emailAddress,
-                  validator: (v) => (v == null || v.trim().isEmpty) ? s.fieldRequired : null,
-                ),
-                const SizedBox(height: 14),
-                AuthTextField(
-                  controller: _passwordController,
-                  label: s.password,
-                  obscureText: _obscurePassword,
-                  validator: (v) => (v == null || v.isEmpty) ? s.fieldRequired : null,
-                  suffixIcon: IconButton(
-                    icon: Icon(
-                      _obscurePassword ? Icons.visibility_off_rounded : Icons.visibility_rounded,
-                      color: Colors.white54,
-                    ),
-                    onPressed: () => setState(() => _obscurePassword = !_obscurePassword),
-                  ),
-                ),
-                const SizedBox(height: 4),
-                Row(
+    // Wrapped in AnimatedBuilder (rather than reading _economy.language
+    // once) so picking a language from the switch below rebuilds this
+    // screen's own text immediately, same as every other screen that
+    // reacts to Economy changes.
+    return AnimatedBuilder(
+      animation: _economy,
+      builder: (context, _) {
+        final s = Strings(_economy.language);
+        return Scaffold(
+          backgroundColor: const Color(0xFF2A2018),
+          body: SafeArea(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.all(24),
+              child: Form(
+                key: _formKey,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    Checkbox(
-                      value: _rememberMe,
-                      onChanged: (v) => setState(() => _rememberMe = v ?? true),
-                      activeColor: const Color(0xFF3E9B4F),
+                    Center(
+                      child: Image.asset(
+                        'assets/images/ui/MenuBanner.png',
+                        width: 200,
+                      ),
                     ),
-                    Expanded(
-                      child: Text(s.rememberMe, style: const TextStyle(color: Colors.white70)),
+                    const SizedBox(height: 28),
+                    AuthTextField(
+                      controller: _identifierController,
+                      label: s.usernameOrEmail,
+                      keyboardType: TextInputType.emailAddress,
+                      validator: (v) => (v == null || v.trim().isEmpty)
+                          ? s.fieldRequired
+                          : null,
                     ),
-                  ],
-                ),
-                if (_errorText != null) ...[
-                  const SizedBox(height: 4),
-                  Text(
-                    _errorText!,
-                    style: const TextStyle(color: Colors.redAccent, fontSize: 13),
-                  ),
-                ],
-                const SizedBox(height: 12),
-                ElevatedButton(
-                  onPressed: _submitting ? null : _submit,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFFCB7B2A),
-                    padding: const EdgeInsets.symmetric(vertical: 14),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                  ),
-                  child: _submitting
-                      ? const SizedBox(
-                          width: 20,
-                          height: 20,
-                          child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2.4),
-                        )
-                      : Text(
-                          s.logIn,
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontWeight: FontWeight.bold,
-                            letterSpacing: 1,
+                    const SizedBox(height: 14),
+                    AuthTextField(
+                      controller: _passwordController,
+                      label: s.password,
+                      obscureText: _obscurePassword,
+                      validator: (v) =>
+                          (v == null || v.isEmpty) ? s.fieldRequired : null,
+                      suffixIcon: IconButton(
+                        icon: Icon(
+                          _obscurePassword
+                              ? Icons.visibility_off_rounded
+                              : Icons.visibility_rounded,
+                          color: Colors.white54,
+                        ),
+                        onPressed: () => setState(
+                          () => _obscurePassword = !_obscurePassword,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Row(
+                      children: [
+                        Checkbox(
+                          value: _rememberMe,
+                          onChanged: (v) =>
+                              setState(() => _rememberMe = v ?? true),
+                          activeColor: const Color(0xFF3E9B4F),
+                        ),
+                        Expanded(
+                          child: Text(
+                            s.rememberMe,
+                            style: const TextStyle(color: Colors.white70),
                           ),
                         ),
-                ),
-                const SizedBox(height: 22),
-                Row(
-                  children: [
-                    const Expanded(child: Divider(color: Colors.white24)),
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 10),
-                      child: Text(s.orContinueWith, style: const TextStyle(color: Colors.white38)),
+                      ],
                     ),
-                    const Expanded(child: Divider(color: Colors.white24)),
-                  ],
-                ),
-                const SizedBox(height: 18),
-                OutlinedButton(
-                  onPressed: _submitting ? null : _continueWithGoogle,
-                  style: OutlinedButton.styleFrom(
-                    backgroundColor: Colors.white,
-                    padding: const EdgeInsets.symmetric(vertical: 12),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                    side: BorderSide.none,
-                  ),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      const GoogleLogo(size: 20),
-                      const SizedBox(width: 10),
+                    if (_errorText != null) ...[
+                      const SizedBox(height: 4),
                       Text(
-                        s.continueWithGoogle,
+                        _errorText!,
                         style: const TextStyle(
-                          color: Color(0xFF3C4043),
-                          fontWeight: FontWeight.w600,
+                          color: Colors.redAccent,
+                          fontSize: 13,
                         ),
                       ),
                     ],
-                  ),
-                ),
-                const SizedBox(height: 22),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Text(s.noAccountYet, style: const TextStyle(color: Colors.white70)),
-                    GestureDetector(
-                      onTap: _goToRegister,
-                      child: Text(
-                        s.registerLink,
-                        style: const TextStyle(
-                          color: Color(0xFFCB7B2A),
-                          fontWeight: FontWeight.bold,
+                    const SizedBox(height: 12),
+                    ElevatedButton(
+                      onPressed: _submitting ? null : _submit,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFFCB7B2A),
+                        padding: const EdgeInsets.symmetric(vertical: 14),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
                         ),
                       ),
+                      child: _submitting
+                          ? const SizedBox(
+                              width: 20,
+                              height: 20,
+                              child: CircularProgressIndicator(
+                                color: Colors.white,
+                                strokeWidth: 2.4,
+                              ),
+                            )
+                          : Text(
+                              s.logIn,
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontWeight: FontWeight.bold,
+                                letterSpacing: 1,
+                              ),
+                            ),
+                    ),
+                    const SizedBox(height: 22),
+                    Row(
+                      children: [
+                        const Expanded(child: Divider(color: Colors.white24)),
+                        Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 10),
+                          child: Text(
+                            s.orContinueWith,
+                            style: const TextStyle(color: Colors.white38),
+                          ),
+                        ),
+                        const Expanded(child: Divider(color: Colors.white24)),
+                      ],
+                    ),
+                    const SizedBox(height: 18),
+                    OutlinedButton(
+                      onPressed: _submitting ? null : _continueWithGoogle,
+                      style: OutlinedButton.styleFrom(
+                        backgroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(vertical: 12),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        side: BorderSide.none,
+                      ),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          const GoogleLogo(size: 20),
+                          const SizedBox(width: 10),
+                          Text(
+                            s.continueWithGoogle,
+                            style: const TextStyle(
+                              color: Color(0xFF3C4043),
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 14),
+                    LanguageSwitchRow(
+                      label: s.language,
+                      value: _economy.language,
+                      onChanged: _economy.setLanguage,
+                    ),
+                    const SizedBox(height: 22),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Text(
+                          s.noAccountYet,
+                          style: const TextStyle(color: Colors.white70),
+                        ),
+                        GestureDetector(
+                          onTap: _goToRegister,
+                          child: Text(
+                            s.registerLink,
+                            style: const TextStyle(
+                              color: Color(0xFFCB7B2A),
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
                   ],
                 ),
-              ],
+              ),
             ),
           ),
-        ),
-      ),
+        );
+      },
     );
   }
 }
