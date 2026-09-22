@@ -30,3 +30,11 @@ class TurretStats {
 int turretBuyCost(int purchasedCount) {
   return (20 * math.pow(1.16, purchasedCount)).round();
 }
+
+/// Highest level directly purchasable from the Buy menu (merging can still
+/// take a turret beyond this, up to [TurretStats.maxTier]).
+const int maxDirectBuyLevel = 10;
+
+/// Direct-buy price for a specific starting level: 20 for level 1, +100 per
+/// level after that (level 2 = 120, level 10 = 920, ...).
+int levelBuyCost(int level) => 20 + (level - 1) * 100;

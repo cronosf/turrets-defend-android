@@ -33,7 +33,7 @@ class TurretComponent extends PositionComponent
     required this.row,
     required this.col,
     required Vector2 position,
-  }) : super(position: position, size: Vector2(60, 60), anchor: Anchor.center, priority: 5) {
+  }) : super(position: position, size: Vector2(50, 50), anchor: Anchor.center, priority: 5) {
     stats = TurretStats(tier);
   }
 

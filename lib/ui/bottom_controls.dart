@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 
 import '../l10n/app_strings.dart';
 import '../models/economy.dart';
-import '../models/turret_stats.dart';
 import '../theme/app_fonts.dart';
 
 class BottomControls extends StatelessWidget {
@@ -24,8 +23,6 @@ class BottomControls extends StatelessWidget {
     return AnimatedBuilder(
       animation: economy,
       builder: (context, _) {
-        final cost = turretBuyCost(economy.turretsPurchased);
-        final canBuy = economy.money >= cost;
         final adReady = economy.adCooldown <= 0;
         final s = Strings(economy.language);
 
@@ -55,7 +52,7 @@ class BottomControls extends StatelessWidget {
                     Expanded(
                       child: _ControlButton(
                         label: adReady ? s.free : '${economy.adCooldown.ceil()}s',
-                        iconData: Icons.smart_display_rounded,
+                        iconAsset: 'assets/images/turrets/t1/T1-Shoot_00.png',
                         enabled: adReady,
                         onTap: onFree,
                         color: adReady ? const Color(0xFF3E9B4F) : const Color(0xFF555555),
@@ -65,11 +62,11 @@ class BottomControls extends StatelessWidget {
                     Expanded(
                       flex: 2,
                       child: _ControlButton(
-                        label: s.buy(cost),
+                        label: s.buyMenu,
                         iconAsset: 'assets/images/ui/MoneyIcon.png',
-                        enabled: canBuy,
+                        enabled: true,
                         onTap: onBuy,
-                        color: canBuy ? const Color(0xFFCB7B2A) : const Color(0xFF555555),
+                        color: const Color(0xFFCB7B2A),
                       ),
                     ),
                     const SizedBox(width: 10),

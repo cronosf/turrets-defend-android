@@ -6,6 +6,7 @@ import '../models/economy.dart';
 import '../services/api_client.dart';
 import 'base_health_bar.dart';
 import 'bottom_controls.dart';
+import 'buy_level_dialog.dart';
 import 'lose_overlay.dart';
 import 'settings_overlay.dart';
 import 'top_hud.dart';
@@ -57,25 +58,45 @@ class _GameScreenState extends State<GameScreen> {
     _game.resumeEngine();
   }
 
+  Future<void> _openBuyMenu() async {
+    _game.pauseEngine();
+    await showBuyLevelDialog(context, _game);
+    _game.resumeEngine();
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFF2A2018),
       body: Column(
         children: [
-          TopHud(economy: widget.economy, onSettingsTap: _openSettings),
+          // TopHud is transparent and overlaid on the game canvas (Stack)
+          // rather than a separate opaque row above it, so the field
+          // background shows through behind the money/score/level bar.
           Expanded(
-            child: GameWidget<TurretDefenseGame>(
-              game: _game,
-              overlayBuilderMap: {
-                'lose': (context, game) => LoseOverlay(game: game),
-              },
+            child: Stack(
+              children: [
+                Positioned.fill(
+                  child: GameWidget<TurretDefenseGame>(
+                    game: _game,
+                    overlayBuilderMap: {
+                      'lose': (context, game) => LoseOverlay(game: game),
+                    },
+                  ),
+                ),
+                Positioned(
+                  top: 0,
+                  left: 0,
+                  right: 0,
+                  child: TopHud(economy: widget.economy, onSettingsTap: _openSettings),
+                ),
+              ],
             ),
           ),
           BaseHealthBar(economy: widget.economy),
           BottomControls(
             economy: widget.economy,
-            onBuy: _game.buyTurret,
+            onBuy: _openBuyMenu,
             onFree: _game.claimFreeTurret,
             onToggleSell: widget.economy.toggleSellMode,
           ),

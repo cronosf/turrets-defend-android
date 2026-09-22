@@ -7,10 +7,20 @@ import 'components/turret_component.dart';
 /// the bottom of the field is simultaneously the merge board and the firing
 /// line), so there is a single grid rather than a separate inventory strip.
 class TurretGrid {
-  static const int rows = 2;
+  static const int rows = 3;
   static const int cols = 5;
-  static const double slotSize = 68;
-  static const double gap = 10;
+  static const double slotSize = 56;
+  static const double gap = 8;
+
+  /// Row 0 (the bonus row above the two main ones) only has 3 usable slots,
+  /// centered within the 5-wide grid by simply only using columns 1-3 of
+  /// the same coordinate space every other row uses — no separate centering
+  /// math needed. Columns 0 and 4 of row 0 are never placed into, never
+  /// rendered, and never a valid drop target.
+  static bool isUsable(int row, int col) {
+    if (row == 0) return col >= 1 && col <= 3;
+    return true;
+  }
 
   late Vector2 topLeft;
   final List<List<TurretComponent?>> _occupancy =
@@ -50,20 +60,23 @@ class TurretGrid {
   ({int row, int col})? firstEmptySlot() {
     for (var r = 0; r < rows; r++) {
       for (var c = 0; c < cols; c++) {
+        if (!isUsable(r, c)) continue;
         if (_occupancy[r][c] == null) return (row: r, col: c);
       }
     }
     return null;
   }
 
-  /// Finds the slot whose center is nearest to [point], regardless of
-  /// whether it's occupied (used while dragging to decide the drop target).
+  /// Finds the usable slot whose center is nearest to [point], regardless
+  /// of whether it's occupied (used while dragging to decide the drop
+  /// target).
   ({int row, int col}) nearestSlot(Vector2 point) {
-    var bestRow = 0;
+    var bestRow = 1;
     var bestCol = 0;
     var bestDist = double.infinity;
     for (var r = 0; r < rows; r++) {
       for (var c = 0; c < cols; c++) {
+        if (!isUsable(r, c)) continue;
         final d = slotCenter(r, c).distanceToSquared(point);
         if (d < bestDist) {
           bestDist = d;

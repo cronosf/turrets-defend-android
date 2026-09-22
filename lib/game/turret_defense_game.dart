@@ -29,6 +29,7 @@ class TurretDefenseGame extends FlameGame {
   late List<Sprite> _hitFxFrames;
   late List<Sprite> _explosionFrames;
   final List<RectangleComponent> _slotVisuals = [];
+  final List<({int row, int col})> _slotVisualCoords = [];
 
   double get baseLineY => grid.topY - 6;
 
@@ -67,16 +68,20 @@ class TurretDefenseGame extends FlameGame {
 
     await world.addAll([_background, _baseSprite]);
 
-    for (var i = 0; i < TurretGrid.rows * TurretGrid.cols; i++) {
-      final slotVisual = RectangleComponent(
-        size: Vector2.all(TurretGrid.slotSize),
-        anchor: Anchor.center,
-        paint: Paint()
-          ..color = const Color(0x33FFFFFF)
-          ..style = PaintingStyle.fill,
-      )..priority = -1;
-      _slotVisuals.add(slotVisual);
-      world.add(slotVisual);
+    for (var r = 0; r < TurretGrid.rows; r++) {
+      for (var c = 0; c < TurretGrid.cols; c++) {
+        if (!TurretGrid.isUsable(r, c)) continue;
+        final slotVisual = RectangleComponent(
+          size: Vector2.all(TurretGrid.slotSize),
+          anchor: Anchor.center,
+          paint: Paint()
+            ..color = const Color(0x33FFFFFF)
+            ..style = PaintingStyle.fill,
+        )..priority = -1;
+        _slotVisuals.add(slotVisual);
+        _slotVisualCoords.add((row: r, col: c));
+        world.add(slotVisual);
+      }
     }
 
     _relayout();
@@ -104,9 +109,8 @@ class TurretDefenseGame extends FlameGame {
     _baseSprite.position = Vector2(0, grid.topY - 34);
 
     for (var i = 0; i < _slotVisuals.length; i++) {
-      final row = i ~/ TurretGrid.cols;
-      final col = i % TurretGrid.cols;
-      _slotVisuals[i].position = grid.slotCenter(row, col);
+      final coords = _slotVisualCoords[i];
+      _slotVisuals[i].position = grid.slotCenter(coords.row, coords.col);
     }
 
     for (final turret in grid.allTurrets) {
@@ -295,13 +299,20 @@ class TurretDefenseGame extends FlameGame {
     grid.place(turret, row, col);
   }
 
-  void buyTurret() {
+  bool get hasEmptySlot => grid.firstEmptySlot() != null;
+
+  /// Directly buys a turret starting at [level] (see the Buy menu — 1..10,
+  /// levelBuyCost) rather than always tier 1. Returns false (spending
+  /// nothing) if there's no empty slot or the player can't afford it, so
+  /// the UI can show the right feedback.
+  bool buyTurretAtLevel(int level) {
     final slot = grid.firstEmptySlot();
-    if (slot == null) return;
-    final cost = turretBuyCost(economy.turretsPurchased);
-    if (!economy.spend(cost)) return;
+    if (slot == null) return false;
+    final cost = levelBuyCost(level);
+    if (!economy.spend(cost)) return false;
     economy.turretsPurchased++;
-    spawnTurretAt(slot.row, slot.col, 1);
+    spawnTurretAt(slot.row, slot.col, level);
+    return true;
   }
 
   void claimFreeTurret() {

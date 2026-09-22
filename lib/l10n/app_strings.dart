@@ -20,7 +20,15 @@ class Strings {
 
   String get free => _es ? 'GRATIS' : 'FREE';
   String buy(int cost) => _es ? 'COMPRAR  \$$cost' : 'BUY  \$$cost';
+  String get buyMenu => _es ? 'COMPRAR' : 'BUY';
   String get sell => _es ? 'VENDER' : 'SELL';
+  String get buyLevelDialogTitle => _es ? 'Elige una torreta' : 'Choose a turret';
+  String buyLevelOption(int level, int cost) =>
+      _es ? 'Nivel $level  —  \$$cost' : 'Level $level  —  \$$cost';
+  String get gridFullMessage =>
+      _es ? 'No hay espacio libre en el tablero.' : 'No empty space on the board.';
+  String get notEnoughMoneyMessage =>
+      _es ? 'No tienes suficiente dinero.' : "You don't have enough money.";
   String get sellModeHint => _es
       ? 'Modo vender activo: toca una torreta para venderla'
       : 'Sell mode active: tap a turret to sell it';

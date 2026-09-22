@@ -22,7 +22,7 @@ class TopHud extends StatelessWidget {
         final s = Strings(economy.language);
         return Container(
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-          color: const Color(0xFF2A2018),
+          color: Colors.transparent,
           child: SafeArea(
             bottom: false,
             child: Column(
