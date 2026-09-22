@@ -1,5 +1,50 @@
 import 'package:flutter/material.dart';
 
+/// Prev/next pager shown below a leaderboard page (top 15 per page).
+/// Arrows disable themselves at the first/last page instead of hiding, so
+/// the control's position doesn't jump around as you page through.
+class LeaderboardPagination extends StatelessWidget {
+  const LeaderboardPagination({
+    super.key,
+    required this.page,
+    required this.totalPages,
+    required this.onChanged,
+  });
+
+  final int page;
+  final int totalPages;
+  final ValueChanged<int> onChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    if (totalPages <= 1) return const SizedBox.shrink();
+    return Padding(
+      padding: const EdgeInsets.only(top: 8),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          IconButton(
+            onPressed: page > 1 ? () => onChanged(page - 1) : null,
+            icon: const Icon(Icons.chevron_left_rounded),
+            color: const Color(0xFFCB7B2A),
+            disabledColor: Colors.white24,
+          ),
+          Text(
+            '$page / $totalPages',
+            style: const TextStyle(color: Colors.white70, fontSize: 13, fontWeight: FontWeight.w600),
+          ),
+          IconButton(
+            onPressed: page < totalPages ? () => onChanged(page + 1) : null,
+            icon: const Icon(Icons.chevron_right_rounded),
+            color: const Color(0xFFCB7B2A),
+            disabledColor: Colors.white24,
+          ),
+        ],
+      ),
+    );
+  }
+}
+
 /// Column widths shared by [LeaderboardHeader] and [LeaderboardRow] so the
 /// header labels line up exactly over their values.
 const double _rankColumnWidth = 36;

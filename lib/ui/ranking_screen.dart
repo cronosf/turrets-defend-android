@@ -5,9 +5,17 @@ import '../models/economy.dart';
 import '../services/api_client.dart';
 import 'leaderboard_row.dart';
 
+class _LeaderboardPage {
+  const _LeaderboardPage({required this.entries, required this.totalPages});
+
+  final List<Map<String, dynamic>> entries;
+  final int totalPages;
+}
+
 /// Local player stats (best score, best wave, last run) plus the real
-/// global leaderboard fetched from `GET /ranking` (backed by the
-/// `v_leaderboard` view in `server/database/seed.sql`).
+/// global leaderboard fetched from `GET /ranking`. Rank position there
+/// combines best_wave and best_score (see RankingController::rankByAverage
+/// server-side), 15 players per page.
 class RankingScreen extends StatefulWidget {
   const RankingScreen({super.key, required this.economy});
 
@@ -18,7 +26,8 @@ class RankingScreen extends StatefulWidget {
 }
 
 class _RankingScreenState extends State<RankingScreen> {
-  late Future<List<Map<String, dynamic>>> _leaderboard;
+  late Future<_LeaderboardPage> _leaderboard;
+  int _page = 1;
 
   @override
   void initState() {
@@ -26,15 +35,25 @@ class _RankingScreenState extends State<RankingScreen> {
     _leaderboard = _fetchLeaderboard();
   }
 
-  Future<List<Map<String, dynamic>>> _fetchLeaderboard() async {
-    final data = await ApiClient.get('/ranking', query: {'limit': 50});
-    final list = (data as Map<String, dynamic>)['leaderboard'] as List<dynamic>? ?? [];
-    return list.cast<Map<String, dynamic>>();
+  Future<_LeaderboardPage> _fetchLeaderboard() async {
+    final data = await ApiClient.get('/ranking', query: {'page': _page}) as Map<String, dynamic>;
+    final list = data['leaderboard'] as List<dynamic>? ?? [];
+    return _LeaderboardPage(
+      entries: list.cast<Map<String, dynamic>>(),
+      totalPages: (data['total_pages'] as num?)?.toInt() ?? 1,
+    );
   }
 
   Future<void> _reload() async {
     setState(() => _leaderboard = _fetchLeaderboard());
     await _leaderboard;
+  }
+
+  void _goToPage(int page) {
+    setState(() {
+      _page = page;
+      _leaderboard = _fetchLeaderboard();
+    });
   }
 
   @override
@@ -50,6 +69,13 @@ class _RankingScreenState extends State<RankingScreen> {
             backgroundColor: const Color(0xFF3A2A1C),
             foregroundColor: Colors.white,
             title: Text(s.rankingTitle),
+            actions: [
+              IconButton(
+                onPressed: _reload,
+                icon: const Icon(Icons.refresh_rounded),
+                tooltip: s.retry,
+              ),
+            ],
           ),
           body: RefreshIndicator(
             onRefresh: _reload,
@@ -101,7 +127,7 @@ class _RankingScreenState extends State<RankingScreen> {
                   ),
                 ),
                 const SizedBox(height: 12),
-                FutureBuilder<List<Map<String, dynamic>>>(
+                FutureBuilder<_LeaderboardPage>(
                   future: _leaderboard,
                   builder: (context, snapshot) {
                     if (snapshot.connectionState != ConnectionState.done) {
@@ -130,7 +156,8 @@ class _RankingScreenState extends State<RankingScreen> {
                         ),
                       );
                     }
-                    final entries = snapshot.data ?? [];
+                    final result = snapshot.data ?? const _LeaderboardPage(entries: [], totalPages: 1);
+                    final entries = result.entries;
                     if (entries.isEmpty) {
                       return Text(
                         s.noRunsYet,
@@ -151,6 +178,11 @@ class _RankingScreenState extends State<RankingScreen> {
                             bestScore: (entry['best_score'] as num?)?.toInt() ?? 0,
                             bestWave: (entry['best_wave'] as num?)?.toInt() ?? 0,
                           ),
+                        LeaderboardPagination(
+                          page: _page,
+                          totalPages: result.totalPages,
+                          onChanged: _goToPage,
+                        ),
                       ],
                     );
                   },

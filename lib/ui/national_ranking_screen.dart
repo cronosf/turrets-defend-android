@@ -5,8 +5,15 @@ import '../models/economy.dart';
 import '../services/api_client.dart';
 import 'leaderboard_row.dart';
 
+class _LeaderboardPage {
+  const _LeaderboardPage({required this.entries, required this.totalPages});
+
+  final List<Map<String, dynamic>> entries;
+  final int totalPages;
+}
+
 /// Same leaderboard shape as [RankingScreen], but scoped to the player's own
-/// country (`GET /ranking?country=XX`), with rank numbers computed within
+/// country (`GET /ranking?country=XX`), with rank_position computed within
 /// that country rather than the global rank filtered down.
 class NationalRankingScreen extends StatefulWidget {
   const NationalRankingScreen({super.key, required this.economy, required this.countryCode});
@@ -19,7 +26,8 @@ class NationalRankingScreen extends StatefulWidget {
 }
 
 class _NationalRankingScreenState extends State<NationalRankingScreen> {
-  late Future<List<Map<String, dynamic>>> _leaderboard;
+  late Future<_LeaderboardPage> _leaderboard;
+  int _page = 1;
 
   @override
   void initState() {
@@ -27,16 +35,31 @@ class _NationalRankingScreenState extends State<NationalRankingScreen> {
     _leaderboard = _fetch();
   }
 
-  Future<List<Map<String, dynamic>>> _fetch() async {
-    if (widget.countryCode == null || widget.countryCode!.isEmpty) return [];
-    final data = await ApiClient.get('/ranking', query: {'country': widget.countryCode, 'limit': 50});
-    final list = (data as Map<String, dynamic>)['leaderboard'] as List<dynamic>? ?? [];
-    return list.cast<Map<String, dynamic>>();
+  Future<_LeaderboardPage> _fetch() async {
+    if (widget.countryCode == null || widget.countryCode!.isEmpty) {
+      return const _LeaderboardPage(entries: [], totalPages: 1);
+    }
+    final data = await ApiClient.get(
+      '/ranking',
+      query: {'country': widget.countryCode, 'page': _page},
+    ) as Map<String, dynamic>;
+    final list = data['leaderboard'] as List<dynamic>? ?? [];
+    return _LeaderboardPage(
+      entries: list.cast<Map<String, dynamic>>(),
+      totalPages: (data['total_pages'] as num?)?.toInt() ?? 1,
+    );
   }
 
   Future<void> _reload() async {
     setState(() => _leaderboard = _fetch());
     await _leaderboard;
+  }
+
+  void _goToPage(int page) {
+    setState(() {
+      _page = page;
+      _leaderboard = _fetch();
+    });
   }
 
   @override
@@ -48,6 +71,15 @@ class _NationalRankingScreenState extends State<NationalRankingScreen> {
         backgroundColor: const Color(0xFF3A2A1C),
         foregroundColor: Colors.white,
         title: Text(s.nationalRankingTitle),
+        actions: (widget.countryCode == null || widget.countryCode!.isEmpty)
+            ? null
+            : [
+                IconButton(
+                  onPressed: _reload,
+                  icon: const Icon(Icons.refresh_rounded),
+                  tooltip: s.retry,
+                ),
+              ],
       ),
       body: (widget.countryCode == null || widget.countryCode!.isEmpty)
           ? Center(
@@ -63,7 +95,7 @@ class _NationalRankingScreenState extends State<NationalRankingScreen> {
           : RefreshIndicator(
               onRefresh: _reload,
               color: const Color(0xFFCB7B2A),
-              child: FutureBuilder<List<Map<String, dynamic>>>(
+              child: FutureBuilder<_LeaderboardPage>(
                 future: _leaderboard,
                 builder: (context, snapshot) {
                   if (snapshot.connectionState != ConnectionState.done) {
@@ -81,7 +113,8 @@ class _NationalRankingScreenState extends State<NationalRankingScreen> {
                       ],
                     );
                   }
-                  final entries = snapshot.data ?? [];
+                  final result = snapshot.data ?? const _LeaderboardPage(entries: [], totalPages: 1);
+                  final entries = result.entries;
                   if (entries.isEmpty) {
                     return ListView(
                       children: [
@@ -90,24 +123,26 @@ class _NationalRankingScreenState extends State<NationalRankingScreen> {
                       ],
                     );
                   }
-                  return ListView.builder(
+                  return ListView(
                     padding: const EdgeInsets.all(20),
-                    itemCount: entries.length + 1,
-                    itemBuilder: (context, index) {
-                      if (index == 0) {
-                        return LeaderboardHeader(
-                          scoreLabel: s.rankingScoreColumnLabel,
-                          waveLabel: s.rankingWaveColumnLabel,
-                        );
-                      }
-                      final entry = entries[index - 1];
-                      return LeaderboardRow(
-                        rank: (entry['rank_position'] as num?)?.toInt() ?? 0,
-                        username: entry['username']?.toString() ?? '?',
-                        bestScore: (entry['best_score'] as num?)?.toInt() ?? 0,
-                        bestWave: (entry['best_wave'] as num?)?.toInt() ?? 0,
-                      );
-                    },
+                    children: [
+                      LeaderboardHeader(
+                        scoreLabel: s.rankingScoreColumnLabel,
+                        waveLabel: s.rankingWaveColumnLabel,
+                      ),
+                      for (final entry in entries)
+                        LeaderboardRow(
+                          rank: (entry['rank_position'] as num?)?.toInt() ?? 0,
+                          username: entry['username']?.toString() ?? '?',
+                          bestScore: (entry['best_score'] as num?)?.toInt() ?? 0,
+                          bestWave: (entry['best_wave'] as num?)?.toInt() ?? 0,
+                        ),
+                      LeaderboardPagination(
+                        page: _page,
+                        totalPages: result.totalPages,
+                        onChanged: _goToPage,
+                      ),
+                    ],
                   );
                 },
               ),
