@@ -9,8 +9,8 @@ import 'components/turret_component.dart';
 class TurretGrid {
   static const int rows = 3;
   static const int cols = 5;
-  static const double slotSize = 56;
-  static const double gap = 8;
+  static const double slotSize = 44;
+  static const double gap = 6;
 
   /// Row 0 (the bonus row above the two main ones) only has 3 usable slots,
   /// centered within the 5-wide grid by simply only using columns 1-3 of

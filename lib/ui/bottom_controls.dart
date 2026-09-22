@@ -60,7 +60,6 @@ class BottomControls extends StatelessWidget {
                     ),
                     const SizedBox(width: 10),
                     Expanded(
-                      flex: 2,
                       child: _ControlButton(
                         label: s.buyMenu,
                         iconAsset: 'assets/images/ui/MoneyIcon.png',
@@ -127,12 +126,13 @@ class _ControlButton extends StatelessWidget {
               Icon(iconData, color: Colors.white, size: 20)
             else if (iconAsset != null)
               Image.asset(iconAsset!, width: 33, height: 33),
-            const SizedBox(width: 6),
+            const SizedBox(width: 4),
             Flexible(
               child: Text(
                 label,
+                textAlign: TextAlign.center,
                 overflow: TextOverflow.ellipsis,
-                style: AppFonts.title(color: Colors.white, fontSize: 13),
+                style: AppFonts.title(color: Colors.white, fontSize: 12),
               ),
             ),
           ],
