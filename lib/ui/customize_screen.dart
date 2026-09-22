@@ -22,6 +22,8 @@ class CustomizeScreen extends StatefulWidget {
 class _CustomizeScreenState extends State<CustomizeScreen> {
   late Future<_ProfileItems> _future;
   int? _equippingItemId;
+  String? _equippingBasicCategory;
+  String _selectedCategory = shopCategoryOrder.first;
 
   @override
   void initState() {
@@ -45,8 +47,17 @@ class _CustomizeScreenState extends State<CustomizeScreen> {
     await _future;
   }
 
-  Future<void> _equip(String category, int itemId, Strings s) async {
-    setState(() => _equippingItemId = itemId);
+  /// [itemId] null means "equip Basic" (the unmodified default look) —
+  /// the server already treats a null shop_item_id as an explicit
+  /// unequip for that category.
+  Future<void> _equip(String category, int? itemId, Strings s) async {
+    setState(() {
+      if (itemId == null) {
+        _equippingBasicCategory = category;
+      } else {
+        _equippingItemId = itemId;
+      }
+    });
     try {
       await ApiClient.post('/profile/equip', body: {'category': category, 'shop_item_id': itemId});
       await _reload();
@@ -55,7 +66,29 @@ class _CustomizeScreenState extends State<CustomizeScreen> {
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.message)));
       }
     } finally {
-      if (mounted) setState(() => _equippingItemId = null);
+      if (mounted) {
+        setState(() {
+          _equippingItemId = null;
+          _equippingBasicCategory = null;
+        });
+      }
+    }
+  }
+
+  /// A representative "default game look" image for the Basic entry in
+  /// each category, so it's visually obvious what "no skin" looks like —
+  /// falls back to the shared generic icon (imagePath null) for
+  /// categories without an obvious single default sprite.
+  String? _basicImagePathFor(String category) {
+    switch (category) {
+      case 'turret_skin':
+        return 'assets/images/turrets/t1/T1-Shoot_00.png';
+      case 'bullet_effect':
+        return 'assets/images/projectile/Projectile1.png';
+      case 'mob_skin':
+        return 'assets/images/enemies/ground/redbeetle/RedBeetle-move_00.png';
+      default:
+        return null;
     }
   }
 
@@ -69,82 +102,107 @@ class _CustomizeScreenState extends State<CustomizeScreen> {
         foregroundColor: Colors.white,
         title: Text(s.customizeTitle),
       ),
-      body: RefreshIndicator(
-        onRefresh: _reload,
-        color: const Color(0xFFCB7B2A),
-        child: FutureBuilder<_ProfileItems>(
-          future: _future,
-          builder: (context, snapshot) {
-            if (snapshot.connectionState != ConnectionState.done) {
-              return const Center(child: CircularProgressIndicator(color: Color(0xFFCB7B2A)));
-            }
-            if (snapshot.hasError) {
-              return ListView(
+      body: FutureBuilder<_ProfileItems>(
+        future: _future,
+        builder: (context, snapshot) {
+          if (snapshot.connectionState != ConnectionState.done) {
+            return const Center(child: CircularProgressIndicator(color: Color(0xFFCB7B2A)));
+          }
+          if (snapshot.hasError) {
+            return RefreshIndicator(
+              onRefresh: _reload,
+              color: const Color(0xFFCB7B2A),
+              child: ListView(
                 children: [
                   const SizedBox(height: 80),
                   Center(child: Text(s.profileLoadError, style: const TextStyle(color: Colors.redAccent))),
                   const SizedBox(height: 12),
                   Center(child: OutlinedButton(onPressed: _reload, child: Text(s.retry))),
                 ],
-              );
-            }
+              ),
+            );
+          }
 
-            final data = snapshot.data!;
-            if (data.items.isEmpty) {
-              return ListView(
-                children: [
-                  const SizedBox(height: 80),
-                  Center(child: Text(s.noItemsOwnedYet, style: const TextStyle(color: Colors.white54))),
-                ],
-              );
-            }
+          final data = snapshot.data!;
+          final byCategory = <String, List<Map<String, dynamic>>>{};
+          for (final item in data.items) {
+            final category = item['category']?.toString() ?? '';
+            byCategory.putIfAbsent(category, () => []).add(item);
+          }
+          final selectedItems = byCategory[_selectedCategory] ?? [];
+          // Categories with no catalog items at all yet (mobs, bosses) get
+          // the same "coming soon" note the shop shows, alongside Basic —
+          // there's nothing to buy there yet, but Basic still shows what
+          // "no skin" looks like for consistency.
+          final isComingSoon = _selectedCategory == 'mob_skin' || _selectedCategory == 'boss_skin';
+          // Basic (no skin equipped) is "equipped" whenever the category
+          // has no row in user_equipped_items yet, or an explicit null.
+          final equippedId = data.equippedByCategory[_selectedCategory];
+          final basicEquipped = !data.equippedByCategory.containsKey(_selectedCategory) || equippedId == null;
 
-            final byCategory = <String, List<Map<String, dynamic>>>{};
-            for (final item in data.items) {
-              final category = item['category']?.toString() ?? '';
-              byCategory.putIfAbsent(category, () => []).add(item);
-            }
-
-            return ListView(
-              padding: const EdgeInsets.all(16),
-              children: [
-                for (final entry in byCategory.entries) ...[
-                  Padding(
-                    padding: const EdgeInsets.only(bottom: 10, top: 6),
-                    child: Text(
-                      s.categoryLabel(entry.key).toUpperCase(),
-                      style: AppFonts.title(color: const Color(0xFFCB7B2A), fontSize: 15, letterSpacing: 1),
-                    ),
-                  ),
-                  GridView.count(
-                    crossAxisCount: 2,
-                    shrinkWrap: true,
-                    physics: const NeverScrollableScrollPhysics(),
-                    mainAxisSpacing: 18,
-                    crossAxisSpacing: 14,
-                    childAspectRatio: 0.72,
+          return Row(
+            children: [
+              CategoryRail(
+                selected: _selectedCategory,
+                onSelect: (c) => setState(() => _selectedCategory = c),
+                s: s,
+              ),
+              Expanded(
+                child: RefreshIndicator(
+                  onRefresh: _reload,
+                  color: const Color(0xFFCB7B2A),
+                  child: ListView(
+                    padding: const EdgeInsets.all(16),
                     children: [
-                      for (final item in entry.value)
-                        _OwnedItemCard(
-                          imagePath: shopItemImagePath(item),
-                          name: s.shopItemName(
-                            item['sku']?.toString() ?? '',
-                            item['name']?.toString() ?? '',
-                          ),
-                          equipped: data.equippedByCategory[entry.key] == (item['id'] as num).toInt(),
-                          busy: _equippingItemId == (item['id'] as num).toInt(),
-                          equippedLabel: s.equippedLabel,
-                          equipLabel: s.equipAction,
-                          onTap: () => _equip(entry.key, (item['id'] as num).toInt(), s),
+                      if (isComingSoon)
+                        Padding(
+                          padding: const EdgeInsets.only(bottom: 12),
+                          child: Text(s.comingSoon, style: const TextStyle(color: Colors.white54)),
                         ),
+                      GridView.count(
+                        shrinkWrap: true,
+                        physics: const NeverScrollableScrollPhysics(),
+                        crossAxisCount: 2,
+                        mainAxisSpacing: 18,
+                        crossAxisSpacing: 14,
+                        childAspectRatio: 0.66,
+                        children: [
+                          _OwnedItemCard(
+                            imagePath: _basicImagePathFor(_selectedCategory),
+                            name: s.basicItemName,
+                            description: s.basicItemDescription,
+                            equipped: basicEquipped,
+                            busy: _equippingBasicCategory == _selectedCategory,
+                            equippedLabel: s.equippedLabel,
+                            equipLabel: s.equipAction,
+                            onTap: () => _equip(_selectedCategory, null, s),
+                          ),
+                          for (final item in selectedItems)
+                            _OwnedItemCard(
+                              imagePath: shopItemImagePath(item),
+                              name: s.shopItemName(
+                                item['sku']?.toString() ?? '',
+                                item['name']?.toString() ?? '',
+                              ),
+                              description: s.shopItemDescription(
+                                item['sku']?.toString() ?? '',
+                                item['description']?.toString() ?? '',
+                              ),
+                              equipped: equippedId == (item['id'] as num).toInt(),
+                              busy: _equippingItemId == (item['id'] as num).toInt(),
+                              equippedLabel: s.equippedLabel,
+                              equipLabel: s.equipAction,
+                              onTap: () => _equip(_selectedCategory, (item['id'] as num).toInt(), s),
+                            ),
+                        ],
+                      ),
                     ],
                   ),
-                  const SizedBox(height: 20),
-                ],
-              ],
-            );
-          },
-        ),
+                ),
+              ),
+            ],
+          );
+        },
       ),
     );
   }
@@ -165,6 +223,7 @@ class _OwnedItemCard extends StatelessWidget {
   const _OwnedItemCard({
     required this.imagePath,
     required this.name,
+    required this.description,
     required this.equipped,
     required this.busy,
     required this.equippedLabel,
@@ -174,6 +233,7 @@ class _OwnedItemCard extends StatelessWidget {
 
   final String? imagePath;
   final String name;
+  final String description;
   final bool equipped;
   final bool busy;
   final String equippedLabel;
@@ -193,6 +253,15 @@ class _OwnedItemCard extends StatelessWidget {
           overflow: TextOverflow.ellipsis,
           style: AppFonts.title(color: Colors.white, fontSize: 13),
         ),
+        if (description.isNotEmpty) ...[
+          const SizedBox(height: 2),
+          Text(
+            description,
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+            style: const TextStyle(color: Colors.white54, fontSize: 11, height: 1.25),
+          ),
+        ],
         const SizedBox(height: 8),
         if (busy)
           const SizedBox(

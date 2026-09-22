@@ -232,6 +232,10 @@ class Strings {
   String get equippedLabel => _es ? 'Equipado' : 'Equipped';
   String get equipAction => _es ? 'Equipar' : 'Equip';
   String get goToShop => _es ? 'Ir a la tienda' : 'Go to shop';
+  String get basicItemName => _es ? 'Básico' : 'Basic';
+  String get basicItemDescription => _es
+      ? 'El aspecto original del juego, sin ningún skin aplicado.'
+      : "The game's original look, with no skin applied.";
   String categoryLabel(String category) {
     switch (category) {
       case 'turret_skin':

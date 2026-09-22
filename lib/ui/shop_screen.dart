@@ -24,11 +24,9 @@ class ShopScreen extends StatefulWidget {
 }
 
 class _ShopScreenState extends State<ShopScreen> {
-  static const categoryOrder = ['turret_skin', 'bullet_effect', 'mob_skin', 'boss_skin', 'bundle'];
-
   late Future<List<Map<String, dynamic>>> _items;
   final Set<int> _purchasing = {};
-  String _selectedCategory = categoryOrder.first;
+  String _selectedCategory = shopCategoryOrder.first;
 
   @override
   void initState() {
@@ -130,7 +128,7 @@ class _ShopScreenState extends State<ShopScreen> {
 
           return Row(
             children: [
-              _CategoryRail(
+              CategoryRail(
                 selected: _selectedCategory,
                 onSelect: (c) => setState(() => _selectedCategory = c),
                 s: s,
@@ -182,102 +180,6 @@ class _ShopScreenState extends State<ShopScreen> {
             ],
           );
         },
-      ),
-    );
-  }
-}
-
-/// Left-side "Categories" navigation: one entry per catalog category,
-/// always shown (even for categories with no items yet) so mobs/bosses
-/// are visible with their "coming soon" state instead of just missing.
-class _CategoryRail extends StatelessWidget {
-  const _CategoryRail({required this.selected, required this.onSelect, required this.s});
-
-  final String selected;
-  final ValueChanged<String> onSelect;
-  final Strings s;
-
-  static const _icons = {
-    'turret_skin': Icons.gps_fixed_rounded,
-    'bullet_effect': Icons.bolt_rounded,
-    'mob_skin': Icons.bug_report_rounded,
-    'boss_skin': Icons.emoji_events_rounded,
-    'bundle': Icons.card_giftcard_rounded,
-  };
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: 84,
-      color: const Color(0xFF241a11),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Padding(
-            padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 4),
-            child: Text(
-              s.shopCategoriesTitle.toUpperCase(),
-              textAlign: TextAlign.center,
-              style: AppFonts.title(color: const Color(0xFFCB7B2A), fontSize: 11, letterSpacing: 0.5),
-            ),
-          ),
-          for (final category in _ShopScreenState.categoryOrder)
-            _CategoryButton(
-              label: s.shopCategoryShortLabel(category),
-              icon: _icons[category] ?? Icons.category_rounded,
-              selected: category == selected,
-              onTap: () => onSelect(category),
-            ),
-        ],
-      ),
-    );
-  }
-}
-
-class _CategoryButton extends StatelessWidget {
-  const _CategoryButton({
-    required this.label,
-    required this.icon,
-    required this.selected,
-    required this.onTap,
-  });
-
-  final String label;
-  final IconData icon;
-  final bool selected;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    return InkWell(
-      onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 4),
-        decoration: BoxDecoration(
-          color: selected ? const Color(0xFF3A2A1C) : Colors.transparent,
-          border: Border(
-            left: BorderSide(
-              color: selected ? const Color(0xFFCB7B2A) : Colors.transparent,
-              width: 3,
-            ),
-          ),
-        ),
-        child: Column(
-          children: [
-            Icon(icon, color: selected ? const Color(0xFFCB7B2A) : Colors.white54, size: 22),
-            const SizedBox(height: 4),
-            Text(
-              label,
-              textAlign: TextAlign.center,
-              maxLines: 2,
-              style: TextStyle(
-                color: selected ? Colors.white : Colors.white54,
-                fontSize: 10,
-                fontWeight: selected ? FontWeight.bold : FontWeight.normal,
-              ),
-            ),
-          ],
-        ),
       ),
     );
   }
