@@ -9,3 +9,8 @@ GeneratedPluginRegistrant.java
 key.properties
 **/*.keystore
 **/*.jks
+
+# Not used (no Firebase Gradle plugin applied — see build.gradle.kts/
+# settings.gradle.kts) and contains a Google API key shared across other
+# apps' projects, so it stays out of git if it's ever regenerated locally.
+app/google-services.json

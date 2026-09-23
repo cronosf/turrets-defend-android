@@ -4,9 +4,6 @@ plugins {
     id("com.android.application")
     // The Flutter Gradle Plugin must be applied after the Android and Kotlin Gradle plugins.
     id("dev.flutter.flutter-gradle-plugin")
-    // Reads android/app/google-services.json to wire up this app's Firebase/
-    // Google Cloud project — needed for Google Sign-In.
-    id("com.google.gms.google-services")
 }
 
 // Release signing config, kept out of version control (see android/.gitignore
