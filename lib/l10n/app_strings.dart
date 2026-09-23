@@ -44,6 +44,13 @@ class Strings {
   String get close => _es ? 'CERRAR' : 'CLOSE';
 
   String get baseDestroyed => _es ? 'BASE DESTRUIDA' : 'BASE DESTROYED';
+  String get bossFightTitle => _es ? 'COMBATE CON JEFE' : 'BOSS FIGHT';
+  String get bossLevelLabel => _es ? 'NIVEL DE BOSS' : 'BOSS LEVEL';
+  String get bossDefeatedTitle => _es ? 'BOSS ELIMINADO' : 'BOSS DEFEATED';
+  String get achievementUnlockedLabel => _es ? 'Logro conseguido' : 'Achievement unlocked';
+  String get achievementRepeatLabel => _es ? 'Ya tienes este logro' : 'You already have this figure';
+  String achievementName(int id) => _es ? 'Logro #$id' : 'Achievement #$id';
+  String get bossContinueLabel => _es ? 'CONTINUAR' : 'CONTINUE';
   String waveReached(int n) => _es ? 'Oleada alcanzada: $n' : 'Wave reached: $n';
   String get playAgain => _es ? 'JUGAR DE NUEVO' : 'PLAY AGAIN';
   String get backToHome => _es ? 'VOLVER' : 'BACK';
@@ -189,6 +196,7 @@ class Strings {
   String get editProfile => _es ? 'Editar perfil' : 'Edit profile';
   String get menuMyPurchases => _es ? 'Mis compras' : 'My purchases';
   String get menuCustomize => _es ? 'Mi personalización' : 'My customization';
+  String get menuAchievements => _es ? 'Logros' : 'Achievements';
   String get menuNationalRanking => _es ? 'Ranking nacional' : 'National ranking';
   String get menuNotifications => _es ? 'Notificaciones' : 'Notifications';
   String get notificationsHint => _es
@@ -229,6 +237,14 @@ class Strings {
         return status;
     }
   }
+
+  // --- Logros --------------------------------------------------------------
+  String get achievementsTitle => menuAchievements;
+  String get achievementsHint => _es
+      ? 'Derrota bosses para conseguir figuras de colección. Las últimas son las más difíciles.'
+      : 'Defeat bosses to earn collectible figures. The last ones are the hardest to get.';
+  String achievementsPageLabel(int page, int totalPages) =>
+      _es ? 'Página $page de $totalPages' : 'Page $page of $totalPages';
 
   // --- Mi personalización --------------------------------------------------
   String get customizeTitle => menuCustomize;
@@ -305,6 +321,12 @@ class Strings {
           return 'Crimson Turret';
         case 'bundle_blue_pack':
           return 'Full Blue Pack';
+        case 'mob_skin_plant1':
+          return 'Crimson Plant';
+        case 'mob_skin_plant2':
+          return 'Azure Plant';
+        case 'mob_skin_plant3':
+          return 'Star Plant';
       }
     }
     return fallback;
@@ -327,6 +349,10 @@ class Strings {
           return 'Shots with a glowing neon green effect.';
         case 'bundle_blue_pack':
           return 'Futuristic Blue Turret + Red Laser, bundled at a discount.';
+        case 'mob_skin_plant1':
+        case 'mob_skin_plant2':
+        case 'mob_skin_plant3':
+          return 'Replaces the classic ground mobs with this plant variant.';
       }
     }
     return fallback;

@@ -54,8 +54,11 @@ class TopHud extends StatelessWidget {
                     ),
                     const Spacer(),
                     Text(
-                      s.level(economy.wave),
-                      style: AppFonts.title(color: Colors.amberAccent, fontSize: 16),
+                      economy.isBossWave ? s.bossLevelLabel : s.level(economy.wave),
+                      style: AppFonts.title(
+                        color: economy.isBossWave ? const Color(0xFFE05A3A) : Colors.amberAccent,
+                        fontSize: 16,
+                      ),
                     ),
                     const Spacer(),
                     GestureDetector(

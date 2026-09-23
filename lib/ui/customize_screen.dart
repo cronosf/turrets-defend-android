@@ -130,11 +130,11 @@ class _CustomizeScreenState extends State<CustomizeScreen> {
             byCategory.putIfAbsent(category, () => []).add(item);
           }
           final selectedItems = byCategory[_selectedCategory] ?? [];
-          // Categories with no catalog items at all yet (mobs, bosses) get
-          // the same "coming soon" note the shop shows, alongside Basic —
-          // there's nothing to buy there yet, but Basic still shows what
-          // "no skin" looks like for consistency.
-          final isComingSoon = _selectedCategory == 'mob_skin' || _selectedCategory == 'boss_skin';
+          // Categories with no catalog items at all yet (bosses aren't
+          // purchasable) get the same "coming soon" note the shop shows,
+          // alongside Basic — there's nothing to buy there yet, but Basic
+          // still shows what "no skin" looks like for consistency.
+          final isComingSoon = _selectedCategory == 'boss_skin';
           // Basic (no skin equipped) is "equipped" whenever the category
           // has no row in user_equipped_items yet, or an explicit null.
           final equippedId = data.equippedByCategory[_selectedCategory];

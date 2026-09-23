@@ -6,6 +6,8 @@ import '../game/turret_defense_game.dart';
 import '../models/economy.dart';
 import '../services/api_client.dart';
 import 'base_health_bar.dart';
+import 'boss_banner.dart';
+import 'boss_defeated_overlay.dart';
 import 'bottom_controls.dart';
 import 'buy_level_dialog.dart';
 import 'lose_overlay.dart';
@@ -92,6 +94,8 @@ class _GameScreenState extends State<GameScreen> {
                     game: _game,
                     overlayBuilderMap: {
                       'lose': (context, game) => LoseOverlay(game: game),
+                      'bossFight': (context, game) => BossBanner(game: game),
+                      'bossDefeated': (context, game) => BossDefeatedOverlay(game: game),
                     },
                   ),
                 ),

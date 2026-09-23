@@ -5,6 +5,7 @@ import '../models/economy.dart';
 import '../services/api_client.dart';
 import '../services/nav_guard.dart';
 import '../theme/app_fonts.dart';
+import 'achievements_screen.dart';
 import 'avatar_initials.dart';
 import 'customize_screen.dart';
 import 'edit_profile_screen.dart';
@@ -146,22 +147,22 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 ),
                 const SizedBox(height: 28),
                 _MenuTile(
-                  icon: Icons.receipt_long_rounded,
-                  label: s.menuMyPurchases,
-                  onTap: () {
-                    if (!NavGuard.allow()) return;
-                    Navigator.of(context).push(
-                      MaterialPageRoute(builder: (_) => MyPurchasesScreen(economy: widget.economy)),
-                    );
-                  },
-                ),
-                _MenuTile(
                   icon: Icons.brush_rounded,
                   label: s.menuCustomize,
                   onTap: () {
                     if (!NavGuard.allow()) return;
                     Navigator.of(context).push(
                       MaterialPageRoute(builder: (_) => CustomizeScreen(economy: widget.economy)),
+                    );
+                  },
+                ),
+                _MenuTile(
+                  icon: Icons.emoji_events_rounded,
+                  label: s.menuAchievements,
+                  onTap: () {
+                    if (!NavGuard.allow()) return;
+                    Navigator.of(context).push(
+                      MaterialPageRoute(builder: (_) => AchievementsScreen(economy: widget.economy)),
                     );
                   },
                 ),
@@ -177,6 +178,16 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           countryCode: user['country_code']?.toString(),
                         ),
                       ),
+                    );
+                  },
+                ),
+                _MenuTile(
+                  icon: Icons.receipt_long_rounded,
+                  label: s.menuMyPurchases,
+                  onTap: () {
+                    if (!NavGuard.allow()) return;
+                    Navigator.of(context).push(
+                      MaterialPageRoute(builder: (_) => MyPurchasesScreen(economy: widget.economy)),
                     );
                   },
                 ),

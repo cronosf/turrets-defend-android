@@ -1,3 +1,4 @@
+import 'package:flame/components.dart' show Vector2;
 import 'package:flame/flame.dart';
 import 'package:flame/sprite.dart';
 import 'package:flutter/services.dart' show rootBundle, AssetManifest;
@@ -63,5 +64,29 @@ class GameAssets {
   static Future<Sprite> loadSprite(String relativePath) async {
     final image = await Flame.images.load(relativePath);
     return Sprite(image);
+  }
+
+  /// Slices one row out of a uniform sprite sheet into individual [Sprite]s.
+  /// Boss art (see assets/images/bosses/) comes as one PNG per animation
+  /// with a fixed-size frame grid (rows = facing direction, columns =
+  /// animation frames) rather than the per-frame-file convention
+  /// [loadFrames] expects, so this reads a single row directly via
+  /// srcPosition/srcSize instead.
+  static Future<List<Sprite>> loadSheetRow(
+    String relativePath, {
+    required double frameWidth,
+    required double frameHeight,
+    required int row,
+    required int columns,
+  }) async {
+    final image = await Flame.images.load(relativePath);
+    return [
+      for (var col = 0; col < columns; col++)
+        Sprite(
+          image,
+          srcPosition: Vector2(col * frameWidth, row * frameHeight),
+          srcSize: Vector2(frameWidth, frameHeight),
+        ),
+    ];
   }
 }

@@ -5,13 +5,13 @@ import 'package:flutter/material.dart' show Paint;
 
 import '../../theme/hue_rotate.dart';
 import '../turret_defense_game.dart';
-import 'enemy_component.dart';
+import 'targetable.dart';
 
 /// A homing shot fired by a turret. Homing (rather than a straight-line
 /// shot) keeps low fire-rate tiers from feeling like they miss fast movers.
 class ProjectileComponent extends SpriteComponent
     with HasGameReference<TurretDefenseGame> {
-  final EnemyComponent target;
+  final Targetable target;
   final double damage;
   static const double speed = 460;
 
@@ -61,7 +61,7 @@ class ProjectileComponent extends SpriteComponent
 
     final delta = target.position - position;
     final distance = delta.length;
-    if (distance < 14) {
+    if (distance < target.hitRadius) {
       target.takeDamage(damage);
       game.spawnHitFx(position.clone());
       removeFromParent();

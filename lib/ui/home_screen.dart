@@ -85,16 +85,17 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  /// Looks up the player's currently-equipped `turret_skin` and
-  /// `bullet_effect` items (if any) and resolves each one's `tint_hue`
-  /// from the owned-items list, so every turret tier and every shot fired
-  /// in the run gets reskinned via the runtime color filter — not just
-  /// tier 1, and not just a static shop preview.
+  /// Looks up the player's currently-equipped `turret_skin`,
+  /// `bullet_effect` and `mob_skin` items (if any) and resolves each one's
+  /// `tint_hue`/`asset_key` from the owned-items list, so every turret
+  /// tier, every shot fired, and every ground mob in the run gets
+  /// reskinned — not just tier 1, and not just a static shop preview.
   Future<void> _syncEquippedSkins() async {
     if (!ApiClient.hasToken) {
       _economy.setEquippedTurretHue(null);
       _economy.setEquippedBulletHue(null);
       _economy.setEquippedBulletAssetKey(null);
+      _economy.setEquippedMobSkinAssetKey(null);
       return;
     }
     try {
@@ -104,11 +105,14 @@ class _HomeScreenState extends State<HomeScreen> {
 
       num? equippedTurretSkinId;
       num? equippedBulletSkinId;
+      num? equippedMobSkinId;
       for (final e in equipped) {
         if (e['category'] == 'turret_skin') {
           equippedTurretSkinId = e['shop_item_id'] as num?;
         } else if (e['category'] == 'bullet_effect') {
           equippedBulletSkinId = e['shop_item_id'] as num?;
+        } else if (e['category'] == 'mob_skin') {
+          equippedMobSkinId = e['shop_item_id'] as num?;
         }
       }
 
@@ -116,6 +120,7 @@ class _HomeScreenState extends State<HomeScreen> {
       final bulletMeta = _metaFor(items, equippedBulletSkinId);
       _economy.setEquippedBulletHue(bulletMeta.hue);
       _economy.setEquippedBulletAssetKey(bulletMeta.assetKey);
+      _economy.setEquippedMobSkinAssetKey(_metaFor(items, equippedMobSkinId).assetKey);
     } catch (_) {
       // Best-effort — worst case the run just uses the default art.
     }

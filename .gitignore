@@ -68,3 +68,15 @@ app.*.map.json
 # pubspec.yaml or lib/ (the app actually ships the compressed assets/audio/
 # .mp3 files). Unused bulk, so it stays out of the repo.
 /assets/music/
+
+# Raw source kits for bosses/mobs/items/achievement figures (.ai/.eps
+# originals, full PNG sequences, ~700MB combined) — same situation as
+# "Merge Turrets" above: not referenced by pubspec.yaml (only the cropped/
+# processed assets/images/bosses/, assets/images/logros/, assets/images/mobs/
+# are shipped), and redistributing the purchased kits' source files is very
+# likely outside their license terms.
+/assets/bosses/
+/assets/core_sprites/
+/assets/items/
+/assets/logros/
+/assets/mobs/

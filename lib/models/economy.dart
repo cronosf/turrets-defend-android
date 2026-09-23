@@ -22,6 +22,11 @@ class Economy extends ChangeNotifier {
   int lastScore = 0;
   int waveEnemiesTotal = 0;
   int waveEnemiesResolved = 0;
+  bool isBossWave = false;
+
+  /// Ids (1-40) of achievement figures earned so far — persisted locally,
+  /// same as best_wave/best_score. See models/achievements.dart.
+  Set<int> unlockedAchievements = {};
 
   double adCooldown = 0;
   bool sellMode = false;
@@ -74,6 +79,18 @@ class Economy extends ChangeNotifier {
     notifyListeners();
   }
 
+  /// The equipped mob_skin item's `asset_key` — EnemyComponent uses this
+  /// to replace every ground-kind enemy's sprite with the matching plant
+  /// art (see models/mob_skins.dart) instead of the classic beetle art.
+  /// null means the original mobs.
+  String? equippedMobSkinAssetKey;
+
+  void setEquippedMobSkinAssetKey(String? key) {
+    if (equippedMobSkinAssetKey == key) return;
+    equippedMobSkinAssetKey = key;
+    notifyListeners();
+  }
+
   SharedPreferences? _prefs;
 
   Future<void> loadPersisted() async {
@@ -92,6 +109,8 @@ class Economy extends ChangeNotifier {
     language = (_prefs?.getString('language') ?? 'es') == 'en'
         ? AppLanguage.en
         : AppLanguage.es;
+    unlockedAchievements =
+        (_prefs?.getStringList('unlocked_achievements') ?? []).map(int.parse).toSet();
     notifyListeners();
   }
 
@@ -106,6 +125,7 @@ class Economy extends ChangeNotifier {
     gameOver = false;
     waveEnemiesTotal = 0;
     waveEnemiesResolved = 0;
+    isBossWave = false;
     notifyListeners();
   }
 
@@ -163,6 +183,29 @@ class Economy extends ChangeNotifier {
     waveEnemiesResolved = resolved;
     waveEnemiesTotal = total;
     notifyListeners();
+  }
+
+  /// Drives TopHud showing "BOSS LEVEL"/"NIVEL DE BOSS" instead of a
+  /// numbered level while a boss encounter is active (see
+  /// TurretDefenseGame's boss-wave logic).
+  void setBossWave(bool value) {
+    if (isBossWave == value) return;
+    isBossWave = value;
+    notifyListeners();
+  }
+
+  /// Records an achievement figure as earned. Returns false (and no-ops)
+  /// if that figure was already owned — a boss kill can roll a repeat, and
+  /// the caller uses this to show "already have it" instead of "unlocked"
+  /// (see BossDefeatedOverlay). See models/achievements.dart.
+  bool unlockAchievement(int id) {
+    if (!unlockedAchievements.add(id)) return false;
+    _prefs?.setStringList(
+      'unlocked_achievements',
+      unlockedAchievements.map((e) => e.toString()).toList(),
+    );
+    notifyListeners();
+    return true;
   }
 
   void tickAdCooldown(double dt) {

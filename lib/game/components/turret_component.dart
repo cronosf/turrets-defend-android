@@ -125,7 +125,11 @@ class TurretComponent extends PositionComponent
 
     _cooldown -= dt;
     if (_cooldown <= 0) {
-      final target = game.findNearestEnemyInRange(position, stats.range);
+      // A boss is much taller than a regular mob, so give turrets a bit
+      // more reach specifically during a boss wave — only there, normal
+      // waves keep their usual range untouched.
+      final range = game.economy.isBossWave ? stats.range * 1.15 : stats.range;
+      final target = game.findNearestEnemyInRange(position, range);
       if (target != null) {
         game.fireProjectileFromTurret(this, target, stats.damage);
         _cooldown = stats.fireInterval;

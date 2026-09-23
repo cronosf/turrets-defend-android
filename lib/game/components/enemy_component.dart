@@ -5,11 +5,13 @@ import 'package:flutter/material.dart';
 
 import '../../game_assets.dart';
 import '../../models/enemy_types.dart';
+import '../../models/mob_skins.dart';
 import '../turret_defense_game.dart';
+import 'targetable.dart';
 
 /// A single enemy walking/flying down the battlefield toward the base.
 class EnemyComponent extends PositionComponent
-    with HasGameReference<TurretDefenseGame> {
+    with HasGameReference<TurretDefenseGame>, Targetable {
   final EnemyType type;
   final double maxHp;
   final double speed;
@@ -32,15 +34,30 @@ class EnemyComponent extends PositionComponent
     required this.damage,
     required this.reward,
     required Vector2 position,
+    Vector2? size,
   })  : hp = maxHp,
         _swayPhase = math.Random().nextDouble() * math.pi * 2,
-        super(position: position, size: Vector2(48, 48), anchor: Anchor.center);
+        super(position: position, size: size ?? Vector2(48, 48), anchor: Anchor.center);
 
+  @override
   bool get isDead => _dead;
 
   @override
   Future<void> onLoad() async {
-    final frames = await GameAssets.loadFrames(type.assetDir);
+    // A purchased mob_skin fully replaces ground-kind enemies' art (unlike
+    // turret/bullet skins, which just tint the base sprite) — see
+    // models/mob_skins.dart.
+    final skinKey = type.kind == EnemyKind.ground ? game.economy.equippedMobSkinAssetKey : null;
+    final skin = skinKey != null ? kMobSkinTypes[skinKey] : null;
+    final frames = skin != null
+        ? await GameAssets.loadSheetRow(
+            skin.walkSheetPath,
+            frameWidth: kMobSkinFrameSize,
+            frameHeight: kMobSkinFrameSize,
+            row: kMobSkinDirectionRow,
+            columns: kMobSkinFrameCount,
+          )
+        : await GameAssets.loadFrames(type.assetDir);
     _sprite = SpriteAnimationComponent(
       animation: SpriteAnimation.spriteList(
         frames.isEmpty ? [await GameAssets.loadSprite('ground/Ground-Base.png')] : frames,
@@ -53,14 +70,19 @@ class EnemyComponent extends PositionComponent
     );
     add(_sprite);
 
+    // 70% of the sprite's width (centered) rather than the full width —
+    // full-width read as too thick/wide once mob_skin-equipped enemies
+    // render bigger.
+    final barWidth = size.x * 0.7;
+    final barX = (size.x - barWidth) / 2;
     _hpBarBg = RectangleComponent(
-      position: Vector2(0, -8),
-      size: Vector2(size.x, 5),
+      position: Vector2(barX, -8),
+      size: Vector2(barWidth, 5),
       paint: Paint()..color = Colors.black54,
     );
     _hpBarFill = RectangleComponent(
-      position: Vector2(0, -8),
-      size: Vector2(size.x, 5),
+      position: Vector2(barX, -8),
+      size: Vector2(barWidth, 5),
       paint: Paint()..color = Colors.greenAccent,
     );
     add(_hpBarBg);
@@ -85,10 +107,11 @@ class EnemyComponent extends PositionComponent
     }
   }
 
+  @override
   void takeDamage(double amount) {
     if (_dead) return;
     hp -= amount;
-    _hpBarFill.size = Vector2(size.x * (hp / maxHp).clamp(0, 1), 5);
+    _hpBarFill.size = Vector2(_hpBarBg.size.x * (hp / maxHp).clamp(0, 1), 5);
     if (hp <= 0) {
       _die();
     }
