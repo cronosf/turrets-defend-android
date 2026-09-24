@@ -79,15 +79,31 @@ class Economy extends ChangeNotifier {
     notifyListeners();
   }
 
-  /// The equipped mob_skin item's `asset_key` — EnemyComponent uses this
-  /// to replace every ground-kind enemy's sprite with the matching plant
-  /// art (see models/mob_skins.dart) instead of the classic beetle art.
-  /// null means the original mobs.
-  String? equippedMobSkinAssetKey;
+  /// The equipped mob_skin `asset_key` per enemy kind ('ground'/'fly'/
+  /// 'hybrid' — see EnemyKind.name), e.g. {'ground': 'plant1'}. A kind
+  /// missing here (or mapped to null) means that kind's original art.
+  /// Each kind is its own independent equip slot server-side (the
+  /// `mob_skin:<kind>` convention — see HomeScreen._syncEquippedSkins),
+  /// so e.g. a ground skin and a hybrid skin can both be equipped at once.
+  /// See models/mob_skins.dart and EnemyComponent.onLoad.
+  Map<String, String?> equippedMobSkinByKind = const {};
 
-  void setEquippedMobSkinAssetKey(String? key) {
-    if (equippedMobSkinAssetKey == key) return;
-    equippedMobSkinAssetKey = key;
+  void setEquippedMobSkinForKind(String kind, String? assetKey) {
+    if (equippedMobSkinByKind[kind] == assetKey) return;
+    equippedMobSkinByKind = {...equippedMobSkinByKind, kind: assetKey};
+    notifyListeners();
+  }
+
+  /// The equipped boss_skin variant id per boss rotation slot ('golem'/
+  /// 'goblin'/'ogre'/'orc' — BossType.slotId), e.g. {'golem': 'golem1'}.
+  /// A slot missing here (or mapped to null) means that slot's basic
+  /// look. See models/boss_types.dart's resolveBossType and the
+  /// `boss_skin:<slot>` equip-category convention in HomeScreen.
+  Map<String, String?> equippedBossSkinBySlot = const {};
+
+  void setEquippedBossSkinForSlot(String slot, String? variantId) {
+    if (equippedBossSkinBySlot[slot] == variantId) return;
+    equippedBossSkinBySlot = {...equippedBossSkinBySlot, slot: variantId};
     notifyListeners();
   }
 

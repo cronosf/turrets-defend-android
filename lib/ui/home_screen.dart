@@ -4,7 +4,9 @@ import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../l10n/app_strings.dart';
+import '../models/boss_types.dart';
 import '../models/economy.dart';
+import '../models/enemy_types.dart';
 import '../services/api_client.dart';
 import '../services/nav_guard.dart';
 import '../services/update_checker.dart';
@@ -95,7 +97,12 @@ class _HomeScreenState extends State<HomeScreen> {
       _economy.setEquippedTurretHue(null);
       _economy.setEquippedBulletHue(null);
       _economy.setEquippedBulletAssetKey(null);
-      _economy.setEquippedMobSkinAssetKey(null);
+      for (final kind in EnemyKind.values.map((k) => k.name)) {
+        _economy.setEquippedMobSkinForKind(kind, null);
+      }
+      for (final slot in kBossTypes.map((b) => b.slotId)) {
+        _economy.setEquippedBossSkinForSlot(slot, null);
+      }
       return;
     }
     try {
@@ -105,14 +112,23 @@ class _HomeScreenState extends State<HomeScreen> {
 
       num? equippedTurretSkinId;
       num? equippedBulletSkinId;
-      num? equippedMobSkinId;
+      // 'mob_skin:<kind>' / 'boss_skin:<slot>' — each an independent equip
+      // slot server-side (see the same convention documented on
+      // Economy.equippedMobSkinByKind), so a ground skin and a hybrid
+      // skin (or a golem skin and a future goblin skin) can be equipped
+      // at the same time instead of fighting over one shared category row.
+      final mobSkinItemIdByKind = <String, num?>{};
+      final bossSkinItemIdBySlot = <String, num?>{};
       for (final e in equipped) {
-        if (e['category'] == 'turret_skin') {
+        final category = e['category']?.toString() ?? '';
+        if (category == 'turret_skin') {
           equippedTurretSkinId = e['shop_item_id'] as num?;
-        } else if (e['category'] == 'bullet_effect') {
+        } else if (category == 'bullet_effect') {
           equippedBulletSkinId = e['shop_item_id'] as num?;
-        } else if (e['category'] == 'mob_skin') {
-          equippedMobSkinId = e['shop_item_id'] as num?;
+        } else if (category.startsWith('mob_skin:')) {
+          mobSkinItemIdByKind[category.substring('mob_skin:'.length)] = e['shop_item_id'] as num?;
+        } else if (category.startsWith('boss_skin:')) {
+          bossSkinItemIdBySlot[category.substring('boss_skin:'.length)] = e['shop_item_id'] as num?;
         }
       }
 
@@ -120,7 +136,12 @@ class _HomeScreenState extends State<HomeScreen> {
       final bulletMeta = _metaFor(items, equippedBulletSkinId);
       _economy.setEquippedBulletHue(bulletMeta.hue);
       _economy.setEquippedBulletAssetKey(bulletMeta.assetKey);
-      _economy.setEquippedMobSkinAssetKey(_metaFor(items, equippedMobSkinId).assetKey);
+      for (final kind in EnemyKind.values.map((k) => k.name)) {
+        _economy.setEquippedMobSkinForKind(kind, _metaFor(items, mobSkinItemIdByKind[kind]).assetKey);
+      }
+      for (final slot in kBossTypes.map((b) => b.slotId)) {
+        _economy.setEquippedBossSkinForSlot(slot, _metaFor(items, bossSkinItemIdBySlot[slot]).assetKey);
+      }
     } catch (_) {
       // Best-effort — worst case the run just uses the default art.
     }

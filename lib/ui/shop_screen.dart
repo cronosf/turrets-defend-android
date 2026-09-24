@@ -27,6 +27,19 @@ class _ShopScreenState extends State<ShopScreen> {
   late Future<List<Map<String, dynamic>>> _items;
   final Set<int> _purchasing = {};
   String _selectedCategory = shopCategoryOrder.first;
+  // Remembers the last sub-slot picked per category (mob_skin's kind /
+  // boss_skin's slot — see shopSubSlotsFor) so switching categories and
+  // back doesn't reset it to the first tab every time.
+  final Map<String, String> _selectedSubSlot = {};
+
+  void _selectCategory(String category) {
+    setState(() => _selectedCategory = category);
+  }
+
+  String? _currentSubSlot(List<String>? subSlots) {
+    if (subSlots == null) return null;
+    return _selectedSubSlot[_selectedCategory] ?? subSlots.first;
+  }
 
   @override
   void initState() {
@@ -47,13 +60,17 @@ class _ShopScreenState extends State<ShopScreen> {
 
   Future<void> _buy(Map<String, dynamic> item, Strings s) async {
     if (!ApiClient.hasToken) {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(s.shopLoginRequired)));
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text(s.shopLoginRequired)));
       return;
     }
     final itemId = (item['id'] as num).toInt();
     setState(() => _purchasing.add(itemId));
     try {
-      final order = await ApiClient.post('/shop/orders', body: {'sku': item['sku']}) as Map<String, dynamic>;
+      final order = await ApiClient.post(
+        '/shop/orders',
+        body: {'sku': item['sku']},
+      ) as Map<String, dynamic>;
       final approveUrl = order['approve_url'] as String?;
       final orderId = order['order_id'];
       if (approveUrl == null || orderId == null) {
@@ -62,23 +79,29 @@ class _ShopScreenState extends State<ShopScreen> {
 
       if (!mounted) return;
       final approved = await Navigator.of(context).push<bool>(
-        MaterialPageRoute(builder: (_) => PaypalCheckoutScreen(approveUrl: approveUrl)),
+        MaterialPageRoute(
+          builder: (_) => PaypalCheckoutScreen(approveUrl: approveUrl),
+        ),
       );
       if (approved != true) {
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(s.purchaseCancelled)));
+          ScaffoldMessenger.of(context)
+              .showSnackBar(SnackBar(content: Text(s.purchaseCancelled)));
         }
         return;
       }
 
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(s.purchaseApproving)));
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text(s.purchaseApproving)));
       await ApiClient.post('/shop/orders/$orderId/capture');
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(s.purchaseSuccess)));
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text(s.purchaseSuccess)));
     } on ApiException catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.message)));
+        ScaffoldMessenger.of(context)
+            .showSnackBar(SnackBar(content: Text(e.message)));
       }
     } finally {
       if (mounted) setState(() => _purchasing.remove(itemId));
@@ -99,7 +122,9 @@ class _ShopScreenState extends State<ShopScreen> {
         future: _items,
         builder: (context, snapshot) {
           if (snapshot.connectionState != ConnectionState.done) {
-            return const Center(child: CircularProgressIndicator(color: Color(0xFFCB7B2A)));
+            return const Center(
+              child: CircularProgressIndicator(color: Color(0xFFCB7B2A)),
+            );
           }
           if (snapshot.hasError) {
             return RefreshIndicator(
@@ -109,10 +134,18 @@ class _ShopScreenState extends State<ShopScreen> {
                 children: [
                   const SizedBox(height: 80),
                   Center(
-                    child: Text(s.shopLoadError, style: const TextStyle(color: Colors.redAccent)),
+                    child: Text(
+                      s.shopLoadError,
+                      style: const TextStyle(color: Colors.redAccent),
+                    ),
                   ),
                   const SizedBox(height: 12),
-                  Center(child: OutlinedButton(onPressed: _reload, child: Text(s.retry))),
+                  Center(
+                    child: OutlinedButton(
+                      onPressed: _reload,
+                      child: Text(s.retry),
+                    ),
+                  ),
                 ],
               ),
             );
@@ -124,86 +157,131 @@ class _ShopScreenState extends State<ShopScreen> {
             final category = item['category']?.toString() ?? '';
             byCategory.putIfAbsent(category, () => []).add(item);
           }
-          final selectedItems = byCategory[_selectedCategory] ?? [];
+          final categoryItems = byCategory[_selectedCategory] ?? [];
+          final subSlots = shopSubSlotsFor(_selectedCategory);
+          final currentSubSlot = _currentSubSlot(subSlots);
+          final selectedItems = currentSubSlot == null
+              ? categoryItems
+              : categoryItems
+                    .where((item) => shopItemSubSlot(item) == currentSubSlot)
+                    .toList();
 
           return Row(
             children: [
               CategoryRail(
                 selected: _selectedCategory,
-                onSelect: (c) => setState(() => _selectedCategory = c),
+                onSelect: _selectCategory,
                 s: s,
                 headerIcon: Icons.storefront_rounded,
               ),
               Expanded(
-                child: RefreshIndicator(
-                  onRefresh: _reload,
-                  color: const Color(0xFFCB7B2A),
-                  child: selectedItems.isEmpty
-                      ? ListView(
-                          children: [
-                            const SizedBox(height: 80),
-                            Center(
-                              child: Text(s.comingSoon, style: const TextStyle(color: Colors.white54)),
-                            ),
-                          ],
-                        )
-                      : LayoutBuilder(
-                          builder: (context, constraints) {
-                            // A fixed aspect ratio doesn't work here: the
-                            // card's text (name + 2-line description +
-                            // button) has a height in dp that doesn't scale
-                            // with the column's width, so on some widths an
-                            // aspect-ratio cell came out shorter than the
-                            // content actually needed and the card overflowed
-                            // *into the row below it* (looked like rows
-                            // overlapping — the Buy button underneath became
-                            // untappable). Computing an explicit
-                            // mainAxisExtent from the real column width plus
-                            // a fixed text-area height avoids that regardless
-                            // of screen size.
-                            const columns = 2;
-                            const crossAxisSpacing = 14.0;
-                            const horizontalPadding = 16.0;
-                            const textAreaHeight = 128.0;
-                            final columnWidth = (constraints.maxWidth -
-                                    horizontalPadding * 2 -
-                                    crossAxisSpacing * (columns - 1)) /
-                                columns;
-                            final cardExtent = columnWidth + textAreaHeight;
-
-                            return GridView(
-                              padding: const EdgeInsets.all(horizontalPadding),
-                              gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                                crossAxisCount: columns,
-                                mainAxisSpacing: 18,
-                                crossAxisSpacing: crossAxisSpacing,
-                                mainAxisExtent: cardExtent,
-                              ),
-                              children: [
-                                for (final item in selectedItems)
-                                  _ShopItemCard(
-                                    imagePath: shopItemImagePath(item),
-                                    name: s.shopItemName(
-                                      item['sku']?.toString() ?? '',
-                                      item['name']?.toString() ?? '',
-                                    ),
-                                    description: s.shopItemDescription(
-                                      item['sku']?.toString() ?? '',
-                                      item['description']?.toString() ?? '',
-                                    ),
-                                    buyLabel: s.buyItem(
-                                      item['price_amount']?.toString() ?? '0',
-                                      item['price_currency']?.toString() ?? 'USD',
-                                    ),
-                                    busy: _purchasing.contains((item['id'] as num).toInt()),
-                                    onBuy: _purchasing.contains((item['id'] as num).toInt())
-                                        ? null
-                                        : () => _buy(item, s),
-                                  ),
-                              ],
-                            );
-                          },
+                child: Column(
+                  children: [
+                    if (subSlots != null)
+                      Padding(
+                        padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
+                        child: ShopSubSlotTabs(
+                          category: _selectedCategory,
+                          slots: subSlots,
+                          selected: currentSubSlot!,
+                          onSelect: (slot) => setState(
+                            () => _selectedSubSlot[_selectedCategory] = slot,
+                          ),
+                          s: s,
                         ),
+                      ),
+                    Expanded(
+                      child: RefreshIndicator(
+                        onRefresh: _reload,
+                        color: const Color(0xFFCB7B2A),
+                        child: selectedItems.isEmpty
+                            ? ListView(
+                                children: [
+                                  const SizedBox(height: 80),
+                                  Center(
+                                    child: Text(
+                                      s.comingSoon,
+                                      style: const TextStyle(
+                                        color: Colors.white54,
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              )
+                            : LayoutBuilder(
+                                builder: (context, constraints) {
+                                  // A fixed aspect ratio doesn't work here: the
+                                  // card's text (name + 2-line description +
+                                  // button) has a height in dp that doesn't scale
+                                  // with the column's width, so on some widths an
+                                  // aspect-ratio cell came out shorter than the
+                                  // content actually needed and the card overflowed
+                                  // *into the row below it* (looked like rows
+                                  // overlapping — the Buy button underneath became
+                                  // untappable). Computing an explicit
+                                  // mainAxisExtent from the real column width plus
+                                  // a fixed text-area height avoids that regardless
+                                  // of screen size.
+                                  const columns = 2;
+                                  const crossAxisSpacing = 14.0;
+                                  const horizontalPadding = 16.0;
+                                  const textAreaHeight = 128.0;
+                                  final columnWidth =
+                                      (constraints.maxWidth -
+                                          horizontalPadding * 2 -
+                                          crossAxisSpacing * (columns - 1)) /
+                                      columns;
+                                  final cardExtent =
+                                      columnWidth + textAreaHeight;
+
+                                  return GridView(
+                                    padding: const EdgeInsets.all(
+                                      horizontalPadding,
+                                    ),
+                                    gridDelegate:
+                                        SliverGridDelegateWithFixedCrossAxisCount(
+                                          crossAxisCount: columns,
+                                          mainAxisSpacing: 18,
+                                          crossAxisSpacing: crossAxisSpacing,
+                                          mainAxisExtent: cardExtent,
+                                        ),
+                                    children: [
+                                      for (final item in selectedItems)
+                                        _ShopItemCard(
+                                          imagePath: shopItemImagePath(item),
+                                          name: s.shopItemName(
+                                            item['sku']?.toString() ?? '',
+                                            item['name']?.toString() ?? '',
+                                          ),
+                                          description: s.shopItemDescription(
+                                            item['sku']?.toString() ?? '',
+                                            item['description']?.toString() ??
+                                                '',
+                                          ),
+                                          buyLabel: s.buyItem(
+                                            item['price_amount']?.toString() ??
+                                                '0',
+                                            item['price_currency']
+                                                    ?.toString() ??
+                                                'USD',
+                                          ),
+                                          busy: _purchasing.contains(
+                                            (item['id'] as num).toInt(),
+                                          ),
+                                          onBuy:
+                                              _purchasing.contains(
+                                                (item['id'] as num).toInt(),
+                                              )
+                                              ? null
+                                              : () => _buy(item, s),
+                                        ),
+                                    ],
+                                  );
+                                },
+                              ),
+                      ),
+                    ),
+                  ],
                 ),
               ),
             ],
@@ -256,7 +334,11 @@ class _ShopItemCard extends StatelessWidget {
             description,
             maxLines: 2,
             overflow: TextOverflow.ellipsis,
-            style: const TextStyle(color: Colors.white54, fontSize: 11, height: 1.25),
+            style: const TextStyle(
+              color: Colors.white54,
+              fontSize: 11,
+              height: 1.25,
+            ),
           ),
         ],
         const SizedBox(height: 8),
@@ -273,14 +355,19 @@ class _ShopItemCard extends StatelessWidget {
               backgroundColor: _gold,
               foregroundColor: const Color(0xFF241a11),
               padding: const EdgeInsets.symmetric(vertical: 10),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(10),
+              ),
               tapTargetSize: MaterialTapTargetSize.shrinkWrap,
             ),
             child: busy
                 ? const SizedBox(
                     width: 16,
                     height: 16,
-                    child: CircularProgressIndicator(color: Color(0xFF241a11), strokeWidth: 2),
+                    child: CircularProgressIndicator(
+                      color: Color(0xFF241a11),
+                      strokeWidth: 2,
+                    ),
                   )
                 : Text(buyLabel, style: const TextStyle(fontSize: 12)),
           ),

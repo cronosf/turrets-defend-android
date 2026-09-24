@@ -27,7 +27,7 @@ class HelpScreen extends StatelessWidget {
               Image.asset('assets/images/ui/MenuBanner.png', width: 220),
               const SizedBox(height: 20),
               const Text(
-                'Merge Turrets: Endless Mode',
+                'Defense Turrets: Endless Mode',
                 textAlign: TextAlign.center,
                 style: TextStyle(
                   color: Colors.white,

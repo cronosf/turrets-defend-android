@@ -24,6 +24,17 @@ class _CustomizeScreenState extends State<CustomizeScreen> {
   int? _equippingItemId;
   String? _equippingBasicCategory;
   String _selectedCategory = shopCategoryOrder.first;
+  // Remembers the last sub-slot picked per category (mob_skin's kind /
+  // boss_skin's slot — see shopSubSlotsFor), same idea as ShopScreen.
+  final Map<String, String> _selectedSubSlot = {};
+
+  /// The actual key used with `/profile/equip` and to read equipped state
+  /// — plain category for slot-less categories, "category:subSlot" for
+  /// mob_skin/boss_skin so e.g. a ground skin and a hybrid skin (or a
+  /// golem skin and a future goblin skin) are independent equip slots
+  /// instead of fighting over one shared row.
+  String _equipCategoryKey(String category, String? subSlot) =>
+      subSlot == null ? category : '$category:$subSlot';
 
   @override
   void initState() {
@@ -33,8 +44,10 @@ class _CustomizeScreenState extends State<CustomizeScreen> {
 
   Future<_ProfileItems> _fetch() async {
     final data = await ApiClient.get('/profile') as Map<String, dynamic>;
-    final items = (data['items'] as List<dynamic>? ?? []).cast<Map<String, dynamic>>();
-    final equipped = (data['equipped'] as List<dynamic>? ?? []).cast<Map<String, dynamic>>();
+    final items = (data['items'] as List<dynamic>? ?? [])
+        .cast<Map<String, dynamic>>();
+    final equipped = (data['equipped'] as List<dynamic>? ?? [])
+        .cast<Map<String, dynamic>>();
     final equippedByCategory = <String, int?>{
       for (final e in equipped)
         e['category'].toString(): (e['shop_item_id'] as num?)?.toInt(),
@@ -59,11 +72,15 @@ class _CustomizeScreenState extends State<CustomizeScreen> {
       }
     });
     try {
-      await ApiClient.post('/profile/equip', body: {'category': category, 'shop_item_id': itemId});
+      await ApiClient.post(
+        '/profile/equip',
+        body: {'category': category, 'shop_item_id': itemId},
+      );
       await _reload();
     } on ApiException catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.message)));
+        ScaffoldMessenger.of(context)
+            .showSnackBar(SnackBar(content: Text(e.message)));
       }
     } finally {
       if (mounted) {
@@ -76,17 +93,35 @@ class _CustomizeScreenState extends State<CustomizeScreen> {
   }
 
   /// A representative "default game look" image for the Basic entry in
-  /// each category, so it's visually obvious what "no skin" looks like —
-  /// falls back to the shared generic icon (imagePath null) for
-  /// categories without an obvious single default sprite.
-  String? _basicImagePathFor(String category) {
+  /// each category/sub-slot, so it's visually obvious what "no skin"
+  /// looks like — falls back to the shared generic icon (imagePath null)
+  /// for categories without an obvious single default sprite.
+  String? _basicImagePathFor(String category, String? subSlot) {
     switch (category) {
       case 'turret_skin':
         return 'assets/images/turrets/t1/T1-Shoot_00.png';
       case 'bullet_effect':
         return 'assets/images/projectile/Projectile1.png';
       case 'mob_skin':
-        return 'assets/images/enemies/ground/redbeetle/RedBeetle-move_00.png';
+        switch (subSlot) {
+          case 'fly':
+            return 'assets/images/enemies/fly/flyingblue/FlyingBlue-Move_00.png';
+          case 'hybrid':
+            return 'assets/images/enemies/hybrid/hybridblue/HybridPur-Move_00.png';
+          default:
+            return 'assets/images/enemies/ground/redbeetle/RedBeetle-move_00.png';
+        }
+      case 'boss_skin':
+        switch (subSlot) {
+          case 'goblin':
+            return 'assets/images/bosses/goblin/0_Goblin_Walking_000.png';
+          case 'ogre':
+            return 'assets/images/bosses/ogre/0_Ogre_Walking_000.png';
+          case 'orc':
+            return 'assets/images/bosses/orc/0_Orc_Walking_000.png';
+          default:
+            return 'assets/images/bosses/golem2/0_Golem_Walking_000.png';
+        }
       default:
         return null;
     }
@@ -106,7 +141,9 @@ class _CustomizeScreenState extends State<CustomizeScreen> {
         future: _future,
         builder: (context, snapshot) {
           if (snapshot.connectionState != ConnectionState.done) {
-            return const Center(child: CircularProgressIndicator(color: Color(0xFFCB7B2A)));
+            return const Center(
+              child: CircularProgressIndicator(color: Color(0xFFCB7B2A)),
+            );
           }
           if (snapshot.hasError) {
             return RefreshIndicator(
@@ -115,9 +152,19 @@ class _CustomizeScreenState extends State<CustomizeScreen> {
               child: ListView(
                 children: [
                   const SizedBox(height: 80),
-                  Center(child: Text(s.profileLoadError, style: const TextStyle(color: Colors.redAccent))),
+                  Center(
+                    child: Text(
+                      s.profileLoadError,
+                      style: const TextStyle(color: Colors.redAccent),
+                    ),
+                  ),
                   const SizedBox(height: 12),
-                  Center(child: OutlinedButton(onPressed: _reload, child: Text(s.retry))),
+                  Center(
+                    child: OutlinedButton(
+                      onPressed: _reload,
+                      child: Text(s.retry),
+                    ),
+                  ),
                 ],
               ),
             );
@@ -129,16 +176,32 @@ class _CustomizeScreenState extends State<CustomizeScreen> {
             final category = item['category']?.toString() ?? '';
             byCategory.putIfAbsent(category, () => []).add(item);
           }
-          final selectedItems = byCategory[_selectedCategory] ?? [];
-          // Categories with no catalog items at all yet (bosses aren't
-          // purchasable) get the same "coming soon" note the shop shows,
-          // alongside Basic — there's nothing to buy there yet, but Basic
-          // still shows what "no skin" looks like for consistency.
-          final isComingSoon = _selectedCategory == 'boss_skin';
-          // Basic (no skin equipped) is "equipped" whenever the category
-          // has no row in user_equipped_items yet, or an explicit null.
-          final equippedId = data.equippedByCategory[_selectedCategory];
-          final basicEquipped = !data.equippedByCategory.containsKey(_selectedCategory) || equippedId == null;
+          final subSlots = shopSubSlotsFor(_selectedCategory);
+          final currentSubSlot = subSlots == null
+              ? null
+              : (_selectedSubSlot[_selectedCategory] ?? subSlots.first);
+          final equipCategoryKey = _equipCategoryKey(
+            _selectedCategory,
+            currentSubSlot,
+          );
+          final categoryItems = byCategory[_selectedCategory] ?? [];
+          final selectedItems = currentSubSlot == null
+              ? categoryItems
+              : categoryItems
+                    .where((item) => shopItemSubSlot(item) == currentSubSlot)
+                    .toList();
+          // A sub-slot (or whole category) with nothing purchasable yet
+          // (e.g. boss_skin's goblin/ogre/orc, mob_skin's flying) gets a
+          // "coming soon" note alongside Basic — there's nothing to buy
+          // there yet, but Basic still shows what "no skin" looks like.
+          final isComingSoon = selectedItems.isEmpty;
+          // Basic (no skin equipped) is "equipped" whenever this equip
+          // slot has no row in user_equipped_items yet, or an explicit
+          // null.
+          final equippedId = data.equippedByCategory[equipCategoryKey];
+          final basicEquipped =
+              !data.equippedByCategory.containsKey(equipCategoryKey) ||
+              equippedId == null;
 
           return Row(
             children: [
@@ -155,10 +218,26 @@ class _CustomizeScreenState extends State<CustomizeScreen> {
                   child: ListView(
                     padding: const EdgeInsets.all(16),
                     children: [
+                      if (subSlots != null)
+                        Padding(
+                          padding: const EdgeInsets.only(bottom: 12),
+                          child: ShopSubSlotTabs(
+                            category: _selectedCategory,
+                            slots: subSlots,
+                            selected: currentSubSlot!,
+                            onSelect: (slot) => setState(
+                              () => _selectedSubSlot[_selectedCategory] = slot,
+                            ),
+                            s: s,
+                          ),
+                        ),
                       if (isComingSoon)
                         Padding(
                           padding: const EdgeInsets.only(bottom: 12),
-                          child: Text(s.comingSoon, style: const TextStyle(color: Colors.white54)),
+                          child: Text(
+                            s.comingSoon,
+                            style: const TextStyle(color: Colors.white54),
+                          ),
                         ),
                       LayoutBuilder(
                         builder: (context, constraints) {
@@ -176,28 +255,35 @@ class _CustomizeScreenState extends State<CustomizeScreen> {
                           const crossAxisSpacing = 14.0;
                           const textAreaHeight = 116.0;
                           final columnWidth =
-                              (constraints.maxWidth - crossAxisSpacing * (columns - 1)) / columns;
+                              (constraints.maxWidth -
+                                  crossAxisSpacing * (columns - 1)) /
+                              columns;
                           final cardExtent = columnWidth + textAreaHeight;
 
                           return GridView(
                             shrinkWrap: true,
                             physics: const NeverScrollableScrollPhysics(),
-                            gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                              crossAxisCount: columns,
-                              mainAxisSpacing: 18,
-                              crossAxisSpacing: crossAxisSpacing,
-                              mainAxisExtent: cardExtent,
-                            ),
+                            gridDelegate:
+                                SliverGridDelegateWithFixedCrossAxisCount(
+                                  crossAxisCount: columns,
+                                  mainAxisSpacing: 18,
+                                  crossAxisSpacing: crossAxisSpacing,
+                                  mainAxisExtent: cardExtent,
+                                ),
                             children: [
                               _OwnedItemCard(
-                                imagePath: _basicImagePathFor(_selectedCategory),
+                                imagePath: _basicImagePathFor(
+                                  _selectedCategory,
+                                  currentSubSlot,
+                                ),
                                 name: s.basicItemName,
                                 description: s.basicItemDescription,
                                 equipped: basicEquipped,
-                                busy: _equippingBasicCategory == _selectedCategory,
+                                busy:
+                                    _equippingBasicCategory == equipCategoryKey,
                                 equippedLabel: s.equippedLabel,
                                 equipLabel: s.equipAction,
-                                onTap: () => _equip(_selectedCategory, null, s),
+                                onTap: () => _equip(equipCategoryKey, null, s),
                               ),
                               for (final item in selectedItems)
                                 _OwnedItemCard(
@@ -210,11 +296,18 @@ class _CustomizeScreenState extends State<CustomizeScreen> {
                                     item['sku']?.toString() ?? '',
                                     item['description']?.toString() ?? '',
                                   ),
-                                  equipped: equippedId == (item['id'] as num).toInt(),
-                                  busy: _equippingItemId == (item['id'] as num).toInt(),
+                                  equipped:
+                                      equippedId == (item['id'] as num).toInt(),
+                                  busy:
+                                      _equippingItemId ==
+                                      (item['id'] as num).toInt(),
                                   equippedLabel: s.equippedLabel,
                                   equipLabel: s.equipAction,
-                                  onTap: () => _equip(_selectedCategory, (item['id'] as num).toInt(), s),
+                                  onTap: () => _equip(
+                                    equipCategoryKey,
+                                    (item['id'] as num).toInt(),
+                                    s,
+                                  ),
                                 ),
                             ],
                           );
@@ -283,7 +376,11 @@ class _OwnedItemCard extends StatelessWidget {
             description,
             maxLines: 2,
             overflow: TextOverflow.ellipsis,
-            style: const TextStyle(color: Colors.white54, fontSize: 11, height: 1.25),
+            style: const TextStyle(
+              color: Colors.white54,
+              fontSize: 11,
+              height: 1.25,
+            ),
           ),
         ],
         const SizedBox(height: 8),
@@ -294,7 +391,10 @@ class _OwnedItemCard extends StatelessWidget {
               child: SizedBox(
                 width: 18,
                 height: 18,
-                child: CircularProgressIndicator(color: Color(0xFFCB7B2A), strokeWidth: 2.2),
+                child: CircularProgressIndicator(
+                  color: Color(0xFFCB7B2A),
+                  strokeWidth: 2.2,
+                ),
               ),
             ),
           )
@@ -310,11 +410,19 @@ class _OwnedItemCard extends StatelessWidget {
             child: Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                const Icon(Icons.check_circle_rounded, color: Color(0xFF3E9B4F), size: 16),
+                const Icon(
+                  Icons.check_circle_rounded,
+                  color: Color(0xFF3E9B4F),
+                  size: 16,
+                ),
                 const SizedBox(width: 6),
                 Text(
                   equippedLabel,
-                  style: const TextStyle(color: Color(0xFF3E9B4F), fontWeight: FontWeight.w600, fontSize: 12),
+                  style: const TextStyle(
+                    color: Color(0xFF3E9B4F),
+                    fontWeight: FontWeight.w600,
+                    fontSize: 12,
+                  ),
                 ),
               ],
             ),

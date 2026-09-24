@@ -399,7 +399,8 @@ class TurretDefenseGame extends FlameGame {
     // economy.wave is still the just-cleared wave (5, 10, 15...) at this
     // point — see the "doesn't consume a level number" note above.
     final encounterIndex = (economy.wave - _bossAfterWave) ~/ _bossWaveInterval;
-    final bossType = kBossTypes[encounterIndex % kBossTypes.length];
+    final basicBossType = kBossTypes[encounterIndex % kBossTypes.length];
+    final bossType = resolveBossType(basicBossType, economy.equippedBossSkinBySlot[basicBossType.slotId]);
     final encounterNumber = encounterIndex + 1;
 
     final dps = _referenceDpsForWave(economy.wave + 1);
@@ -534,7 +535,7 @@ class TurretDefenseGame extends FlameGame {
     // bigger while a skin is equipped. Decided here (spawn time, where
     // `economy` is already in scope) rather than in EnemyComponent.onLoad
     // because the component's size has to be fixed at construction.
-    final hasMobSkin = type.kind == EnemyKind.ground && economy.equippedMobSkinAssetKey != null;
+    final hasMobSkin = economy.equippedMobSkinByKind[type.kind.name] != null;
     final enemySize = hasMobSkin ? Vector2.all(_mobSkinSize) : null;
 
     final enemy = EnemyComponent(

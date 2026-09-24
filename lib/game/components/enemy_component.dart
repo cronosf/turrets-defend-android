@@ -44,18 +44,19 @@ class EnemyComponent extends PositionComponent
 
   @override
   Future<void> onLoad() async {
-    // A purchased mob_skin fully replaces ground-kind enemies' art (unlike
+    // A purchased mob_skin fully replaces this enemy kind's art (unlike
     // turret/bullet skins, which just tint the base sprite) — see
-    // models/mob_skins.dart.
-    final skinKey = type.kind == EnemyKind.ground ? game.economy.equippedMobSkinAssetKey : null;
+    // models/mob_skins.dart. Each EnemyKind is its own equip slot, so a
+    // ground skin and a hybrid skin can be equipped at the same time.
+    final skinKey = game.economy.equippedMobSkinByKind[type.kind.name];
     final skin = skinKey != null ? kMobSkinTypes[skinKey] : null;
     final frames = skin != null
         ? await GameAssets.loadSheetRow(
             skin.walkSheetPath,
-            frameWidth: kMobSkinFrameSize,
-            frameHeight: kMobSkinFrameSize,
-            row: kMobSkinDirectionRow,
-            columns: kMobSkinFrameCount,
+            frameWidth: skin.frameSize,
+            frameHeight: skin.frameSize,
+            row: skin.directionRow,
+            columns: skin.frameCount,
           )
         : await GameAssets.loadFrames(type.assetDir);
     _sprite = SpriteAnimationComponent(

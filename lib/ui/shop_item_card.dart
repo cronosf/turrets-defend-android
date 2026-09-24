@@ -3,6 +3,8 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 
 import '../l10n/app_strings.dart';
+import '../models/boss_types.dart';
+import '../models/enemy_types.dart';
 
 /// The catalog's fixed category order, shared by the shop grid and "My
 /// customization" so both screens list categories the same way.
@@ -29,6 +31,87 @@ String? shopItemImagePath(Map<String, dynamic> item) {
     return 'assets/images/shop/$assetKey.png';
   } catch (_) {
     return null;
+  }
+}
+
+/// The sub-slots a category splits into for independent equip state — a
+/// mob_skin's [EnemyKind] (ground/fly/hybrid) or a boss_skin's
+/// [BossType.slotId] (golem/goblin/ogre/orc, see [kBossTypes]). Returns
+/// null for categories with no sub-slots (turret_skin, bullet_effect,
+/// bundle), so the caller knows not to show the sub-tab row at all.
+List<String>? shopSubSlotsFor(String category) {
+  switch (category) {
+    case 'mob_skin':
+      return EnemyKind.values.map((k) => k.name).toList(growable: false);
+    case 'boss_skin':
+      return kBossTypes.map((b) => b.slotId).toList(growable: false);
+    default:
+      return null;
+  }
+}
+
+/// An item's sub-slot key, read from its own metadata (`kind` for
+/// mob_skin items, `slot` for boss_skin items) — null for categories
+/// without sub-slots, or a malformed/legacy row missing the field.
+String? shopItemSubSlot(Map<String, dynamic> item) {
+  final rawMetadata = item['metadata'];
+  if (rawMetadata is! String || rawMetadata.isEmpty) return null;
+  try {
+    final metadata = jsonDecode(rawMetadata) as Map<String, dynamic>;
+    return (metadata['kind'] ?? metadata['slot']) as String?;
+  } catch (_) {
+    return null;
+  }
+}
+
+/// Horizontal row of sub-slot chips shown below the category rail's
+/// selection, when [shopSubSlotsFor] the current category is non-null —
+/// e.g. "Ground / Flying / Hybrid" under Mobs, "Golem / Goblin / Ogre /
+/// Orc" under Bosses. Shared by the shop and "My customization" so both
+/// filter the exact same way.
+class ShopSubSlotTabs extends StatelessWidget {
+  const ShopSubSlotTabs({
+    super.key,
+    required this.category,
+    required this.slots,
+    required this.selected,
+    required this.onSelect,
+    required this.s,
+  });
+
+  final String category;
+  final List<String> slots;
+  final String selected;
+  final ValueChanged<String> onSelect;
+  final Strings s;
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      height: 38,
+      child: ListView.separated(
+        scrollDirection: Axis.horizontal,
+        itemCount: slots.length,
+        separatorBuilder: (_, _) => const SizedBox(width: 8),
+        itemBuilder: (context, i) {
+          final slot = slots[i];
+          final isSelected = slot == selected;
+          return ChoiceChip(
+            label: Text(s.shopSubSlotLabel(category, slot)),
+            selected: isSelected,
+            onSelected: (_) => onSelect(slot),
+            selectedColor: const Color(0xFFCB7B2A),
+            backgroundColor: const Color(0xFF3A2A1C),
+            labelStyle: TextStyle(
+              color: isSelected ? Colors.white : Colors.white70,
+              fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+              fontSize: 12,
+            ),
+            side: BorderSide(color: isSelected ? const Color(0xFFCB7B2A) : Colors.white24),
+          );
+        },
+      ),
+    );
   }
 }
 

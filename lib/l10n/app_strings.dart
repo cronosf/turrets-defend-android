@@ -241,8 +241,8 @@ class Strings {
   // --- Logros --------------------------------------------------------------
   String get achievementsTitle => menuAchievements;
   String get achievementsHint => _es
-      ? 'Derrota bosses para conseguir figuras de colección. Las últimas son las más difíciles.'
-      : 'Defeat bosses to earn collectible figures. The last ones are the hardest to get.';
+      ? 'Derrota bosses para conseguir figuras de colección.\nLas últimas son las más difíciles.'
+      : 'Defeat bosses to earn collectible figures.\nThe last ones are the hardest to get.';
   String achievementsPageLabel(int page, int totalPages) =>
       _es ? 'Página $page de $totalPages' : 'Page $page of $totalPages';
 
@@ -292,6 +292,22 @@ class Strings {
     }
   }
 
+  // --- Sub-slots dentro de mob_skin/boss_skin (ver shopSubSlotsFor) -----
+  String shopSubSlotLabel(String category, String subSlot) {
+    if (category == 'mob_skin') {
+      switch (subSlot) {
+        case 'ground':
+          return _es ? 'Terrestres' : 'Ground';
+        case 'fly':
+          return _es ? 'Voladores' : 'Flying';
+        case 'hybrid':
+          return _es ? 'Híbridos' : 'Hybrid';
+      }
+    }
+    // Boss slot ids are proper nouns — same spelling in both languages.
+    return subSlot[0].toUpperCase() + subSlot.substring(1);
+  }
+
   // --- Nombres/descripciones de items de la tienda ---------------------
   // shop_items.name/description viven en español en la base de datos (ver
   // server/database/seed.sql) — se traducen aquí por SKU en vez de
@@ -327,6 +343,16 @@ class Strings {
           return 'Azure Plant';
         case 'mob_skin_plant3':
           return 'Star Plant';
+        case 'mob_skin_slime1':
+          return 'Emerald Slime';
+        case 'mob_skin_slime2':
+          return 'Sapphire Slime';
+        case 'mob_skin_slime3':
+          return 'Amber Slime';
+        case 'boss_skin_golem1':
+          return 'Crystal Golem';
+        case 'boss_skin_golem3':
+          return 'Lava Golem';
       }
     }
     return fallback;
@@ -353,6 +379,13 @@ class Strings {
         case 'mob_skin_plant2':
         case 'mob_skin_plant3':
           return 'Replaces the classic ground mobs with this plant variant.';
+        case 'mob_skin_slime1':
+        case 'mob_skin_slime2':
+        case 'mob_skin_slime3':
+          return 'Replaces the classic hybrid mobs with this slime variant.';
+        case 'boss_skin_golem1':
+        case 'boss_skin_golem3':
+          return "Changes the Golem boss's look to this variant.";
       }
     }
     return fallback;
@@ -406,9 +439,10 @@ class Strings {
           ),
           (
             'Conseguir torretas',
-            'Usa el botón COMPRAR para pagar por una torreta nueva de nivel '
-                '1 (el costo sube con cada compra), o el botón GRATIS para '
-                'obtener una sin costo cada cierto tiempo de espera.',
+            'Usa el botón COMPRAR para elegir y pagar el nivel de torreta '
+                'que quieras (del 1 al 10, cada uno con su propio precio '
+                'fijo), o el botón GRATIS para obtener una torreta de nivel '
+                '1 sin costo cada cierto tiempo de espera.',
           ),
           (
             'Vender torretas',
@@ -420,6 +454,14 @@ class Strings {
             'Cada oleada trae más enemigos, más resistentes y más rápidos. '
                 'Con el paso de las oleadas se desbloquean nuevos tipos de '
                 'enemigos: terrestres, voladores e híbridos.',
+          ),
+          (
+            'Combates contra bosses',
+            'Cada 5 oleadas aparece un boss: un enemigo único, enorme y muy '
+                'resistente, en vez de la oleada normal. Al derrotarlo '
+                'consigues una figura de colección para tu álbum de logros. '
+                'Como el modo es infinito, los bosses se repiten y son cada '
+                'vez más fuertes.',
           ),
           (
             'La base',
@@ -449,9 +491,10 @@ class Strings {
           ),
           (
             'Getting turrets',
-            'Use the BUY button to pay for a new level-1 turret (the cost '
-                'rises with every purchase), or the FREE button to get one '
-                'at no cost after a short wait.',
+            'Use the BUY button to pick and pay for the turret level you '
+                'want (1 through 10, each with its own fixed price), or the '
+                'FREE button to get a level-1 turret at no cost after a '
+                'short wait.',
           ),
           (
             'Selling turrets',
@@ -462,6 +505,14 @@ class Strings {
             'Endless waves',
             'Every wave brings more enemies, tougher and faster. As waves '
                 'go on, new enemy types unlock: ground, flying, and hybrid.',
+          ),
+          (
+            'Boss fights',
+            'A boss appears every 5 waves instead of the usual swarm: a '
+                'single huge, very tough enemy. Defeating it earns a '
+                'collectible figure for your achievements album. Since the '
+                'mode is endless, bosses keep coming back and get stronger '
+                'each time.',
           ),
           (
             'The base',
