@@ -12,6 +12,7 @@ import '../services/nav_guard.dart';
 import '../services/update_checker.dart';
 import '../theme/app_fonts.dart';
 import 'game_screen.dart';
+import 'guide_screen.dart';
 import 'login_screen.dart';
 import 'profile_screen.dart';
 import 'ranking_screen.dart';
@@ -50,7 +51,10 @@ class _HomeScreenState extends State<HomeScreen> {
       context: context,
       builder: (context) => AlertDialog(
         backgroundColor: const Color(0xFF3A2A1C),
-        title: Text(s.updateAvailableTitle, style: const TextStyle(color: Colors.white)),
+        title: Text(
+          s.updateAvailableTitle,
+          style: const TextStyle(color: Colors.white),
+        ),
         content: Text(
           update.notes.isNotEmpty
               ? '${s.updateAvailableBody(update.version)}\n\n${update.notes}'
@@ -60,15 +64,26 @@ class _HomeScreenState extends State<HomeScreen> {
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(),
-            child: Text(s.updateLater, style: const TextStyle(color: Colors.white54)),
+            child: Text(
+              s.updateLater,
+              style: const TextStyle(color: Colors.white54),
+            ),
           ),
           ElevatedButton(
             onPressed: () {
               Navigator.of(context).pop();
-              launchUrl(Uri.parse(update.downloadUrl), mode: LaunchMode.externalApplication);
+              launchUrl(
+                Uri.parse(update.downloadUrl),
+                mode: LaunchMode.externalApplication,
+              );
             },
-            style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFFCB7B2A)),
-            child: Text(s.updateDownload, style: const TextStyle(color: Colors.white)),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFFCB7B2A),
+            ),
+            child: Text(
+              s.updateDownload,
+              style: const TextStyle(color: Colors.white),
+            ),
           ),
         ],
       ),
@@ -82,8 +97,16 @@ class _HomeScreenState extends State<HomeScreen> {
     // just catches up moments after the run starts rather than blocking
     // navigation on it.
     _syncEquippedSkins();
+    Navigator.of(context)
+        .push(MaterialPageRoute(builder: (_) => GameScreen(economy: _economy)));
+  }
+
+  void _openGuide() {
+    if (!NavGuard.allow()) return;
     Navigator.of(context).push(
-      MaterialPageRoute(builder: (_) => GameScreen(economy: _economy)),
+      MaterialPageRoute(
+        builder: (_) => GuideScreen(language: _economy.language),
+      ),
     );
   }
 
@@ -107,8 +130,10 @@ class _HomeScreenState extends State<HomeScreen> {
     }
     try {
       final data = await ApiClient.get('/profile') as Map<String, dynamic>;
-      final items = (data['items'] as List<dynamic>? ?? []).cast<Map<String, dynamic>>();
-      final equipped = (data['equipped'] as List<dynamic>? ?? []).cast<Map<String, dynamic>>();
+      final items = (data['items'] as List<dynamic>? ?? [])
+          .cast<Map<String, dynamic>>();
+      final equipped = (data['equipped'] as List<dynamic>? ?? [])
+          .cast<Map<String, dynamic>>();
 
       num? equippedTurretSkinId;
       num? equippedBulletSkinId;
@@ -126,9 +151,11 @@ class _HomeScreenState extends State<HomeScreen> {
         } else if (category == 'bullet_effect') {
           equippedBulletSkinId = e['shop_item_id'] as num?;
         } else if (category.startsWith('mob_skin:')) {
-          mobSkinItemIdByKind[category.substring('mob_skin:'.length)] = e['shop_item_id'] as num?;
+          mobSkinItemIdByKind[category.substring('mob_skin:'.length)] =
+              e['shop_item_id'] as num?;
         } else if (category.startsWith('boss_skin:')) {
-          bossSkinItemIdBySlot[category.substring('boss_skin:'.length)] = e['shop_item_id'] as num?;
+          bossSkinItemIdBySlot[category.substring('boss_skin:'.length)] =
+              e['shop_item_id'] as num?;
         }
       }
 
@@ -137,17 +164,26 @@ class _HomeScreenState extends State<HomeScreen> {
       _economy.setEquippedBulletHue(bulletMeta.hue);
       _economy.setEquippedBulletAssetKey(bulletMeta.assetKey);
       for (final kind in EnemyKind.values.map((k) => k.name)) {
-        _economy.setEquippedMobSkinForKind(kind, _metaFor(items, mobSkinItemIdByKind[kind]).assetKey);
+        _economy.setEquippedMobSkinForKind(
+          kind,
+          _metaFor(items, mobSkinItemIdByKind[kind]).assetKey,
+        );
       }
       for (final slot in kBossTypes.map((b) => b.slotId)) {
-        _economy.setEquippedBossSkinForSlot(slot, _metaFor(items, bossSkinItemIdBySlot[slot]).assetKey);
+        _economy.setEquippedBossSkinForSlot(
+          slot,
+          _metaFor(items, bossSkinItemIdBySlot[slot]).assetKey,
+        );
       }
     } catch (_) {
       // Best-effort — worst case the run just uses the default art.
     }
   }
 
-  ({double? hue, String? assetKey}) _metaFor(List<Map<String, dynamic>> items, num? shopItemId) {
+  ({double? hue, String? assetKey}) _metaFor(
+    List<Map<String, dynamic>> items,
+    num? shopItemId,
+  ) {
     if (shopItemId == null) return (hue: null, assetKey: null);
     for (final item in items) {
       if ((item['id'] as num?) != shopItemId) continue;
@@ -167,9 +203,9 @@ class _HomeScreenState extends State<HomeScreen> {
 
   void _openRanking() {
     if (!NavGuard.allow()) return;
-    Navigator.of(context).push(
-      MaterialPageRoute(builder: (_) => RankingScreen(economy: _economy)),
-    );
+    Navigator.of(
+      context,
+    ).push(MaterialPageRoute(builder: (_) => RankingScreen(economy: _economy)));
   }
 
   void _openProfileOrLogin() {
@@ -185,9 +221,8 @@ class _HomeScreenState extends State<HomeScreen> {
 
   void _openShop() {
     if (!NavGuard.allow()) return;
-    Navigator.of(context).push(
-      MaterialPageRoute(builder: (_) => ShopScreen(economy: _economy)),
-    );
+    Navigator.of(context)
+        .push(MaterialPageRoute(builder: (_) => ShopScreen(economy: _economy)));
   }
 
   @override
@@ -203,51 +238,89 @@ class _HomeScreenState extends State<HomeScreen> {
               children: [
                 Expanded(
                   child: Center(
-                    child: GestureDetector(
-                      behavior: HitTestBehavior.opaque,
-                      onTap: _play,
-                      child: Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 24),
-                        child: Column(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            LayoutBuilder(
-                              builder: (context, constraints) {
-                                final maxW = constraints.maxWidth.isFinite
-                                    ? constraints.maxWidth
-                                    : 340.0;
-                                return Image.asset(
-                                  'assets/images/ui/MenuBanner.png',
-                                  width: maxW,
-                                  fit: BoxFit.contain,
-                                );
-                              },
-                            ),
-                            const SizedBox(height: 28),
-                            TweenAnimationBuilder<double>(
-                              tween: Tween(begin: 0.6, end: 1),
-                              duration: const Duration(milliseconds: 900),
-                              curve: Curves.easeInOut,
-                              builder: (context, value, child) =>
-                                  Opacity(opacity: value, child: child),
-                              child: Text(
-                                s.tapToPlay,
-                                style: AppFonts.title(
-                                  color: Colors.white,
-                                  fontSize: 22,
-                                  letterSpacing: 1.2,
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 24),
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          LayoutBuilder(
+                            builder: (context, constraints) {
+                              final maxW = constraints.maxWidth.isFinite
+                                  ? constraints.maxWidth
+                                  : 340.0;
+                              return Image.asset(
+                                'assets/images/ui/MenuBanner.png',
+                                width: maxW,
+                                fit: BoxFit.contain,
+                              );
+                            },
+                          ),
+                          const SizedBox(height: 28),
+                          TweenAnimationBuilder<double>(
+                            tween: Tween(begin: 0.6, end: 1),
+                            duration: const Duration(milliseconds: 900),
+                            curve: Curves.easeInOut,
+                            builder: (context, value, child) =>
+                                Opacity(opacity: value, child: child),
+                            // Same green pill look as the "Play again" button
+                            // on the lose overlay (see LoseOverlay), so the
+                            // primary call-to-action reads the same way in
+                            // both places instead of home's just being plain
+                            // text.
+                            child: GestureDetector(
+                              onTap: _play,
+                              child: Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 40,
+                                  vertical: 16,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: const Color(0xFF3E9B4F),
+                                  borderRadius: BorderRadius.circular(14),
+                                ),
+                                child: Text(
+                                  s.tapToPlay,
+                                  style: AppFonts.title(
+                                    color: Colors.white,
+                                    fontSize: 20,
+                                    letterSpacing: 1.2,
+                                  ),
                                 ),
                               ),
                             ),
-                            if (_economy.bestWave > 0) ...[
-                              const SizedBox(height: 16),
-                              Text(
-                                s.bestWave(_economy.bestWave),
-                                style: const TextStyle(color: Colors.white70, fontSize: 15),
+                          ),
+                          if (_economy.bestWave > 0) ...[
+                            const SizedBox(height: 16),
+                            Text(
+                              s.bestWave(_economy.bestWave),
+                              style: const TextStyle(
+                                color: Colors.white70,
+                                fontSize: 15,
                               ),
-                            ],
+                            ),
                           ],
-                        ),
+                          const SizedBox(height: 14),
+                          GestureDetector(
+                            onTap: _openGuide,
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 20,
+                                vertical: 10,
+                              ),
+                              decoration: BoxDecoration(
+                                color: const Color(0xFFFFC94D),
+                                borderRadius: BorderRadius.circular(10),
+                              ),
+                              child: Text(
+                                s.howToPlay,
+                                style: AppFonts.title(
+                                  color: const Color(0xFF241a11),
+                                  fontSize: 13,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
                       ),
                     ),
                   ),
@@ -291,10 +364,26 @@ class _FooterNav extends StatelessWidget {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
         children: [
-          _NavItem(icon: Icons.person_rounded, label: strings.navProfile, onTap: onProfile),
-          _NavItem(icon: Icons.emoji_events_rounded, label: strings.navRanking, onTap: onRanking),
-          _NavItem(icon: Icons.storefront_rounded, label: strings.navShop, onTap: onShop),
-          _NavItem(icon: Icons.settings_rounded, label: strings.navSettings, onTap: onSettings),
+          _NavItem(
+            icon: Icons.person_rounded,
+            label: strings.navProfile,
+            onTap: onProfile,
+          ),
+          _NavItem(
+            icon: Icons.emoji_events_rounded,
+            label: strings.navRanking,
+            onTap: onRanking,
+          ),
+          _NavItem(
+            icon: Icons.storefront_rounded,
+            label: strings.navShop,
+            onTap: onShop,
+          ),
+          _NavItem(
+            icon: Icons.settings_rounded,
+            label: strings.navSettings,
+            onTap: onSettings,
+          ),
         ],
       ),
     );
@@ -302,7 +391,11 @@ class _FooterNav extends StatelessWidget {
 }
 
 class _NavItem extends StatelessWidget {
-  const _NavItem({required this.icon, required this.label, required this.onTap});
+  const _NavItem({
+    required this.icon,
+    required this.label,
+    required this.onTap,
+  });
 
   final IconData icon;
   final String label;

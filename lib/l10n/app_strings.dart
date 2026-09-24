@@ -11,6 +11,7 @@ class Strings {
 
   String get tapToPlay => _es ? 'TOCA PARA JUGAR' : 'TAP TO PLAY';
   String bestWave(int n) => _es ? 'Mejor oleada: $n' : 'Best wave: $n';
+  String get howToPlay => _es ? '¿Cómo Jugar?' : 'How to play?';
 
   String level(int n) => _es ? 'NIVEL $n' : 'LEVEL $n';
   String turretLevel(int n) => _es ? 'Nvl $n' : 'Lvl $n';
@@ -22,11 +23,13 @@ class Strings {
   String buy(int cost) => _es ? 'COMPRAR  \$$cost' : 'BUY  \$$cost';
   String get buyMenu => _es ? 'COMPRAR' : 'BUY';
   String get sell => _es ? 'VENDER' : 'SELL';
-  String get buyLevelDialogTitle => _es ? 'Elige una torreta' : 'Choose a turret';
+  String get buyLevelDialogTitle =>
+      _es ? 'Elige una torreta' : 'Choose a turret';
   String buyLevelOption(int level, int cost) =>
       _es ? 'Nivel $level  —  \$$cost' : 'Level $level  —  \$$cost';
-  String get gridFullMessage =>
-      _es ? 'No hay espacio libre en el tablero.' : 'No empty space on the board.';
+  String get gridFullMessage => _es
+      ? 'No hay espacio libre en el tablero.'
+      : 'No empty space on the board.';
   String get notEnoughMoneyMessage =>
       _es ? 'No tienes suficiente dinero.' : "You don't have enough money.";
   String get sellModeHint => _es
@@ -47,11 +50,14 @@ class Strings {
   String get bossFightTitle => _es ? 'COMBATE CON JEFE' : 'BOSS FIGHT';
   String get bossLevelLabel => _es ? 'NIVEL DE BOSS' : 'BOSS LEVEL';
   String get bossDefeatedTitle => _es ? 'BOSS ELIMINADO' : 'BOSS DEFEATED';
-  String get achievementUnlockedLabel => _es ? 'Logro conseguido' : 'Achievement unlocked';
-  String get achievementRepeatLabel => _es ? 'Ya tienes este logro' : 'You already have this figure';
+  String get achievementUnlockedLabel =>
+      _es ? 'Logro conseguido' : 'Achievement unlocked';
+  String get achievementRepeatLabel =>
+      _es ? 'Ya tienes este logro' : 'You already have this figure';
   String achievementName(int id) => _es ? 'Logro #$id' : 'Achievement #$id';
   String get bossContinueLabel => _es ? 'CONTINUAR' : 'CONTINUE';
-  String waveReached(int n) => _es ? 'Oleada alcanzada: $n' : 'Wave reached: $n';
+  String waveReached(int n) =>
+      _es ? 'Oleada alcanzada: $n' : 'Wave reached: $n';
   String get playAgain => _es ? 'JUGAR DE NUEVO' : 'PLAY AGAIN';
   String get backToHome => _es ? 'VOLVER' : 'BACK';
 
@@ -72,8 +78,9 @@ class Strings {
   String get lastRunLabel => _es ? 'Última partida' : 'Last run';
   String lastRunSummary(int wave, int points) =>
       _es ? 'Oleada $wave · $points pts' : 'Wave $wave · $points pts';
-  String get noRunsYet =>
-      _es ? 'Todavía no jugaste ninguna partida.' : "You haven't played a run yet.";
+  String get noRunsYet => _es
+      ? 'Todavía no jugaste ninguna partida.'
+      : "You haven't played a run yet.";
   String get rankingServerNote => _es
       ? 'Por ahora estas son tus estadísticas locales. El ranking global entre jugadores llega cuando se conecte el servidor.'
       : "These are your local stats for now. A global ranking between players is coming once the server is connected.";
@@ -85,58 +92,65 @@ class Strings {
   String get username => _es ? 'Nombre de usuario' : 'Username';
   String get email => _es ? 'Correo electrónico' : 'Email';
   String get country => _es ? 'País' : 'Country';
-  String get selectCountry => _es ? 'Selecciona tu país' : 'Select your country';
+  String get selectCountry =>
+      _es ? 'Selecciona tu país' : 'Select your country';
   String get password => _es ? 'Contraseña' : 'Password';
-  String get confirmPassword => _es ? 'Confirmar contraseña' : 'Confirm password';
+  String get confirmPassword =>
+      _es ? 'Confirmar contraseña' : 'Confirm password';
   String get rememberMe => _es ? 'Recordar mi sesión' : 'Remember me';
   String get logIn => _es ? 'INICIAR SESIÓN' : 'LOG IN';
   String get createAccount => _es ? 'CREAR CUENTA' : 'CREATE ACCOUNT';
   String get orContinueWith => _es ? 'o continúa con' : 'or continue with';
-  String get continueWithGoogle => _es ? 'Continuar con Google' : 'Continue with Google';
-  String get noAccountYet => _es ? '¿No tienes cuenta? ' : "Don't have an account? ";
+  String get continueWithGoogle =>
+      _es ? 'Continuar con Google' : 'Continue with Google';
+  String get noAccountYet =>
+      _es ? '¿No tienes cuenta? ' : "Don't have an account? ";
   String get registerLink => _es ? 'Regístrate' : 'Sign up';
-  String get haveAccountAlready => _es ? '¿Ya tienes cuenta? ' : 'Already have an account? ';
+  String get haveAccountAlready =>
+      _es ? '¿Ya tienes cuenta? ' : 'Already have an account? ';
   String get loginLink => _es ? 'Inicia sesión' : 'Log in';
 
   String get acceptTermsPrefix => _es ? 'Acepto los ' : 'I accept the ';
-  String get termsLinkLabel => _es ? 'Términos y Condiciones' : 'Terms and Conditions';
-  String get termsTitle => _es ? 'Términos y Condiciones de uso' : 'Terms and Conditions of use';
+  String get termsLinkLabel =>
+      _es ? 'Términos y Condiciones' : 'Terms and Conditions';
+  String get termsTitle =>
+      _es ? 'Términos y Condiciones de uso' : 'Terms and Conditions of use';
   String get termsBody => _es
       ? 'TurretCron es una aplicación desarrollada y de propiedad exclusiva de '
-          'CRONOSF DEV.\n\n'
-          '1. Propiedad intelectual: todo el contenido de la aplicación '
-          '(código, diseño, marcas, arte y sonido) es propiedad de CRONOSF DEV '
-          'o de sus licenciantes. Queda prohibida la reproducción, '
-          'distribución, modificación o explotación total o parcial de la '
-          'aplicación sin autorización previa y por escrito de CRONOSF DEV.\n\n'
-          '2. Cuenta de usuario: eres responsable de mantener la '
-          'confidencialidad de tus credenciales de acceso y de toda '
-          'actividad realizada desde tu cuenta.\n\n'
-          '3. Uso de datos: recopilamos los datos necesarios para el '
-          'funcionamiento de la cuenta (correo, nombre de usuario, progreso '
-          'de juego y compras) y no los compartimos con terceros salvo que '
-          'la ley lo exija o sea necesario para procesar pagos.\n\n'
-          '4. Compras: las compras dentro de la aplicación son gestionadas '
-          'por el proveedor de pago correspondiente y están sujetas a sus '
-          'propios términos.\n\n'
-          'Al crear una cuenta, confirmas que aceptas estos términos.'
+            'CRONOSF DEV.\n\n'
+            '1. Propiedad intelectual: todo el contenido de la aplicación '
+            '(código, diseño, marcas, arte y sonido) es propiedad de CRONOSF DEV '
+            'o de sus licenciantes. Queda prohibida la reproducción, '
+            'distribución, modificación o explotación total o parcial de la '
+            'aplicación sin autorización previa y por escrito de CRONOSF DEV.\n\n'
+            '2. Cuenta de usuario: eres responsable de mantener la '
+            'confidencialidad de tus credenciales de acceso y de toda '
+            'actividad realizada desde tu cuenta.\n\n'
+            '3. Uso de datos: recopilamos los datos necesarios para el '
+            'funcionamiento de la cuenta (correo, nombre de usuario, progreso '
+            'de juego y compras) y no los compartimos con terceros salvo que '
+            'la ley lo exija o sea necesario para procesar pagos.\n\n'
+            '4. Compras: las compras dentro de la aplicación son gestionadas '
+            'por el proveedor de pago correspondiente y están sujetas a sus '
+            'propios términos.\n\n'
+            'Al crear una cuenta, confirmas que aceptas estos términos.'
       : 'TurretCron is an application developed and exclusively owned by '
-          'CRONOSF DEV.\n\n'
-          '1. Intellectual property: all content in the application (code, '
-          'design, trademarks, art and sound) is owned by CRONOSF DEV or its '
-          'licensors. Reproduction, distribution, modification or '
-          'exploitation of the application, in whole or in part, without '
-          "CRONOSF DEV's prior written authorization is prohibited.\n\n"
-          '2. User account: you are responsible for keeping your login '
-          'credentials confidential and for all activity carried out from '
-          'your account.\n\n'
-          '3. Data use: we collect the data needed to run the account '
-          '(email, username, game progress and purchases) and do not share '
-          'it with third parties unless required by law or needed to '
-          'process payments.\n\n'
-          '4. Purchases: in-app purchases are handled by the relevant '
-          'payment provider and are subject to its own terms.\n\n'
-          'By creating an account, you confirm that you accept these terms.';
+            'CRONOSF DEV.\n\n'
+            '1. Intellectual property: all content in the application (code, '
+            'design, trademarks, art and sound) is owned by CRONOSF DEV or its '
+            'licensors. Reproduction, distribution, modification or '
+            'exploitation of the application, in whole or in part, without '
+            "CRONOSF DEV's prior written authorization is prohibited.\n\n"
+            '2. User account: you are responsible for keeping your login '
+            'credentials confidential and for all activity carried out from '
+            'your account.\n\n'
+            '3. Data use: we collect the data needed to run the account '
+            '(email, username, game progress and purchases) and do not share '
+            'it with third parties unless required by law or needed to '
+            'process payments.\n\n'
+            '4. Purchases: in-app purchases are handled by the relevant '
+            'payment provider and are subject to its own terms.\n\n'
+            'By creating an account, you confirm that you accept these terms.';
   String get mustAcceptTerms => _es
       ? 'Debes aceptar los Términos y Condiciones para continuar'
       : 'You must accept the Terms and Conditions to continue';
@@ -148,7 +162,8 @@ class Strings {
       : "Google Sign-In isn't configured yet.";
   String get passwordsDontMatch =>
       _es ? 'Las contraseñas no coinciden' : "Passwords don't match";
-  String get fieldRequired => _es ? 'Este campo es obligatorio' : 'This field is required';
+  String get fieldRequired =>
+      _es ? 'Este campo es obligatorio' : 'This field is required';
   String get retry => _es ? 'Reintentar' : 'Retry';
   String get loadingLabel => _es ? 'Cargando…' : 'Loading…';
 
@@ -169,24 +184,33 @@ class Strings {
 
   // --- Tienda (servidor + PayPal) ----------------------------------------
   String get shopTitle => navShop;
-  String get shopEmpty =>
-      _es ? 'No hay artículos disponibles por ahora.' : 'No items available right now.';
-  String get shopLoadError => _es ? 'No se pudo cargar la tienda.' : "Couldn't load the shop.";
-  String buyItem(String price, String currency) => _es ? 'COMPRAR $currency $price' : 'BUY $currency $price';
+  String get shopEmpty => _es
+      ? 'No hay artículos disponibles por ahora.'
+      : 'No items available right now.';
+  String get shopLoadError =>
+      _es ? 'No se pudo cargar la tienda.' : "Couldn't load the shop.";
+  String buyItem(String price, String currency) =>
+      _es ? 'COMPRAR $currency $price' : 'BUY $currency $price';
   String get alreadyOwned => _es ? 'Ya lo tienes' : 'Already owned';
-  String get purchaseApproving => _es ? 'Verificando el pago…' : 'Verifying payment…';
-  String get purchaseSuccess => _es ? '¡Compra realizada!' : 'Purchase complete!';
-  String get purchaseCancelled => _es ? 'Compra cancelada.' : 'Purchase cancelled.';
-  String get purchaseError =>
-      _es ? 'No se pudo completar la compra.' : "Couldn't complete the purchase.";
+  String get purchaseApproving =>
+      _es ? 'Verificando el pago…' : 'Verifying payment…';
+  String get purchaseSuccess =>
+      _es ? '¡Compra realizada!' : 'Purchase complete!';
+  String get purchaseCancelled =>
+      _es ? 'Compra cancelada.' : 'Purchase cancelled.';
+  String get purchaseError => _es
+      ? 'No se pudo completar la compra.'
+      : "Couldn't complete the purchase.";
   String get shopLoginRequired => _es
       ? 'Inicia sesión para comprar en la tienda.'
       : 'Log in to buy from the shop.';
 
   // --- Actualizaciones -----------------------------------------------------
-  String get updateAvailableTitle => _es ? 'Nueva versión disponible' : 'New version available';
-  String updateAvailableBody(String version) =>
-      _es ? 'Hay una nueva versión ($version) de TurretCron lista para descargar.' : 'A new version ($version) of TurretCron is ready to download.';
+  String get updateAvailableTitle =>
+      _es ? 'Nueva versión disponible' : 'New version available';
+  String updateAvailableBody(String version) => _es
+      ? 'Hay una nueva versión ($version) de TurretCron lista para descargar.'
+      : 'A new version ($version) of TurretCron is ready to download.';
   String get updateDownload => _es ? 'DESCARGAR' : 'DOWNLOAD';
   String get updateLater => _es ? 'Más tarde' : 'Later';
 
@@ -197,19 +221,23 @@ class Strings {
   String get menuMyPurchases => _es ? 'Mis compras' : 'My purchases';
   String get menuCustomize => _es ? 'Mi personalización' : 'My customization';
   String get menuAchievements => _es ? 'Logros' : 'Achievements';
-  String get menuNationalRanking => _es ? 'Ranking nacional' : 'National ranking';
+  String get menuNationalRanking =>
+      _es ? 'Ranking nacional' : 'National ranking';
   String get menuNotifications => _es ? 'Notificaciones' : 'Notifications';
   String get notificationsHint => _es
       ? 'Aún no enviamos notificaciones, pero ya puedes dejarlas activadas.'
       : "We don't send notifications yet, but you can leave these on.";
   String get logOut => _es ? 'Cerrar sesión' : 'Log out';
-  String get profileLoadError => _es ? 'No se pudo cargar tu perfil.' : "Couldn't load your profile.";
+  String get profileLoadError =>
+      _es ? 'No se pudo cargar tu perfil.' : "Couldn't load your profile.";
 
   // --- Editar perfil ---------------------------------------------------------
   String get editProfileTitle => _es ? 'Editar perfil' : 'Edit profile';
   String get fullNameLabel => _es ? 'Nombre completo' : 'Full name';
-  String get newPasswordLabel => _es ? 'Nueva contraseña (opcional)' : 'New password (optional)';
-  String get confirmNewPasswordLabel => _es ? 'Confirmar nueva contraseña' : 'Confirm new password';
+  String get newPasswordLabel =>
+      _es ? 'Nueva contraseña (opcional)' : 'New password (optional)';
+  String get confirmNewPasswordLabel =>
+      _es ? 'Confirmar nueva contraseña' : 'Confirm new password';
   String get saveChanges => _es ? 'GUARDAR CAMBIOS' : 'SAVE CHANGES';
   String get profileUpdated => _es ? 'Perfil actualizado.' : 'Profile updated.';
   String get usernameEmailNotEditable => _es
@@ -218,9 +246,12 @@ class Strings {
 
   // --- Mis compras -------------------------------------------------------
   String get myPurchasesTitle => menuMyPurchases;
-  String get noPurchasesYet =>
-      _es ? 'Todavía no hiciste ninguna compra.' : "You haven't made any purchases yet.";
-  String get purchasesLoadError => _es ? 'No se pudieron cargar tus compras.' : "Couldn't load your purchases.";
+  String get noPurchasesYet => _es
+      ? 'Todavía no hiciste ninguna compra.'
+      : "You haven't made any purchases yet.";
+  String get purchasesLoadError => _es
+      ? 'No se pudieron cargar tus compras.'
+      : "Couldn't load your purchases.";
   String purchaseStatusLabel(String status) {
     switch (status) {
       case 'paid':
@@ -248,8 +279,9 @@ class Strings {
 
   // --- Mi personalización --------------------------------------------------
   String get customizeTitle => menuCustomize;
-  String get noItemsOwnedYet =>
-      _es ? 'Todavía no tienes items comprados.' : "You don't own any items yet.";
+  String get noItemsOwnedYet => _es
+      ? 'Todavía no tienes items comprados.'
+      : "You don't own any items yet.";
   String get equippedLabel => _es ? 'Equipado' : 'Equipped';
   String get equipAction => _es ? 'Equipar' : 'Equip';
   String get goToShop => _es ? 'Ir a la tienda' : 'Go to shop';
@@ -398,13 +430,16 @@ class Strings {
       : 'First select your country in your profile, under "Edit profile".';
 
   // --- Modal de usuario para nuevas cuentas de Google -----------------------
-  String get googleSetupTitle => _es ? 'Elige tu nombre de usuario' : 'Choose your username';
+  String get googleSetupTitle =>
+      _es ? 'Elige tu nombre de usuario' : 'Choose your username';
   String get googleSetupSubtitle => _es
       ? 'Es la primera vez que entras con esta cuenta de Google. Elige un nombre de usuario para tu perfil.'
       : "It's the first time you're signing in with this Google account. Choose a username for your profile.";
-  String get usernameLengthHint => _es ? 'Entre 4 y 12 caracteres' : 'Between 4 and 12 characters';
+  String get usernameLengthHint =>
+      _es ? 'Entre 4 y 12 caracteres' : 'Between 4 and 12 characters';
   String get googleSetupSubmit => _es ? 'CONTINUAR' : 'CONTINUE';
-  String get cancelAndLogOut => _es ? 'Cancelar y cerrar sesión' : 'Cancel and log out';
+  String get cancelAndLogOut =>
+      _es ? 'Cancelar y cerrar sesión' : 'Cancel and log out';
   String get usernameLengthError => _es
       ? 'Debe tener entre 4 y 12 caracteres'
       : 'Must be between 4 and 12 characters';
