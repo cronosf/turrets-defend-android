@@ -253,7 +253,13 @@ class _CustomizeScreenState extends State<CustomizeScreen> {
                           // is already net of that padding.
                           const columns = 2;
                           const crossAxisSpacing = 14.0;
-                          const textAreaHeight = 116.0;
+                          // Matches ShopScreen's own budget exactly — this
+                          // was previously a tighter 116, which didn't leave
+                          // enough room for the 2-line description under
+                          // some font-scale settings and cut it off
+                          // (clipped by the grid cell's fixed height)
+                          // instead of just wrapping.
+                          const textAreaHeight = 128.0;
                           final columnWidth =
                               (constraints.maxWidth -
                                   crossAxisSpacing * (columns - 1)) /
