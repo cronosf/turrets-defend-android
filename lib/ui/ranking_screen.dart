@@ -105,188 +105,202 @@ class _RankingScreenState extends State<RankingScreen> {
               ),
             ],
           ),
-          body: Column(
-            children: [
-              Expanded(
-                child: RefreshIndicator(
-                  onRefresh: _reload,
-                  color: const Color(0xFFCB7B2A),
-                  child: ListView(
-                    padding: const EdgeInsets.all(20),
-                    children: [
-                      _StatCard(
-                        icon: Icons.star_rounded,
-                        iconColor: Colors.amberAccent,
-                        label: s.bestScoreLabel,
-                        value: '${widget.economy.bestScore}',
-                      ),
-                      const SizedBox(height: 14),
-                      _StatCard(
-                        icon: Icons.military_tech_rounded,
-                        iconColor: const Color(0xFFCB7B2A),
-                        label: s.bestWaveLabel,
-                        value: '${widget.economy.bestWave}',
-                      ),
-                      const SizedBox(height: 24),
-                      Text(
-                        s.lastRunLabel,
-                        style: const TextStyle(
-                          color: Colors.white70,
-                          fontSize: 14,
-                          fontWeight: FontWeight.w600,
+          // Bottom-only SafeArea: without it, the last leaderboard row (when
+          // there's a single page, so the pinned pagination footer below
+          // collapses to nothing) or the pagination footer itself (when
+          // shown) sits flush against the system gesture bar / nav buttons
+          // and gets visually cut off on gesture-nav devices.
+          body: SafeArea(
+            top: false,
+            child: Column(
+              children: [
+                Expanded(
+                  child: RefreshIndicator(
+                    onRefresh: _reload,
+                    color: const Color(0xFFCB7B2A),
+                    child: ListView(
+                      padding: const EdgeInsets.all(20),
+                      children: [
+                        _StatCard(
+                          icon: Icons.star_rounded,
+                          iconColor: Colors.amberAccent,
+                          label: s.bestScoreLabel,
+                          value: '${widget.economy.bestScore}',
                         ),
-                      ),
-                      const SizedBox(height: 8),
-                      Text(
-                        hasPlayed
-                            ? s.lastRunSummary(
-                                widget.economy.lastWave,
-                                widget.economy.lastScore,
-                              )
-                            : s.noRunsYet,
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 16,
+                        const SizedBox(height: 14),
+                        _StatCard(
+                          icon: Icons.military_tech_rounded,
+                          iconColor: const Color(0xFFCB7B2A),
+                          label: s.bestWaveLabel,
+                          value: '${widget.economy.bestWave}',
                         ),
-                      ),
-                      if (!ApiClient.hasToken) ...[
-                        const SizedBox(height: 16),
+                        const SizedBox(height: 24),
                         Text(
-                          s.notLoggedInHint,
+                          s.lastRunLabel,
                           style: const TextStyle(
-                            color: Colors.white38,
-                            fontSize: 12,
-                            height: 1.4,
+                            color: Colors.white70,
+                            fontSize: 14,
+                            fontWeight: FontWeight.w600,
                           ),
                         ),
-                      ],
-                      const SizedBox(height: 32),
-                      Text(
-                        s.globalRankingTitle,
-                        style: const TextStyle(
-                          color: Colors.white70,
-                          fontSize: 14,
-                          fontWeight: FontWeight.w600,
+                        const SizedBox(height: 8),
+                        Text(
+                          hasPlayed
+                              ? s.lastRunSummary(
+                                  widget.economy.lastWave,
+                                  widget.economy.lastScore,
+                                )
+                              : s.noRunsYet,
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 16,
+                          ),
                         ),
-                      ),
-                      const SizedBox(height: 12),
-                      FutureBuilder<_LeaderboardPage>(
-                        future: _leaderboard,
-                        builder: (context, snapshot) {
-                          if (snapshot.connectionState !=
-                              ConnectionState.done) {
-                            return const Padding(
-                              padding: EdgeInsets.symmetric(vertical: 24),
-                              child: Center(
-                                child: CircularProgressIndicator(
-                                  color: Color(0xFFCB7B2A),
+                        if (!ApiClient.hasToken) ...[
+                          const SizedBox(height: 16),
+                          Text(
+                            s.notLoggedInHint,
+                            style: const TextStyle(
+                              color: Colors.white38,
+                              fontSize: 12,
+                              height: 1.4,
+                            ),
+                          ),
+                        ],
+                        const SizedBox(height: 32),
+                        Text(
+                          s.globalRankingTitle,
+                          style: const TextStyle(
+                            color: Colors.white70,
+                            fontSize: 14,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                        const SizedBox(height: 12),
+                        FutureBuilder<_LeaderboardPage>(
+                          future: _leaderboard,
+                          builder: (context, snapshot) {
+                            if (snapshot.connectionState !=
+                                ConnectionState.done) {
+                              return const Padding(
+                                padding: EdgeInsets.symmetric(vertical: 24),
+                                child: Center(
+                                  child: CircularProgressIndicator(
+                                    color: Color(0xFFCB7B2A),
+                                  ),
                                 ),
-                              ),
-                            );
-                          }
-                          if (snapshot.hasError) {
-                            return Padding(
-                              padding: const EdgeInsets.symmetric(vertical: 12),
-                              child: Column(
-                                children: [
-                                  Text(
-                                    s.globalRankingLoadError,
-                                    style: const TextStyle(
-                                      color: Colors.redAccent,
-                                      fontSize: 13,
-                                    ),
-                                  ),
-                                  const SizedBox(height: 8),
-                                  OutlinedButton(
-                                    onPressed: _reload,
-                                    child: Text(s.retry),
-                                  ),
-                                ],
-                              ),
-                            );
-                          }
-                          final result =
-                              snapshot.data ??
-                              const _LeaderboardPage(
-                                entries: [],
-                                totalPages: 1,
                               );
-                          final entries = result.entries;
-                          if (entries.isEmpty) {
-                            return Text(
-                              s.noRunsYet,
-                              style: const TextStyle(
-                                color: Colors.white38,
-                                fontSize: 13,
-                              ),
-                            );
-                          }
-                          // Pagination is NOT included here — it's pinned outside
-                          // this scrollable list (see the FutureBuilder right
-                          // below), so it sits at a stable spot at the bottom of
-                          // the screen instead of trailing off after however many
-                          // rows this page happens to have (up to 15 — on a short
-                          // screen that could put it well below the fold).
-                          return Column(
-                            children: [
-                              LeaderboardHeader(
-                                scoreLabel: s.rankingScoreColumnLabel,
-                                waveLabel: s.rankingWaveColumnLabel,
-                                countryLabel: s.rankingCountryColumnLabel,
-                              ),
-                              for (final entry in entries)
-                                LeaderboardRow(
-                                  rank:
-                                      (entry['rank_position'] as num?)
-                                          ?.toInt() ??
-                                      0,
-                                  username:
-                                      entry['username']?.toString() ?? '?',
-                                  countryCode: entry['country_code']
-                                      ?.toString(),
-                                  bestScore:
-                                      (entry['best_score'] as num?)?.toInt() ??
-                                      0,
-                                  bestWave:
-                                      (entry['best_wave'] as num?)?.toInt() ??
-                                      0,
+                            }
+                            if (snapshot.hasError) {
+                              return Padding(
+                                padding: const EdgeInsets.symmetric(
+                                  vertical: 12,
                                 ),
-                            ],
-                          );
-                        },
-                      ),
-                    ],
+                                child: Column(
+                                  children: [
+                                    Text(
+                                      s.globalRankingLoadError,
+                                      style: const TextStyle(
+                                        color: Colors.redAccent,
+                                        fontSize: 13,
+                                      ),
+                                    ),
+                                    const SizedBox(height: 8),
+                                    OutlinedButton(
+                                      onPressed: _reload,
+                                      child: Text(s.retry),
+                                    ),
+                                  ],
+                                ),
+                              );
+                            }
+                            final result =
+                                snapshot.data ??
+                                const _LeaderboardPage(
+                                  entries: [],
+                                  totalPages: 1,
+                                );
+                            final entries = result.entries;
+                            if (entries.isEmpty) {
+                              return Text(
+                                s.noRunsYet,
+                                style: const TextStyle(
+                                  color: Colors.white38,
+                                  fontSize: 13,
+                                ),
+                              );
+                            }
+                            // Pagination is NOT included here — it's pinned
+                            // outside this scrollable list (see the
+                            // FutureBuilder right below), so it sits at a
+                            // stable spot at the bottom of the screen instead
+                            // of trailing off after however many rows this
+                            // page happens to have (up to 15 — on a short
+                            // screen that could put it well below the fold).
+                            return Column(
+                              children: [
+                                LeaderboardHeader(
+                                  scoreLabel: s.rankingScoreColumnLabel,
+                                  waveLabel: s.rankingWaveColumnLabel,
+                                  countryLabel: s.rankingCountryColumnLabel,
+                                ),
+                                for (final entry in entries)
+                                  LeaderboardRow(
+                                    rank:
+                                        (entry['rank_position'] as num?)
+                                            ?.toInt() ??
+                                        0,
+                                    username:
+                                        entry['username']?.toString() ?? '?',
+                                    countryCode: entry['country_code']
+                                        ?.toString(),
+                                    bestScore:
+                                        (entry['best_score'] as num?)
+                                            ?.toInt() ??
+                                        0,
+                                    bestWave:
+                                        (entry['best_wave'] as num?)
+                                            ?.toInt() ??
+                                        0,
+                                    isVip: entry['is_vip'] as bool? ?? false,
+                                  ),
+                              ],
+                            );
+                          },
+                        ),
+                      ],
+                    ),
                   ),
                 ),
-              ),
-              // Pinned outside the scrollable list, in a stable spot that
-              // doesn't move around depending on how many rows this page
-              // has — only shown once the leaderboard is actually loaded
-              // and has more than one page.
-              FutureBuilder<_LeaderboardPage>(
-                future: _leaderboard,
-                builder: (context, snapshot) {
-                  final result = snapshot.data;
-                  if (snapshot.connectionState != ConnectionState.done ||
-                      result == null ||
-                      result.entries.isEmpty ||
-                      result.totalPages <= 1) {
-                    return const SizedBox.shrink();
-                  }
-                  return Container(
-                    padding: const EdgeInsets.fromLTRB(20, 8, 20, 12),
-                    decoration: const BoxDecoration(
-                      border: Border(top: BorderSide(color: Colors.white24)),
-                    ),
-                    child: LeaderboardPagination(
-                      page: _page,
-                      totalPages: result.totalPages,
-                      onChanged: _goToPage,
-                    ),
-                  );
-                },
-              ),
-            ],
+                // Pinned outside the scrollable list, in a stable spot that
+                // doesn't move around depending on how many rows this page
+                // has — only shown once the leaderboard is actually loaded
+                // and has more than one page.
+                FutureBuilder<_LeaderboardPage>(
+                  future: _leaderboard,
+                  builder: (context, snapshot) {
+                    final result = snapshot.data;
+                    if (snapshot.connectionState != ConnectionState.done ||
+                        result == null ||
+                        result.entries.isEmpty ||
+                        result.totalPages <= 1) {
+                      return const SizedBox.shrink();
+                    }
+                    return Container(
+                      padding: const EdgeInsets.fromLTRB(20, 8, 20, 12),
+                      decoration: const BoxDecoration(
+                        border: Border(top: BorderSide(color: Colors.white24)),
+                      ),
+                      child: LeaderboardPagination(
+                        page: _page,
+                        totalPages: result.totalPages,
+                        onChanged: _goToPage,
+                      ),
+                    );
+                  },
+                ),
+              ],
+            ),
           ),
         );
       },

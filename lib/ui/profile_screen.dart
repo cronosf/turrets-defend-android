@@ -108,7 +108,17 @@ class _ProfileScreenState extends State<ProfileScreen> {
             onRefresh: _reload,
             color: const Color(0xFFCB7B2A),
             child: ListView(
-              padding: const EdgeInsets.all(24),
+              // Bottom padding includes the system nav bar's safe-area inset
+              // (gesture pill / button bar) — a flat 24 was letting the
+              // last item (Log out) sit right under it, effectively cut off
+              // on gesture-nav devices, since the list is short enough that
+              // it never scrolls far enough on its own to clear that area.
+              padding: EdgeInsets.fromLTRB(
+                24,
+                24,
+                24,
+                24 + MediaQuery.of(context).padding.bottom,
+              ),
               children: [
                 Text(
                   '${s.greetingHello},',

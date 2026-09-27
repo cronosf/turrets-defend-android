@@ -118,112 +118,129 @@ class _NationalRankingScreenState extends State<NationalRankingScreen> {
                 ),
               ),
             )
-          : Column(
-              children: [
-                Expanded(
-                  child: RefreshIndicator(
-                    onRefresh: _reload,
-                    color: const Color(0xFFCB7B2A),
-                    child: FutureBuilder<_LeaderboardPage>(
-                      future: _leaderboard,
-                      builder: (context, snapshot) {
-                        if (snapshot.connectionState != ConnectionState.done) {
-                          return const Center(
-                            child: CircularProgressIndicator(
-                              color: Color(0xFFCB7B2A),
-                            ),
-                          );
-                        }
-                        if (snapshot.hasError) {
-                          return ListView(
-                            children: [
-                              const SizedBox(height: 80),
-                              Center(
-                                child: Text(
-                                  s.globalRankingLoadError,
-                                  style: const TextStyle(
-                                    color: Colors.redAccent,
+          : SafeArea(
+              top: false,
+              child: Column(
+                children: [
+                  Expanded(
+                    child: RefreshIndicator(
+                      onRefresh: _reload,
+                      color: const Color(0xFFCB7B2A),
+                      child: FutureBuilder<_LeaderboardPage>(
+                        future: _leaderboard,
+                        builder: (context, snapshot) {
+                          if (snapshot.connectionState !=
+                              ConnectionState.done) {
+                            return const Center(
+                              child: CircularProgressIndicator(
+                                color: Color(0xFFCB7B2A),
+                              ),
+                            );
+                          }
+                          if (snapshot.hasError) {
+                            return ListView(
+                              children: [
+                                const SizedBox(height: 80),
+                                Center(
+                                  child: Text(
+                                    s.globalRankingLoadError,
+                                    style: const TextStyle(
+                                      color: Colors.redAccent,
+                                    ),
                                   ),
                                 ),
-                              ),
-                              const SizedBox(height: 12),
-                              Center(
-                                child: OutlinedButton(
-                                  onPressed: _reload,
-                                  child: Text(s.retry),
+                                const SizedBox(height: 12),
+                                Center(
+                                  child: OutlinedButton(
+                                    onPressed: _reload,
+                                    child: Text(s.retry),
+                                  ),
                                 ),
-                              ),
-                            ],
-                          );
-                        }
-                        final result =
-                            snapshot.data ??
-                            const _LeaderboardPage(entries: [], totalPages: 1);
-                        final entries = result.entries;
-                        if (entries.isEmpty) {
+                              ],
+                            );
+                          }
+                          final result =
+                              snapshot.data ??
+                              const _LeaderboardPage(
+                                entries: [],
+                                totalPages: 1,
+                              );
+                          final entries = result.entries;
+                          if (entries.isEmpty) {
+                            return ListView(
+                              children: [
+                                const SizedBox(height: 80),
+                                Center(
+                                  child: Text(
+                                    s.noRunsYet,
+                                    style: const TextStyle(
+                                      color: Colors.white54,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            );
+                          }
+                          // Pagination is pinned outside this scrollable list
+                          // instead (see below) — same reasoning as
+                          // RankingScreen.
                           return ListView(
+                            padding: const EdgeInsets.all(20),
                             children: [
-                              const SizedBox(height: 80),
-                              Center(
-                                child: Text(
-                                  s.noRunsYet,
-                                  style: const TextStyle(color: Colors.white54),
-                                ),
+                              LeaderboardHeader(
+                                scoreLabel: s.rankingScoreColumnLabel,
+                                waveLabel: s.rankingWaveColumnLabel,
                               ),
+                              for (final entry in entries)
+                                LeaderboardRow(
+                                  rank:
+                                      (entry['rank_position'] as num?)
+                                          ?.toInt() ??
+                                      0,
+                                  username:
+                                      entry['username']?.toString() ?? '?',
+                                  bestScore:
+                                      (entry['best_score'] as num?)
+                                          ?.toInt() ??
+                                      0,
+                                  bestWave:
+                                      (entry['best_wave'] as num?)?.toInt() ??
+                                      0,
+                                  isVip: entry['is_vip'] as bool? ?? false,
+                                ),
                             ],
                           );
-                        }
-                        // Pagination is pinned outside this scrollable list
-                        // instead (see below) — same reasoning as
-                        // RankingScreen.
-                        return ListView(
-                          padding: const EdgeInsets.all(20),
-                          children: [
-                            LeaderboardHeader(
-                              scoreLabel: s.rankingScoreColumnLabel,
-                              waveLabel: s.rankingWaveColumnLabel,
-                            ),
-                            for (final entry in entries)
-                              LeaderboardRow(
-                                rank:
-                                    (entry['rank_position'] as num?)?.toInt() ??
-                                    0,
-                                username: entry['username']?.toString() ?? '?',
-                                bestScore:
-                                    (entry['best_score'] as num?)?.toInt() ?? 0,
-                                bestWave:
-                                    (entry['best_wave'] as num?)?.toInt() ?? 0,
-                              ),
-                          ],
-                        );
-                      },
+                        },
+                      ),
                     ),
                   ),
-                ),
-                FutureBuilder<_LeaderboardPage>(
-                  future: _leaderboard,
-                  builder: (context, snapshot) {
-                    final result = snapshot.data;
-                    if (snapshot.connectionState != ConnectionState.done ||
-                        result == null ||
-                        result.entries.isEmpty ||
-                        result.totalPages <= 1) {
-                      return const SizedBox.shrink();
-                    }
-                    return Container(
-                      padding: const EdgeInsets.fromLTRB(20, 8, 20, 12),
-                      decoration: const BoxDecoration(
-                        border: Border(top: BorderSide(color: Colors.white24)),
-                      ),
-                      child: LeaderboardPagination(
-                        page: _page,
-                        totalPages: result.totalPages,
-                        onChanged: _goToPage,
-                      ),
-                    );
-                  },
-                ),
-              ],
+                  FutureBuilder<_LeaderboardPage>(
+                    future: _leaderboard,
+                    builder: (context, snapshot) {
+                      final result = snapshot.data;
+                      if (snapshot.connectionState != ConnectionState.done ||
+                          result == null ||
+                          result.entries.isEmpty ||
+                          result.totalPages <= 1) {
+                        return const SizedBox.shrink();
+                      }
+                      return Container(
+                        padding: const EdgeInsets.fromLTRB(20, 8, 20, 12),
+                        decoration: const BoxDecoration(
+                          border: Border(
+                            top: BorderSide(color: Colors.white24),
+                          ),
+                        ),
+                        child: LeaderboardPagination(
+                          page: _page,
+                          totalPages: result.totalPages,
+                          onChanged: _goToPage,
+                        ),
+                      );
+                    },
+                  ),
+                ],
+              ),
             ),
     );
   }

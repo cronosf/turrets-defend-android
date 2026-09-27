@@ -106,10 +106,35 @@ class LeaderboardHeader extends StatelessWidget {
   }
 }
 
-/// A single leaderboard row: gold/silver/bronze trophy + highlight for
-/// ranks 1-3, then the player's name, country (own column, only when
-/// [countryCode] is given — see [LeaderboardHeader]), best score and best
-/// wave. Shared by [RankingScreen] (global) and [NationalRankingScreen]
+/// Maps a rank position (1-5) to its trophy asset — 1st is Diamante down to
+/// 5th as Bronce, matching the tier order the game's rank badges use
+/// elsewhere. `null` for rank 6+ (no trophy, just the "#N" text).
+String? _trophyAssetForRank(int rank) {
+  switch (rank) {
+    case 1:
+      return 'assets/images/ranking/trophy_diamante.png';
+    case 2:
+      return 'assets/images/ranking/trophy_platino.png';
+    case 3:
+      return 'assets/images/ranking/trophy_oro.png';
+    case 4:
+      return 'assets/images/ranking/trophy_plata.png';
+    case 5:
+      return 'assets/images/ranking/trophy_bronce.png';
+    default:
+      return null;
+  }
+}
+
+const _vipTrophyAsset = 'assets/images/ranking/trophy_blackvip.png';
+
+/// A single leaderboard row: a trophy image for ranks 1-5 (Diamante down to
+/// Bronce) plus a highlight, then the player's name, country (own column,
+/// only when [countryCode] is given — see [LeaderboardHeader]), best score
+/// and best wave. [isVip] (a player with $10+ in paid orders) shows the
+/// Black VIP trophy instead, regardless of rank — a separate "top spender"
+/// badge rather than another rank tier, so it can apply outside the top 5
+/// too. Shared by [RankingScreen] (global) and [NationalRankingScreen]
 /// (per-country) so both use the same design.
 class LeaderboardRow extends StatelessWidget {
   const LeaderboardRow({
@@ -119,6 +144,7 @@ class LeaderboardRow extends StatelessWidget {
     required this.bestScore,
     required this.bestWave,
     this.countryCode,
+    this.isVip = false,
   });
 
   final int rank;
@@ -126,45 +152,39 @@ class LeaderboardRow extends StatelessWidget {
   final int bestScore;
   final int bestWave;
   final String? countryCode;
+  final bool isVip;
 
-  static const _gold = Color(0xFFFFD700);
-  static const _silver = Color(0xFFC0C0C0);
-  static const _bronze = Color(0xFFCD7F32);
-
-  Color? get _trophyColor {
-    switch (rank) {
-      case 1:
-        return _gold;
-      case 2:
-        return _silver;
-      case 3:
-        return _bronze;
-      default:
-        return null;
-    }
-  }
+  static const _tierHighlight = Color(0xFFCB7B2A);
+  static const _vipHighlight = Color(0xFFB98A3A);
 
   @override
   Widget build(BuildContext context) {
-    final trophyColor = _trophyColor;
+    final trophyAsset = isVip ? _vipTrophyAsset : _trophyAssetForRank(rank);
+    final highlightColor = trophyAsset == null
+        ? null
+        : (isVip ? _vipHighlight : _tierHighlight);
     final showCountry = countryCode != null && countryCode!.isNotEmpty;
 
     return Container(
       margin: const EdgeInsets.only(bottom: 8),
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-      decoration: trophyColor != null
+      decoration: highlightColor != null
           ? BoxDecoration(
-              color: trophyColor.withValues(alpha: 0.12),
+              color: highlightColor.withValues(alpha: 0.12),
               borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: trophyColor.withValues(alpha: 0.55), width: 1.5),
+              border: Border.all(
+                color: highlightColor.withValues(alpha: 0.55),
+                width: 1.5,
+              ),
             )
           : null,
       child: Row(
         children: [
           SizedBox(
             width: _rankColumnWidth,
-            child: trophyColor != null
-                ? Icon(Icons.emoji_events_rounded, color: trophyColor, size: 26)
+            height: 34,
+            child: trophyAsset != null
+                ? Image.asset(trophyAsset, fit: BoxFit.contain)
                 : Text(
                     '#$rank',
                     style: const TextStyle(color: Colors.white54, fontWeight: FontWeight.bold),
@@ -176,7 +196,7 @@ class LeaderboardRow extends StatelessWidget {
               style: TextStyle(
                 color: Colors.white,
                 fontSize: 14,
-                fontWeight: trophyColor != null ? FontWeight.bold : FontWeight.normal,
+                fontWeight: highlightColor != null ? FontWeight.bold : FontWeight.normal,
               ),
               overflow: TextOverflow.ellipsis,
             ),
@@ -198,7 +218,7 @@ class LeaderboardRow extends StatelessWidget {
               '$bestScore',
               textAlign: TextAlign.right,
               style: TextStyle(
-                color: trophyColor ?? Colors.white70,
+                color: highlightColor ?? Colors.white70,
                 fontSize: 14,
                 fontWeight: FontWeight.w700,
               ),
@@ -211,7 +231,7 @@ class LeaderboardRow extends StatelessWidget {
               '$bestWave',
               textAlign: TextAlign.right,
               style: TextStyle(
-                color: trophyColor ?? Colors.white70,
+                color: highlightColor ?? Colors.white70,
                 fontSize: 14,
                 fontWeight: FontWeight.w700,
               ),
