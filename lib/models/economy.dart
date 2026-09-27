@@ -94,9 +94,10 @@ class Economy extends ChangeNotifier {
     notifyListeners();
   }
 
-  /// The equipped boss_skin variant id per boss rotation slot ('golem'/
-  /// 'goblin'/'ogre'/'orc' — BossType.slotId), e.g. {'golem': 'golem1'}.
-  /// A slot missing here (or mapped to null) means that slot's basic
+  /// The equipped boss_skin variant id per boss rotation slot (see
+  /// BossType.slotId — 'golem'/'goblin'/'ogre'/'orc' plus the 3 wraith
+  /// slots), e.g. {'golem': 'golem1'}. A slot missing here (or mapped to
+  /// null) means that slot's basic
   /// look. See models/boss_types.dart's resolveBossType and the
   /// `boss_skin:<slot>` equip-category convention in HomeScreen.
   Map<String, String?> equippedBossSkinBySlot = const {};

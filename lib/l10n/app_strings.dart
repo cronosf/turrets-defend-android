@@ -277,6 +277,41 @@ class Strings {
   String achievementsPageLabel(int page, int totalPages) =>
       _es ? 'Página $page de $totalPages' : 'Page $page of $totalPages';
 
+  // --- Recompensas (debajo del álbum de logros) -----------------------------
+  String get rewardsTitle => _es ? 'Recompensas' : 'Rewards';
+  String get rewardsHint => _es
+      ? 'Completa el álbum de logros para desbloquear un skin exclusivo del '
+          'primer boss. Solo puedes elegir uno de los tres.'
+      : "Complete the achievements album to unlock an exclusive skin for "
+          "the first boss. You can only choose one of the three.";
+  String get claimAction => _es ? 'Reclamar' : 'Claim';
+  String get claimedLabel => _es ? 'Reclamado' : 'Claimed';
+  String get claimConfirmTitle => _es
+      ? '¿Seguro qué deseas elegir este skin?\nSolo podrás elegir uno.'
+      : 'Are you sure you want to choose this skin?\nYou can only pick one.';
+  String get cancelAction => _es ? 'Cancelar' : 'Cancel';
+  String get acceptAction => _es ? 'Aceptar' : 'Accept';
+  String get rewardClaimError => _es
+      ? 'No se pudo reclamar la recompensa. Intenta de nuevo.'
+      : 'Could not claim the reward. Please try again.';
+
+  /// Display name for one of the 3 reward skins (see
+  /// models/boss_types.dart's kBossRewardSkus) — hardcoded in both
+  /// languages rather than routed through [shopItemName], which needs a
+  /// server-provided Spanish fallback the achievements screen never
+  /// fetches (it only checks ownership by sku, not full item rows).
+  String rewardSkuName(String sku) {
+    switch (sku) {
+      case 'boss_skin_caveman':
+        return _es ? 'Cavernícola' : 'Caveman';
+      case 'boss_skin_giant_goblin':
+        return _es ? 'Goblin Gigante' : 'Giant Goblin';
+      case 'boss_skin_viking':
+        return _es ? 'Líder Vikingo' : 'Viking Leader';
+    }
+    return sku;
+  }
+
   // --- Mi personalización --------------------------------------------------
   String get customizeTitle => menuCustomize;
   String get noItemsOwnedYet => _es
@@ -336,7 +371,18 @@ class Strings {
           return _es ? 'Híbridos' : 'Hybrid';
       }
     }
-    // Boss slot ids are proper nouns — same spelling in both languages.
+    if (category == 'boss_skin') {
+      switch (subSlot) {
+        case 'wraith_emerald':
+          return _es ? 'Espectro Esmeralda' : 'Emerald Wraith';
+        case 'wraith_wanderer':
+          return _es ? 'Espectro Errante' : 'Wandering Wraith';
+        case 'wraith_shadow':
+          return _es ? 'Espectro Sombrío' : 'Shadow Wraith';
+      }
+    }
+    // Other boss slot ids are proper nouns — same spelling in both
+    // languages.
     return subSlot[0].toUpperCase() + subSlot.substring(1);
   }
 
@@ -385,6 +431,18 @@ class Strings {
           return 'Crystal Golem';
         case 'boss_skin_golem3':
           return 'Lava Golem';
+        case 'boss_skin_goblin_chief':
+          return 'Chief Goblin';
+        case 'boss_skin_ogre_shaman':
+          return 'Ogress Shaman';
+        case 'boss_skin_orc_warrior':
+          return 'Orc Warrior';
+        case 'boss_skin_caveman':
+          return 'Caveman';
+        case 'boss_skin_giant_goblin':
+          return 'Giant Goblin';
+        case 'boss_skin_viking':
+          return 'Viking Leader';
       }
     }
     return fallback;
@@ -418,6 +476,16 @@ class Strings {
         case 'boss_skin_golem1':
         case 'boss_skin_golem3':
           return "Changes the Golem boss's look to this variant.";
+        case 'boss_skin_goblin_chief':
+          return "Changes the Goblin boss's look to this variant.";
+        case 'boss_skin_ogre_shaman':
+          return "Changes the Ogre boss's look to this variant.";
+        case 'boss_skin_orc_warrior':
+          return "Changes the Orc boss's look to this variant.";
+        case 'boss_skin_caveman':
+        case 'boss_skin_giant_goblin':
+        case 'boss_skin_viking':
+          return "Changes the first boss's look to this variant.";
       }
     }
     return fallback;
@@ -504,6 +572,16 @@ class Strings {
                 'tu base. Si la vida de la base llega a 0, la partida '
                 'termina y se guarda la oleada más alta alcanzada.',
           ),
+          (
+            'Ranking global',
+            'La tabla de posiciones ordena a los jugadores primero por '
+                'oleada más alta alcanzada y, en caso de empate, por mejor '
+                'puntaje. Los primeros 5 puestos muestran un trofeo propio: '
+                '1° Diamante, 2° Platino, 3° Oro, 4° Plata y 5° Bronce. '
+                'Además, los jugadores con compras destacadas en la tienda '
+                'reciben la insignia especial Black VIP, sin importar su '
+                'puesto.',
+          ),
         ]
       : const [
           (
@@ -554,6 +632,15 @@ class Strings {
             "If an enemy reaches the end of the field, it damages your "
                 "base. If the base's health hits 0, the run ends and your "
                 'highest wave is saved.',
+          ),
+          (
+            'Global ranking',
+            'The leaderboard sorts players by highest wave reached first, '
+                'then by best score as a tiebreak. The top 5 spots each show '
+                'their own trophy: 1st Diamond, 2nd Platinum, 3rd Gold, 4th '
+                'Silver, and 5th Bronze. Players with standout store '
+                'purchases also earn the special Black VIP badge, no matter '
+                'their rank.',
           ),
         ];
 }

@@ -128,6 +128,79 @@ String? _trophyAssetForRank(int rank) {
 
 const _vipTrophyAsset = 'assets/images/ranking/trophy_blackvip.png';
 
+/// Diagonal light-sweep translation for [_ShimmerTrophy]'s gradient — the
+/// same technique as Flutter's own shimmer-loading cookbook recipe: the
+/// gradient's colors/stops stay fixed (a narrow bright band inside a
+/// transparent field), and only its position is translated per frame, so
+/// `TileMode.clamp`'s transparent edges naturally hide the band for most of
+/// the cycle instead of it looping back and forth.
+class _SlidingGradientTransform extends GradientTransform {
+  const _SlidingGradientTransform(this.slidePercent);
+
+  final double slidePercent;
+
+  @override
+  Matrix4? transform(Rect bounds, {TextDirection? textDirection}) {
+    return Matrix4.translationValues(bounds.width * slidePercent, 0.0, 0.0);
+  }
+}
+
+/// Wraps a trophy image with a soft diagonal shine that sweeps across it
+/// once every 2 seconds — purely decorative polish for the rank-1..5 and
+/// VIP badges.
+class _ShimmerTrophy extends StatefulWidget {
+  const _ShimmerTrophy({required this.assetPath});
+
+  final String assetPath;
+
+  @override
+  State<_ShimmerTrophy> createState() => _ShimmerTrophyState();
+}
+
+class _ShimmerTrophyState extends State<_ShimmerTrophy>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _controller = AnimationController(
+    vsync: this,
+    duration: const Duration(seconds: 2),
+  )..repeat();
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final image = Image.asset(widget.assetPath, fit: BoxFit.contain);
+    return AnimatedBuilder(
+      animation: _controller,
+      child: image,
+      builder: (context, child) {
+        return ShaderMask(
+          blendMode: BlendMode.srcATop,
+          shaderCallback: (bounds) {
+            return LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: const [
+                Colors.transparent,
+                Color(0xCCFFFFFF),
+                Colors.transparent,
+              ],
+              stops: const [0.35, 0.5, 0.65],
+              transform: _SlidingGradientTransform(
+                -1.5 + _controller.value * 3.0,
+              ),
+            ).createShader(bounds);
+          },
+          child: child,
+        );
+      },
+    );
+  }
+}
+
 /// A single leaderboard row: a trophy image for ranks 1-5 (Diamante down to
 /// Bronce) plus a highlight, then the player's name, country (own column,
 /// only when [countryCode] is given — see [LeaderboardHeader]), best score
@@ -184,7 +257,7 @@ class LeaderboardRow extends StatelessWidget {
             width: _rankColumnWidth,
             height: 34,
             child: trophyAsset != null
-                ? Image.asset(trophyAsset, fit: BoxFit.contain)
+                ? _ShimmerTrophy(assetPath: trophyAsset)
                 : Text(
                     '#$rank',
                     style: const TextStyle(color: Colors.white54, fontWeight: FontWeight.bold),

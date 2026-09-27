@@ -119,6 +119,12 @@ class _CustomizeScreenState extends State<CustomizeScreen> {
             return 'assets/images/bosses/ogre/0_Ogre_Walking_000.png';
           case 'orc':
             return 'assets/images/bosses/orc/0_Orc_Walking_000.png';
+          case 'wraith_emerald':
+            return 'assets/images/bosses/wraith_emerald/Wraith_01_Moving Forward_000.png';
+          case 'wraith_wanderer':
+            return 'assets/images/bosses/wraith_wanderer/Wraith_02_Moving Forward_000.png';
+          case 'wraith_shadow':
+            return 'assets/images/bosses/wraith_shadow/Wraith_03_Moving Forward_000.png';
           default:
             return 'assets/images/bosses/golem2/0_Golem_Walking_000.png';
         }

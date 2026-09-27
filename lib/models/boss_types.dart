@@ -24,7 +24,8 @@ class BossType {
   final String id;
 
   /// Which rotation slot ([kBossTypes] entry) this art belongs to —
-  /// 'golem'/'goblin'/'ogre'/'orc'. [kBossTypes] itself always lists each
+  /// 'golem'/'goblin'/'ogre'/'orc'/'wraith_emerald'/'wraith_wanderer'/
+  /// 'wraith_shadow'. [kBossTypes] itself always lists each
   /// slot's *basic* (default, non-purchasable) look; a purchasable
   /// alternate skin (see [kBossSkinVariants]) shares its slotId with the
   /// basic entry it can replace, and [resolveBossType] is what actually
@@ -100,14 +101,41 @@ const List<BossType> kBossTypes = [
     artworkTopFraction: 0,
     aspectRatio: 406 / 609,
   ),
+  // Three new slots past orc — tougher than every basic above by the same
+  // repeat-of-the-rotation scaling every earlier slot already uses (see
+  // TurretDefenseGame's boss-wave code), no separate difficulty knob needed
+  // here. Ghostly "wraith" kit, each its own colorway (206x281/218x284/
+  // 222x291 -> aspect ratios below).
+  BossType(
+    id: 'wraith_emerald',
+    slotId: 'wraith_emerald',
+    walkFramesDirectory: 'bosses/wraith_emerald',
+    artworkTopFraction: 0.0071,
+    aspectRatio: 206 / 281,
+  ),
+  BossType(
+    id: 'wraith_wanderer',
+    slotId: 'wraith_wanderer',
+    walkFramesDirectory: 'bosses/wraith_wanderer',
+    artworkTopFraction: 0.007,
+    aspectRatio: 218 / 284,
+  ),
+  BossType(
+    id: 'wraith_shadow',
+    slotId: 'wraith_shadow',
+    walkFramesDirectory: 'bosses/wraith_shadow',
+    artworkTopFraction: 0.0069,
+    aspectRatio: 222 / 291,
+  ),
 ];
 
-/// Purchasable alternate skins for a boss slot, keyed by shop_items.
+/// Purchasable (or, for the 3 "boss_caveman"/"boss_giant_goblin"/
+/// "boss_viking" entries, reward-claimable — see the achievements screen's
+/// rewards section) alternate skins for a boss slot, keyed by shop_items.
 /// metadata's asset_key exactly (e.g. "boss_golem1") — this is also what
 /// names the shop preview icon (assets/images/shop/$asset_key.png), so the
 /// two have to match. NOT part of [kBossTypes]' own rotation (that list
-/// always cycles through each slot's basic look). Only the 'golem' slot
-/// has alternates for now (goblin/ogre/orc: basic only).
+/// always cycles through each slot's basic look).
 const Map<String, BossType> kBossSkinVariants = {
   'boss_golem1': BossType(
     id: 'golem1',
@@ -126,6 +154,68 @@ const Map<String, BossType> kBossSkinVariants = {
     artworkTopFraction: 0.01,
     aspectRatio: 388 / 539,
   ),
+  // Reward-only skins for the 'golem' slot — never sold in the shop
+  // (shop_items.is_active = 0 for these 3), only granted once by claiming
+  // one from the achievements screen's rewards section after filling the
+  // whole 40-figure album. See AchievementsScreen.
+  'boss_caveman': BossType(
+    id: 'caveman',
+    slotId: 'golem',
+    walkFramesDirectory: 'bosses/human_caveman',
+    artworkTopFraction: 0,
+    aspectRatio: 267 / 443,
+  ),
+  'boss_giant_goblin': BossType(
+    id: 'giant_goblin',
+    slotId: 'golem',
+    walkFramesDirectory: 'bosses/human_giant_goblin',
+    artworkTopFraction: 0,
+    aspectRatio: 286 / 441,
+  ),
+  'boss_viking': BossType(
+    id: 'viking',
+    slotId: 'golem',
+    walkFramesDirectory: 'bosses/human_viking',
+    artworkTopFraction: 0.0023,
+    aspectRatio: 278 / 435,
+  ),
+  // Purchasable skins for the goblin/ogre/orc slots (previously basic-only)
+  // — a single "goblin" character kit reused across all three slots per
+  // the asset pack's own directory order (Chief/Female/Male -> goblin/
+  // ogre/orc), same pattern as the golem1/golem3 alternates above.
+  'boss_goblin_chief': BossType(
+    id: 'goblin_chief',
+    slotId: 'goblin',
+    walkFramesDirectory: 'bosses/goblin_skin_chief',
+    artworkTopFraction: 0,
+    aspectRatio: 249 / 312,
+  ),
+  'boss_ogre_shaman': BossType(
+    id: 'ogre_shaman',
+    slotId: 'ogre',
+    walkFramesDirectory: 'bosses/goblin_skin_female',
+    artworkTopFraction: 0,
+    aspectRatio: 233 / 326,
+  ),
+  'boss_orc_warrior': BossType(
+    id: 'orc_warrior',
+    slotId: 'orc',
+    walkFramesDirectory: 'bosses/goblin_skin_male',
+    artworkTopFraction: 0,
+    aspectRatio: 253 / 289,
+  ),
+};
+
+/// The 3 reward-only skins claimable from the achievements screen's rewards
+/// section — a player can claim exactly one, ever, once their achievements
+/// album is full. Keyed by `shop_items.sku` (what `POST
+/// /rewards/claim-boss-skin` takes and what an owned item's `sku` field
+/// reads back as) with the matching [kBossSkinVariants] asset_key as the
+/// value. Order here is the display order in that section.
+const Map<String, String> kBossRewardSkus = {
+  'boss_skin_caveman': 'boss_caveman',
+  'boss_skin_giant_goblin': 'boss_giant_goblin',
+  'boss_skin_viking': 'boss_viking',
 };
 
 /// Resolves which [BossType] to actually spawn for a rotation slot: the
