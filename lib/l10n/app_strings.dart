@@ -49,6 +49,7 @@ class Strings {
   String get baseDestroyed => _es ? 'BASE DESTRUIDA' : 'BASE DESTROYED';
   String get bossFightTitle => _es ? 'COMBATE CON JEFE' : 'BOSS FIGHT';
   String get bossLevelLabel => _es ? 'NIVEL DE BOSS' : 'BOSS LEVEL';
+  String bossLevelLabelFor(int n) => '$bossLevelLabel $n';
   String get bossDefeatedTitle => _es ? 'BOSS ELIMINADO' : 'BOSS DEFEATED';
   String get achievementUnlockedLabel =>
       _es ? 'Logro conseguido' : 'Achievement unlocked';

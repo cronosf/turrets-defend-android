@@ -54,7 +54,9 @@ class TopHud extends StatelessWidget {
                     ),
                     const Spacer(),
                     Text(
-                      economy.isBossWave ? s.bossLevelLabel : s.level(economy.wave),
+                      economy.isBossWave
+                          ? s.bossLevelLabelFor(economy.bossEncounterNumber ?? 1)
+                          : s.level(economy.wave),
                       style: AppFonts.title(
                         color: economy.isBossWave ? const Color(0xFFE05A3A) : Colors.amberAccent,
                         fontSize: 16,

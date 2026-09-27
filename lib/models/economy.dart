@@ -202,12 +202,18 @@ class Economy extends ChangeNotifier {
     notifyListeners();
   }
 
-  /// Drives TopHud showing "BOSS LEVEL"/"NIVEL DE BOSS" instead of a
+  /// Drives TopHud showing "BOSS LEVEL n"/"NIVEL DE BOSS n" instead of a
   /// numbered level while a boss encounter is active (see
-  /// TurretDefenseGame's boss-wave logic).
-  void setBossWave(bool value) {
+  /// TurretDefenseGame's boss-wave logic) — [encounterNumber] is that
+  /// encounter's 1-based correlative (1st boss ever fought is 1, 2nd is 2,
+  /// and so on, forever increasing since the mode is endless), passed in
+  /// when turning a boss wave on.
+  int? bossEncounterNumber;
+
+  void setBossWave(bool value, {int? encounterNumber}) {
     if (isBossWave == value) return;
     isBossWave = value;
+    if (value) bossEncounterNumber = encounterNumber;
     notifyListeners();
   }
 

@@ -366,7 +366,12 @@ class TurretDefenseGame extends FlameGame {
     if (_bossPending) {
       _bossPending = false;
       _isCurrentWaveBoss = true;
-      economy.setBossWave(true);
+      // Same encounterIndex formula _spawnBoss() uses below — computed here
+      // too (rather than reading it back from _spawnBoss()) just to give
+      // TopHud its correlative "BOSS LEVEL n" number the instant the wave
+      // starts, before _spawnBoss() itself has run.
+      final encounterIndex = (economy.wave - _bossAfterWave) ~/ _bossWaveInterval;
+      economy.setBossWave(true, encounterNumber: encounterIndex + 1);
       // The whole wave is just the one boss — no timer-driven trickle of
       // regular spawns, so mark it fully "spawned" right away.
       _enemiesToSpawn = 1;
