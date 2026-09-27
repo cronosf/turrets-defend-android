@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import '../l10n/app_strings.dart';
 import '../models/boss_types.dart';
 import '../models/enemy_types.dart';
+import '../theme/app_fonts.dart';
 
 /// The catalog's fixed category order, shared by the shop grid and "My
 /// customization" so both screens list categories the same way.
@@ -107,7 +108,9 @@ class ShopSubSlotTabs extends StatelessWidget {
               fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
               fontSize: 12,
             ),
-            side: BorderSide(color: isSelected ? const Color(0xFFCB7B2A) : Colors.white24),
+            side: BorderSide(
+              color: isSelected ? const Color(0xFFCB7B2A) : Colors.white24,
+            ),
           );
         },
       ),
@@ -119,7 +122,11 @@ class ShopSubSlotTabs extends StatelessWidget {
 /// customization", so an owned/equipped item looks the same in both
 /// places. Gold border normally, green when [highlighted] (equipped).
 class ShopItemImageTile extends StatelessWidget {
-  const ShopItemImageTile({super.key, required this.imagePath, this.highlighted = false});
+  const ShopItemImageTile({
+    super.key,
+    required this.imagePath,
+    this.highlighted = false,
+  });
 
   final String? imagePath;
   final bool highlighted;
@@ -154,6 +161,113 @@ class ShopItemImageTile extends StatelessWidget {
       ),
     );
   }
+}
+
+/// Full item detail, opened by tapping a card's icon in either the shop
+/// or "My customization" — the grid card's own description is clipped to
+/// 2 lines with an ellipsis (deliberately: the grid needs a predictable
+/// card height), so this is where the complete, untruncated text lives.
+/// Matches BossDefeatedOverlay's look exactly (same frame, same tight
+/// gold-bordered icon box) rather than reusing [ShopItemImageTile]'s
+/// airier padding, so a modal reads the same wherever it shows up.
+void showItemDetailModal(
+  BuildContext context, {
+  required String? imagePath,
+  required String name,
+  required String description,
+  required Strings s,
+}) {
+  const gold = Color(0xFFFFC94D);
+  showGeneralDialog<void>(
+    context: context,
+    barrierDismissible: true,
+    barrierLabel: name,
+    barrierColor: Colors.black.withValues(alpha: 0.78),
+    transitionDuration: Duration.zero,
+    pageBuilder: (context, _, _) => Material(
+      type: MaterialType.transparency,
+      child: Center(
+        child: Container(
+          margin: const EdgeInsets.symmetric(horizontal: 36),
+          padding: const EdgeInsets.all(22),
+          decoration: BoxDecoration(
+            color: const Color(0xFF3A2A1C),
+            borderRadius: BorderRadius.circular(18),
+            // Same tone as the fill, not gold — the outer frame doesn't
+            // need to compete with the icon's own gold border for
+            // attention (unlike BossDefeatedOverlay, which is a rarer,
+            // celebratory moment that can afford the extra emphasis).
+            border: Border.all(color: const Color(0xFF3A2A1C), width: 3),
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // Tight padding between the border and the sprite itself —
+              // same treatment as the boss-defeated achievement icon, not
+              // the airier gold-border look ShopItemImageTile uses in the
+              // grid.
+              Container(
+                width: 120,
+                height: 120,
+                padding: const EdgeInsets.all(4),
+                decoration: BoxDecoration(
+                  color: const Color(0xFF241a11),
+                  borderRadius: BorderRadius.circular(14),
+                  border: Border.all(color: gold, width: 3),
+                  boxShadow: const [
+                    BoxShadow(
+                      color: Color(0x55FFC94D),
+                      blurRadius: 10,
+                      spreadRadius: 1,
+                    ),
+                  ],
+                ),
+                child: imagePath != null
+                    ? Image.asset(imagePath, fit: BoxFit.contain)
+                    : const Icon(Icons.redeem_rounded, color: gold, size: 40),
+              ),
+              const SizedBox(height: 16),
+              Text(
+                name,
+                textAlign: TextAlign.center,
+                style: AppFonts.title(color: Colors.white, fontSize: 17),
+              ),
+              if (description.isNotEmpty) ...[
+                const SizedBox(height: 8),
+                Text(
+                  description,
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(
+                    color: Colors.white70,
+                    fontSize: 13,
+                    height: 1.4,
+                  ),
+                ),
+              ],
+              const SizedBox(height: 20),
+              GestureDetector(
+                onTap: () => Navigator.of(context).pop(),
+                child: Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 28,
+                    vertical: 12,
+                  ),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFCB7B2A),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Text(
+                    s.close,
+                    style: AppFonts.title(color: Colors.white, fontSize: 14),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    ),
+  );
 }
 
 /// Left-side "Categories" navigation, shared by the shop and "My
@@ -244,7 +358,11 @@ class _CategoryButton extends StatelessWidget {
         ),
         child: Column(
           children: [
-            Icon(icon, color: selected ? const Color(0xFFCB7B2A) : Colors.white54, size: 22),
+            Icon(
+              icon,
+              color: selected ? const Color(0xFFCB7B2A) : Colors.white54,
+              size: 22,
+            ),
             const SizedBox(height: 4),
             Text(
               label,

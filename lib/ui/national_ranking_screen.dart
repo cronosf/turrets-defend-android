@@ -16,7 +16,11 @@ class _LeaderboardPage {
 /// country (`GET /ranking?country=XX`), with rank_position computed within
 /// that country rather than the global rank filtered down.
 class NationalRankingScreen extends StatefulWidget {
-  const NationalRankingScreen({super.key, required this.economy, required this.countryCode});
+  const NationalRankingScreen({
+    super.key,
+    required this.economy,
+    required this.countryCode,
+  });
 
   final Economy economy;
   final String? countryCode;
@@ -42,10 +46,13 @@ class _NationalRankingScreenState extends State<NationalRankingScreen> {
   Future<void> _syncBestStats() async {
     if (!ApiClient.hasToken) return;
     try {
-      await ApiClient.post('/stats/sync', body: {
-        'wave': widget.economy.bestWave,
-        'score': widget.economy.bestScore,
-      });
+      await ApiClient.post(
+        '/stats/sync',
+        body: {
+          'wave': widget.economy.bestWave,
+          'score': widget.economy.bestScore,
+        },
+      );
     } catch (_) {}
   }
 
@@ -111,60 +118,112 @@ class _NationalRankingScreenState extends State<NationalRankingScreen> {
                 ),
               ),
             )
-          : RefreshIndicator(
-              onRefresh: _reload,
-              color: const Color(0xFFCB7B2A),
-              child: FutureBuilder<_LeaderboardPage>(
-                future: _leaderboard,
-                builder: (context, snapshot) {
-                  if (snapshot.connectionState != ConnectionState.done) {
-                    return const Center(child: CircularProgressIndicator(color: Color(0xFFCB7B2A)));
-                  }
-                  if (snapshot.hasError) {
-                    return ListView(
-                      children: [
-                        const SizedBox(height: 80),
-                        Center(
-                          child: Text(s.globalRankingLoadError, style: const TextStyle(color: Colors.redAccent)),
-                        ),
-                        const SizedBox(height: 12),
-                        Center(child: OutlinedButton(onPressed: _reload, child: Text(s.retry))),
-                      ],
-                    );
-                  }
-                  final result = snapshot.data ?? const _LeaderboardPage(entries: [], totalPages: 1);
-                  final entries = result.entries;
-                  if (entries.isEmpty) {
-                    return ListView(
-                      children: [
-                        const SizedBox(height: 80),
-                        Center(child: Text(s.noRunsYet, style: const TextStyle(color: Colors.white54))),
-                      ],
-                    );
-                  }
-                  return ListView(
-                    padding: const EdgeInsets.all(20),
-                    children: [
-                      LeaderboardHeader(
-                        scoreLabel: s.rankingScoreColumnLabel,
-                        waveLabel: s.rankingWaveColumnLabel,
+          : Column(
+              children: [
+                Expanded(
+                  child: RefreshIndicator(
+                    onRefresh: _reload,
+                    color: const Color(0xFFCB7B2A),
+                    child: FutureBuilder<_LeaderboardPage>(
+                      future: _leaderboard,
+                      builder: (context, snapshot) {
+                        if (snapshot.connectionState != ConnectionState.done) {
+                          return const Center(
+                            child: CircularProgressIndicator(
+                              color: Color(0xFFCB7B2A),
+                            ),
+                          );
+                        }
+                        if (snapshot.hasError) {
+                          return ListView(
+                            children: [
+                              const SizedBox(height: 80),
+                              Center(
+                                child: Text(
+                                  s.globalRankingLoadError,
+                                  style: const TextStyle(
+                                    color: Colors.redAccent,
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(height: 12),
+                              Center(
+                                child: OutlinedButton(
+                                  onPressed: _reload,
+                                  child: Text(s.retry),
+                                ),
+                              ),
+                            ],
+                          );
+                        }
+                        final result =
+                            snapshot.data ??
+                            const _LeaderboardPage(entries: [], totalPages: 1);
+                        final entries = result.entries;
+                        if (entries.isEmpty) {
+                          return ListView(
+                            children: [
+                              const SizedBox(height: 80),
+                              Center(
+                                child: Text(
+                                  s.noRunsYet,
+                                  style: const TextStyle(color: Colors.white54),
+                                ),
+                              ),
+                            ],
+                          );
+                        }
+                        // Pagination is pinned outside this scrollable list
+                        // instead (see below) — same reasoning as
+                        // RankingScreen.
+                        return ListView(
+                          padding: const EdgeInsets.all(20),
+                          children: [
+                            LeaderboardHeader(
+                              scoreLabel: s.rankingScoreColumnLabel,
+                              waveLabel: s.rankingWaveColumnLabel,
+                            ),
+                            for (final entry in entries)
+                              LeaderboardRow(
+                                rank:
+                                    (entry['rank_position'] as num?)?.toInt() ??
+                                    0,
+                                username: entry['username']?.toString() ?? '?',
+                                bestScore:
+                                    (entry['best_score'] as num?)?.toInt() ?? 0,
+                                bestWave:
+                                    (entry['best_wave'] as num?)?.toInt() ?? 0,
+                              ),
+                          ],
+                        );
+                      },
+                    ),
+                  ),
+                ),
+                FutureBuilder<_LeaderboardPage>(
+                  future: _leaderboard,
+                  builder: (context, snapshot) {
+                    final result = snapshot.data;
+                    if (snapshot.connectionState != ConnectionState.done ||
+                        result == null ||
+                        result.entries.isEmpty ||
+                        result.totalPages <= 1) {
+                      return const SizedBox.shrink();
+                    }
+                    return Container(
+                      padding: const EdgeInsets.fromLTRB(20, 8, 20, 12),
+                      decoration: const BoxDecoration(
+                        border: Border(top: BorderSide(color: Colors.white24)),
                       ),
-                      for (final entry in entries)
-                        LeaderboardRow(
-                          rank: (entry['rank_position'] as num?)?.toInt() ?? 0,
-                          username: entry['username']?.toString() ?? '?',
-                          bestScore: (entry['best_score'] as num?)?.toInt() ?? 0,
-                          bestWave: (entry['best_wave'] as num?)?.toInt() ?? 0,
-                        ),
-                      LeaderboardPagination(
+                      child: LeaderboardPagination(
                         page: _page,
                         totalPages: result.totalPages,
                         onChanged: _goToPage,
                       ),
-                    ],
-                  );
-                },
-              ),
+                    );
+                  },
+                ),
+              ],
             ),
     );
   }

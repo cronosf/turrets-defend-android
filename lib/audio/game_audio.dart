@@ -49,6 +49,7 @@ class GameAudio {
   AudioPool? _turretBlasterPool;
   AudioPool? _mobDeathPool;
   AudioPool? _barrierLoweredPool;
+  AudioPool? _barrierRisesPool;
 
   /// Safe to call more than once (e.g. if a screen re-mounts) — only the
   /// first call binds the economy listener and kicks off loading.
@@ -83,22 +84,53 @@ class GameAudio {
   Future<void> _loadSfx() async {
     await Future.wait([
       _guard(() async {
-        _turretShotPool = await FlameAudio.createPool('turret_shot.mp3', minPlayers: 3, maxPlayers: 6);
+        // maxPlayers 10, not 6 — this one (and blaster below) covers every
+        // tier-4+ turret on a 13-slot board all firing near-simultaneously
+        // late in an endless run; 6 meant the new capacity guard in
+        // _startPooled was skipping a shot's sound constantly by wave 20+.
+        _turretShotPool = await FlameAudio.createPool(
+          'turret_shot.mp3',
+          minPlayers: 3,
+          maxPlayers: 10,
+        );
       }),
       _guard(() async {
-        _turretLaserPool =
-            await FlameAudio.createPool('turret_laser.mp3', minPlayers: 3, maxPlayers: 6);
+        _turretLaserPool = await FlameAudio.createPool(
+          'turret_laser.mp3',
+          minPlayers: 3,
+          maxPlayers: 10,
+        );
       }),
       _guard(() async {
-        _turretBlasterPool =
-            await FlameAudio.createPool('turret_blaster.mp3', minPlayers: 3, maxPlayers: 6);
+        _turretBlasterPool = await FlameAudio.createPool(
+          'turret_blaster.mp3',
+          minPlayers: 3,
+          maxPlayers: 10,
+        );
       }),
       _guard(() async {
-        _mobDeathPool = await FlameAudio.createPool('mob_death.mp3', minPlayers: 3, maxPlayers: 6);
+        _mobDeathPool = await FlameAudio.createPool(
+          'mob_death.mp3',
+          minPlayers: 3,
+          maxPlayers: 6,
+        );
       }),
       _guard(() async {
-        _barrierLoweredPool =
-            await FlameAudio.createPool('barrier_lowered.mp3', minPlayers: 2, maxPlayers: 4);
+        _barrierLoweredPool = await FlameAudio.createPool(
+          'barrier_lowered.mp3',
+          minPlayers: 2,
+          maxPlayers: 4,
+        );
+      }),
+      _guard(() async {
+        // Only ever fires once per run (game over), but still pooled —
+        // see the class doc comment on why a bare FlameAudio.play call is
+        // never safe to leave in, even for a rare one.
+        _barrierRisesPool = await FlameAudio.createPool(
+          'barrier_rises.mp3',
+          minPlayers: 1,
+          maxPlayers: 2,
+        );
       }),
     ]);
   }
@@ -108,10 +140,12 @@ class GameAudio {
     if (future != null) await future;
   }
 
-  double get _musicVolume =>
-      (_economy?.musicOn ?? true) ? ((_economy?.musicVolume ?? 7) / 10).clamp(0.0, 1.0) : 0.0;
-  double get _sfxVolume =>
-      (_economy?.soundOn ?? true) ? ((_economy?.soundVolume ?? 7) / 10).clamp(0.0, 1.0) : 0.0;
+  double get _musicVolume => (_economy?.musicOn ?? true)
+      ? ((_economy?.musicVolume ?? 7) / 10).clamp(0.0, 1.0)
+      : 0.0;
+  double get _sfxVolume => (_economy?.soundOn ?? true)
+      ? ((_economy?.soundVolume ?? 7) / 10).clamp(0.0, 1.0)
+      : 0.0;
 
   void _onEconomyChanged() {
     final e = _economy;
@@ -163,9 +197,17 @@ class GameAudio {
   });
 
   /// Alternates battle_theme 1/2 per wave (odd waves -> theme 1, even -> 2).
+  /// A no-op if that track is already the one playing — every wave
+  /// transition used to call `FlameAudio.bgm.play` unconditionally, which
+  /// does a full release+reload of the audio source every single time
+  /// (see Bgm.play in the flame_audio package) even when the result is the
+  /// exact same track already looping. That's both an audible stutter/cut
+  /// at every wave boundary (the actual "music doesn't work well" symptom)
+  /// and pointless native I/O on every wave.
   Future<void> playBattleMusicForWave(int wave) => _guard(() async {
     await _musicReady();
     final track = wave.isOdd ? 'battle1.mp3' : 'battle2.mp3';
+    if (_currentMusic == track && FlameAudio.bgm.isPlaying) return;
     _currentMusic = track;
     _musicPausedByToggle = false;
     if (_economy?.musicOn ?? true) {
@@ -180,6 +222,30 @@ class GameAudio {
     await FlameAudio.bgm.stop();
   });
 
+  /// Starts a pooled sound, but only if the pool actually has a player to
+  /// give it — [AudioPool.maxPlayers] is *not* a hard cap: once every
+  /// pooled player is busy, calling `.start()` again makes AudioPool spin
+  /// up a brand-new native `AudioPlayer` on top of the pool (see its own
+  /// doc comment — "there will still be new AudioPlayers created"), and
+  /// that extra one is only ever `.release()`d, never `.dispose()`d, once
+  /// it finishes — its native (platform-channel) side leaks. A high-tier
+  /// turret board late in an endless run fires far more often than any
+  /// pool's maxPlayers, so without this guard every burst past that limit
+  /// permanently leaks another native player — that accumulation, not any
+  /// one call, is what was actually behind the wave-20+ slowdown. Skipping
+  /// the odd shot's sound under a dense barrage is inaudible; the leak
+  /// wasn't.
+  Future<void> _startPooled(AudioPool? pool) async {
+    if (pool == null) return;
+    // currentPlayers is @visibleForTesting in audioplayers — but it's the
+    // only way to read "is this pool already at capacity" before calling
+    // start(), and that's exactly the leak this guard exists to prevent
+    // (see the doc comment above). No public equivalent is exposed.
+    // ignore: invalid_use_of_visible_for_testing_member
+    if (pool.currentPlayers.length >= pool.maxPlayers) return;
+    await pool.start(volume: _sfxVolume);
+  }
+
   Future<void> playTurretShot(int tier) => _guard(() async {
     if (!(_economy?.soundOn ?? true)) return;
     final pool = tier <= 2
@@ -187,21 +253,21 @@ class GameAudio {
         : tier == 3
         ? _turretLaserPool
         : _turretBlasterPool;
-    await pool?.start(volume: _sfxVolume);
+    await _startPooled(pool);
   });
 
   Future<void> playMobDeath() => _guard(() async {
     if (!(_economy?.soundOn ?? true)) return;
-    await _mobDeathPool?.start(volume: _sfxVolume);
+    await _startPooled(_mobDeathPool);
   });
 
   Future<void> playBarrierLowered() => _guard(() async {
     if (!(_economy?.soundOn ?? true)) return;
-    await _barrierLoweredPool?.start(volume: _sfxVolume);
+    await _startPooled(_barrierLoweredPool);
   });
 
   Future<void> playBarrierRises() => _guard(() async {
     if (!(_economy?.soundOn ?? true)) return;
-    await FlameAudio.play('barrier_rises.mp3', volume: _sfxVolume);
+    await _startPooled(_barrierRisesPool);
   });
 }

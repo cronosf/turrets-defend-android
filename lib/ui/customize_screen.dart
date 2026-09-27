@@ -278,6 +278,7 @@ class _CustomizeScreenState extends State<CustomizeScreen> {
                                 ),
                             children: [
                               _OwnedItemCard(
+                                s: s,
                                 imagePath: _basicImagePathFor(
                                   _selectedCategory,
                                   currentSubSlot,
@@ -293,6 +294,7 @@ class _CustomizeScreenState extends State<CustomizeScreen> {
                               ),
                               for (final item in selectedItems)
                                 _OwnedItemCard(
+                                  s: s,
                                   imagePath: shopItemImagePath(item),
                                   name: s.shopItemName(
                                     item['sku']?.toString() ?? '',
@@ -344,6 +346,7 @@ class _ProfileItems {
 /// Equip button once it's the active item for its category.
 class _OwnedItemCard extends StatelessWidget {
   const _OwnedItemCard({
+    required this.s,
     required this.imagePath,
     required this.name,
     required this.description,
@@ -354,6 +357,7 @@ class _OwnedItemCard extends StatelessWidget {
     required this.onTap,
   });
 
+  final Strings s;
   final String? imagePath;
   final String name;
   final String description;
@@ -368,7 +372,16 @@ class _OwnedItemCard extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        ShopItemImageTile(imagePath: imagePath, highlighted: equipped),
+        GestureDetector(
+          onTap: () => showItemDetailModal(
+            context,
+            imagePath: imagePath,
+            name: name,
+            description: description,
+            s: s,
+          ),
+          child: ShopItemImageTile(imagePath: imagePath, highlighted: equipped),
+        ),
         const SizedBox(height: 8),
         Text(
           name,

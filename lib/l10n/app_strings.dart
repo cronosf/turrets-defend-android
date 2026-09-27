@@ -310,15 +310,15 @@ class Strings {
   String shopCategoryShortLabel(String category) {
     switch (category) {
       case 'turret_skin':
-        return 'Turrets';
+        return _es ? 'Torretas' : 'Turrets';
       case 'bullet_effect':
-        return 'Bullets';
+        return _es ? 'Disparos' : 'Bullets';
       case 'mob_skin':
-        return 'Mobs';
+        return _es ? 'Mobs' : 'Mobs';
       case 'boss_skin':
-        return 'Bosses';
+        return _es ? 'Bosses' : 'Bosses';
       case 'bundle':
-        return 'Bundle';
+        return _es ? 'Paquete' : 'Bundle';
       default:
         return category;
     }

@@ -248,6 +248,7 @@ class _ShopScreenState extends State<ShopScreen> {
                                     children: [
                                       for (final item in selectedItems)
                                         _ShopItemCard(
+                                          s: s,
                                           imagePath: shopItemImagePath(item),
                                           name: s.shopItemName(
                                             item['sku']?.toString() ?? '',
@@ -298,6 +299,7 @@ class _ShopScreenState extends State<ShopScreen> {
 /// their own separate elements, not overlaid on the image.
 class _ShopItemCard extends StatelessWidget {
   const _ShopItemCard({
+    required this.s,
     required this.imagePath,
     required this.name,
     required this.description,
@@ -306,6 +308,7 @@ class _ShopItemCard extends StatelessWidget {
     required this.onBuy,
   });
 
+  final Strings s;
   final String? imagePath;
   final String name;
   final String description;
@@ -320,7 +323,16 @@ class _ShopItemCard extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        ShopItemImageTile(imagePath: imagePath),
+        GestureDetector(
+          onTap: () => showItemDetailModal(
+            context,
+            imagePath: imagePath,
+            name: name,
+            description: description,
+            s: s,
+          ),
+          child: ShopItemImageTile(imagePath: imagePath),
+        ),
         const SizedBox(height: 8),
         Text(
           name,
