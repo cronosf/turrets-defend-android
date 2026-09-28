@@ -1,5 +1,6 @@
 import 'package:flame/components.dart';
-import 'package:flutter/material.dart' show Color, Colors, Paint;
+import 'package:flutter/material.dart'
+    show Color, Colors, FontWeight, Paint, TextStyle;
 
 import '../../game_assets.dart';
 import '../../models/boss_types.dart';
@@ -34,6 +35,8 @@ class BossComponent extends PositionComponent
   late final SpriteAnimationComponent _sprite;
   late final RectangleComponent _hpBarBg;
   late final RectangleComponent _hpBarFill;
+  late final TextComponent _hpLabel;
+  late final TextComponent _hpLabelShadow;
 
   BossComponent({
     required this.type,
@@ -95,19 +98,47 @@ class BossComponent extends PositionComponent
     // each frame (see BossType.artworkTopFraction) — anchoring to the raw
     // frame top left the bar floating visibly far above the plant itself.
     final barY = size.y * type.artworkTopFraction - 6;
+    const barHeight = 10.0;
     _hpBarBg = RectangleComponent(
       position: Vector2(barX, barY),
-      size: Vector2(barWidth, 7),
+      size: Vector2(barWidth, barHeight),
       paint: Paint()..color = Colors.black54,
     );
     _hpBarFill = RectangleComponent(
       position: Vector2(barX, barY),
-      size: Vector2(barWidth, 7),
+      size: Vector2(barWidth, barHeight),
       paint: Paint()..color = const Color(0xFFE05A3A),
     );
     add(_hpBarBg);
     add(_hpBarFill);
+
+    // Numeric "current/max" readout, same white-on-black-shadow treatment
+    // as EnemyComponent's own HP label (see its doc comment for why white
+    // reads fine on both this red bar and the mobs' green one) — bosses
+    // render much bigger than a regular mob so this gets a bigger font.
+    final hpLabelStyle = TextStyle(
+      color: Colors.white,
+      fontSize: 9,
+      fontWeight: FontWeight.bold,
+    );
+    final hpLabelPosition = Vector2(barX + barWidth / 2, barY + barHeight / 2);
+    _hpLabelShadow = TextComponent(
+      text: _hpLabelText,
+      textRenderer: TextPaint(style: hpLabelStyle.copyWith(color: Colors.black)),
+      anchor: Anchor.center,
+      position: hpLabelPosition + Vector2(0.6, 0.6),
+    );
+    _hpLabel = TextComponent(
+      text: _hpLabelText,
+      textRenderer: TextPaint(style: hpLabelStyle),
+      anchor: Anchor.center,
+      position: hpLabelPosition,
+    );
+    add(_hpLabelShadow);
+    add(_hpLabel);
   }
+
+  String get _hpLabelText => '${hp.ceil()}/${maxHp.ceil()}';
 
   @override
   void update(double dt) {
@@ -129,7 +160,13 @@ class BossComponent extends PositionComponent
   void takeDamage(double amount) {
     if (_dead) return;
     hp -= amount;
-    _hpBarFill.size = Vector2(_hpBarBg.size.x * (hp / maxHp).clamp(0, 1), 7);
+    _hpBarFill.size = Vector2(
+      _hpBarBg.size.x * (hp / maxHp).clamp(0, 1),
+      _hpBarBg.size.y,
+    );
+    final text = _hpLabelText;
+    _hpLabel.text = text;
+    _hpLabelShadow.text = text;
     if (hp <= 0) _die();
   }
 

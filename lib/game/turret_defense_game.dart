@@ -11,6 +11,7 @@ import '../models/achievements.dart';
 import '../models/boss_types.dart';
 import '../models/economy.dart';
 import '../models/enemy_types.dart';
+import '../models/mob_skins.dart';
 import '../models/turret_stats.dart';
 import 'components/boss_component.dart';
 import 'components/enemy_component.dart';
@@ -117,6 +118,16 @@ class TurretDefenseGame extends FlameGame {
   // Classic ground mobs are 48x48 (EnemyComponent's default); a purchased
   // mob_skin renders 50% bigger than that — see _spawnEnemy.
   static const double _mobSkinSize = 48 * 1.5;
+
+  // The War Orc skin's art (see mob_skins.dart) fills its frame far more
+  // tightly than the other mob_skin kits, so at the same _mobSkinSize it
+  // read as noticeably larger/bulkier than the plant/slime skins — and,
+  // since a bigger sprite covering more screen distance per step reads as
+  // moving faster even at the exact same pixels/sec (its actual speed is
+  // type.baseSpeed * speedMul, identical to every other skin — nothing
+  // skin-specific touches speed), scaling this down should fix the "feels
+  // too fast" perception along with the requested size reduction.
+  static const double _orcSkinSizeScale = 0.85;
 
   @override
   Future<void> onLoad() async {
@@ -540,8 +551,12 @@ class TurretDefenseGame extends FlameGame {
     // bigger while a skin is equipped. Decided here (spawn time, where
     // `economy` is already in scope) rather than in EnemyComponent.onLoad
     // because the component's size has to be fixed at construction.
-    final hasMobSkin = economy.equippedMobSkinByKind[type.kind.name] != null;
-    final enemySize = hasMobSkin ? Vector2.all(_mobSkinSize) : null;
+    final equippedSkinKey = economy.equippedMobSkinByKind[type.kind.name];
+    final hasMobSkin = equippedSkinKey != null;
+    final mobSkinSize = equippedSkinKey == kOrc2AssetKey
+        ? _mobSkinSize * _orcSkinSizeScale
+        : _mobSkinSize;
+    final enemySize = hasMobSkin ? Vector2.all(mobSkinSize) : null;
 
     final enemy = EnemyComponent(
       type: type,

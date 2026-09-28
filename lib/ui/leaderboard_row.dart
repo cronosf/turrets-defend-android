@@ -128,6 +128,28 @@ String? _trophyAssetForRank(int rank) {
 
 const _vipTrophyAsset = 'assets/images/ranking/trophy_blackvip.png';
 
+/// Score/wave text color per rank tier — 1st yellow, 2nd silver, 3rd
+/// orange, 4th/5th (the two remaining "bronce"-tier ranks) a bronze tone.
+/// Independent of [_trophyAssetForRank]'s icon colors (which follow the
+/// Diamante/Platino/Oro/Plata/Bronce theme instead) — this is specifically
+/// what the score/wave numbers use. `null` for rank 6+, same as the
+/// trophy itself.
+Color? _scoreColorForRank(int rank) {
+  switch (rank) {
+    case 1:
+      return const Color(0xFFFFE066);
+    case 2:
+      return const Color(0xFFD6D6D6);
+    case 3:
+      return const Color(0xFFFF9642);
+    case 4:
+    case 5:
+      return const Color(0xFFCD7F32);
+    default:
+      return null;
+  }
+}
+
 /// Diagonal light-sweep translation for [_ShimmerTrophy]'s gradient — the
 /// same technique as Flutter's own shimmer-loading cookbook recipe: the
 /// gradient's colors/stops stay fixed (a narrow bright band inside a
@@ -236,6 +258,14 @@ class LeaderboardRow extends StatelessWidget {
     final highlightColor = trophyAsset == null
         ? null
         : (isVip ? _vipHighlight : _tierHighlight);
+    // Score/wave numbers get their own per-rank color scheme (see
+    // _scoreColorForRank) rather than sharing the row's single highlight
+    // tone — falls back to that highlight for VIP (no per-rank scheme
+    // applies there, it's orthogonal to rank) and to white70 outside the
+    // top 5.
+    final scoreColor = isVip
+        ? highlightColor
+        : (_scoreColorForRank(rank) ?? Colors.white70);
     final showCountry = countryCode != null && countryCode!.isNotEmpty;
 
     return Container(
@@ -291,7 +321,7 @@ class LeaderboardRow extends StatelessWidget {
               '$bestScore',
               textAlign: TextAlign.right,
               style: TextStyle(
-                color: highlightColor ?? Colors.white70,
+                color: scoreColor,
                 fontSize: 14,
                 fontWeight: FontWeight.w700,
               ),
@@ -304,7 +334,7 @@ class LeaderboardRow extends StatelessWidget {
               '$bestWave',
               textAlign: TextAlign.right,
               style: TextStyle(
-                color: highlightColor ?? Colors.white70,
+                color: scoreColor,
                 fontSize: 14,
                 fontWeight: FontWeight.w700,
               ),

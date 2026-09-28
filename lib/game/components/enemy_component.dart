@@ -26,6 +26,8 @@ class EnemyComponent extends PositionComponent
   late final SpriteAnimationComponent _sprite;
   late final RectangleComponent _hpBarBg;
   late final RectangleComponent _hpBarFill;
+  late final TextComponent _hpLabel;
+  late final TextComponent _hpLabelShadow;
 
   EnemyComponent({
     required this.type,
@@ -99,19 +101,48 @@ class EnemyComponent extends PositionComponent
     // same reasoning as BossComponent's own HP bar. 0 for the base/no-skin
     // case reproduces the previous fixed "-8" exactly.
     final barY = size.y * artworkTopFraction - 8;
+    const barHeight = 7.0;
     _hpBarBg = RectangleComponent(
       position: Vector2(barX, barY),
-      size: Vector2(barWidth, 5),
+      size: Vector2(barWidth, barHeight),
       paint: Paint()..color = Colors.black54,
     );
     _hpBarFill = RectangleComponent(
       position: Vector2(barX, barY),
-      size: Vector2(barWidth, 5),
+      size: Vector2(barWidth, barHeight),
       paint: Paint()..color = Colors.greenAccent,
     );
     add(_hpBarBg);
     add(_hpBarFill);
+
+    // Numeric "current/max" readout over the bar, same idea as
+    // BaseHealthBar's own HP text — white with a black shadow copy (rather
+    // than TextPaint's own shadow support) reads fine over both this
+    // green bar and BossComponent's red one, matching how the base bar
+    // already stays legible across its own green/amber/red transitions.
+    final hpLabelStyle = TextStyle(
+      color: Colors.white,
+      fontSize: 6,
+      fontWeight: FontWeight.bold,
+    );
+    final hpLabelPosition = Vector2(barX + barWidth / 2, barY + barHeight / 2);
+    _hpLabelShadow = TextComponent(
+      text: _hpLabelText,
+      textRenderer: TextPaint(style: hpLabelStyle.copyWith(color: Colors.black)),
+      anchor: Anchor.center,
+      position: hpLabelPosition + Vector2(0.5, 0.5),
+    );
+    _hpLabel = TextComponent(
+      text: _hpLabelText,
+      textRenderer: TextPaint(style: hpLabelStyle),
+      anchor: Anchor.center,
+      position: hpLabelPosition,
+    );
+    add(_hpLabelShadow);
+    add(_hpLabel);
   }
+
+  String get _hpLabelText => '${hp.ceil()}/${maxHp.ceil()}';
 
   @override
   void update(double dt) {
@@ -135,7 +166,13 @@ class EnemyComponent extends PositionComponent
   void takeDamage(double amount) {
     if (_dead) return;
     hp -= amount;
-    _hpBarFill.size = Vector2(_hpBarBg.size.x * (hp / maxHp).clamp(0, 1), 5);
+    _hpBarFill.size = Vector2(
+      _hpBarBg.size.x * (hp / maxHp).clamp(0, 1),
+      _hpBarBg.size.y,
+    );
+    final text = _hpLabelText;
+    _hpLabel.text = text;
+    _hpLabelShadow.text = text;
     if (hp <= 0) {
       _die();
     }
