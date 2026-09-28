@@ -444,6 +444,11 @@ class Strings {
           return 'Giant Goblin';
         case 'boss_skin_viking':
           return 'Viking Leader';
+        case 'mob_skin_orc2_ground':
+        case 'mob_skin_orc2_hybrid':
+          return 'War Orc';
+        case 'bundle_orcs2':
+          return 'War Orc Pack';
       }
     }
     return fallback;
@@ -487,6 +492,11 @@ class Strings {
         case 'boss_skin_giant_goblin':
         case 'boss_skin_viking':
           return "Changes the first boss's look to this variant.";
+        case 'mob_skin_orc2_ground':
+        case 'mob_skin_orc2_hybrid':
+          return 'Replaces these mobs with a randomly-picked war orc — 3 different designs.';
+        case 'bundle_orcs2':
+          return 'War Orc skin for both ground and hybrid mobs, bundled at a discount.';
       }
     }
     return fallback;

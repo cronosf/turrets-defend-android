@@ -42,6 +42,8 @@ class EnemyComponent extends PositionComponent
   @override
   bool get isDead => _dead;
 
+  static final _rng = math.Random();
+
   @override
   Future<void> onLoad() async {
     // A purchased mob_skin fully replaces this enemy kind's art (unlike
@@ -49,16 +51,27 @@ class EnemyComponent extends PositionComponent
     // models/mob_skins.dart. Each EnemyKind is its own equip slot, so a
     // ground skin and a hybrid skin can be equipped at the same time.
     final skinKey = game.economy.equippedMobSkinByKind[type.kind.name];
-    final skin = skinKey != null ? kMobSkinTypes[skinKey] : null;
-    final frames = skin != null
-        ? await GameAssets.loadSheetRow(
-            skin.walkSheetPath,
-            frameWidth: skin.frameSize,
-            frameHeight: skin.frameSize,
-            row: skin.directionRow,
-            columns: skin.frameCount,
-          )
-        : await GameAssets.loadFrames(type.assetDir);
+    List<Sprite> frames;
+    double artworkTopFraction = 0;
+    if (skinKey == kOrc2AssetKey) {
+      // See kOrc2AssetKey's doc comment — its 3 designs are rolled per
+      // spawn rather than being one fixed MobSkinType.
+      final variantIndex = resolveOrc2VariantIndex(game.economy.wave, _rng);
+      frames = await GameAssets.loadFrames(kOrc2VariantDirs[variantIndex]);
+      artworkTopFraction = kOrc2VariantTopFractions[variantIndex];
+    } else {
+      final skin = skinKey != null ? kMobSkinTypes[skinKey] : null;
+      frames = skin != null
+          ? await GameAssets.loadSheetRow(
+              skin.walkSheetPath,
+              frameWidth: skin.frameSize,
+              frameHeight: skin.frameSize,
+              row: skin.directionRow,
+              columns: skin.frameCount,
+            )
+          : await GameAssets.loadFrames(type.assetDir);
+      artworkTopFraction = skin?.artworkTopFraction ?? 0;
+    }
     _sprite = SpriteAnimationComponent(
       animation: SpriteAnimation.spriteList(
         frames.isEmpty ? [await GameAssets.loadSprite('ground/Ground-Base.png')] : frames,
@@ -76,13 +89,18 @@ class EnemyComponent extends PositionComponent
     // render bigger.
     final barWidth = size.x * 0.7;
     final barX = (size.x - barWidth) / 2;
+    // Anchored to where the equipped skin's art actually starts (see
+    // MobSkinType.artworkTopFraction) rather than the raw frame top —
+    // same reasoning as BossComponent's own HP bar. 0 for the base/no-skin
+    // case reproduces the previous fixed "-8" exactly.
+    final barY = size.y * artworkTopFraction - 8;
     _hpBarBg = RectangleComponent(
-      position: Vector2(barX, -8),
+      position: Vector2(barX, barY),
       size: Vector2(barWidth, 5),
       paint: Paint()..color = Colors.black54,
     );
     _hpBarFill = RectangleComponent(
-      position: Vector2(barX, -8),
+      position: Vector2(barX, barY),
       size: Vector2(barWidth, 5),
       paint: Paint()..color = Colors.greenAccent,
     );
