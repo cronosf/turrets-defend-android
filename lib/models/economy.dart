@@ -176,7 +176,18 @@ class Economy extends ChangeNotifier {
 
   /// Called once a run ends: the wave/score reached always become "last
   /// played", but "best" only ever moves up, never down.
-  void _finalizeRun() {
+  void _finalizeRun() => checkpointProgress();
+
+  /// Persists the current run's progress as "last played" (and "best" if
+  /// it's a new record) without ending the run — same bookkeeping
+  /// [_finalizeRun] does at game over, just callable mid-run too. Also
+  /// called on every [nextWave] and when the app is backgrounded (see
+  /// GameScreen's lifecycle observer): Android can (and, on a memory-heavy
+  /// Flame game, sometimes does) kill the whole process while the app is
+  /// backgrounded, silently discarding any progress that only existed in
+  /// memory — checkpointing here means that at worst the player loses the
+  /// exact board/turret layout on return, not the wave/score record itself.
+  void checkpointProgress() {
     lastWave = wave;
     lastScore = score;
     _prefs?.setInt('last_wave', lastWave);
@@ -193,6 +204,7 @@ class Economy extends ChangeNotifier {
 
   void nextWave() {
     wave += 1;
+    checkpointProgress();
     notifyListeners();
   }
 

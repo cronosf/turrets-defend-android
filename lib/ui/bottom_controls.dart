@@ -52,8 +52,19 @@ class BottomControls extends StatelessWidget {
                     Expanded(
                       child: _ControlButton(
                         label: adReady ? s.free : '${economy.adCooldown.ceil()}s',
-                        iconAsset: 'assets/images/turrets/t1/T1-Shoot_00.png',
-                        iconSize: 66,
+                        // A tightly-cropped copy of the t1 turret frame, not
+                        // the original — that source file is ~30% blank
+                        // padding on every side (it's sized to match the
+                        // rest of the turret animation frames), which at
+                        // this icon's size left a lot of empty box pushing
+                        // the label oddly far right. See
+                        // assets/images/ui/FreeTurretIcon.png's own crop.
+                        iconAsset: 'assets/images/ui/FreeTurretIcon.png',
+                        // "GRATIS" runs noticeably wider than "FREE" — a
+                        // smaller icon leaves it enough room to never need
+                        // the ellipsis fallback.
+                        iconSize: economy.language == AppLanguage.es ? 30 : 38,
+                        leftAlign: true,
                         enabled: adReady,
                         onTap: onFree,
                         color: adReady ? const Color(0xFF3E9B4F) : const Color(0xFF555555),
@@ -102,6 +113,7 @@ class _ControlButton extends StatelessWidget {
     this.iconAsset,
     this.iconData,
     this.iconSize = 33,
+    this.leftAlign = false,
   });
 
   final String label;
@@ -111,6 +123,13 @@ class _ControlButton extends StatelessWidget {
   final bool enabled;
   final VoidCallback onTap;
   final Color color;
+
+  /// Left-aligns the icon+label pair (with a little leading padding)
+  /// instead of centering them — for a non-square icon like the FREE
+  /// button's turret, centering the icon+text *pair* as a block still
+  /// reads as off-balance because the icon's own bounding box is taller
+  /// than it is wide; shifting the whole group left tightens that up.
+  final bool leftAlign;
 
   @override
   Widget build(BuildContext context) {
@@ -123,23 +142,31 @@ class _ControlButton extends StatelessWidget {
           borderRadius: BorderRadius.circular(12),
           border: Border.all(color: Colors.black26, width: 2),
         ),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            if (iconData != null)
-              Icon(iconData, color: Colors.white, size: 20)
-            else if (iconAsset != null)
-              Image.asset(iconAsset!, width: iconSize, height: iconSize),
-            const SizedBox(width: 4),
-            Flexible(
-              child: Text(
-                label,
-                textAlign: TextAlign.center,
-                overflow: TextOverflow.ellipsis,
-                style: AppFonts.title(color: Colors.white, fontSize: 12),
+        child: Padding(
+          padding: leftAlign ? const EdgeInsets.only(left: 10) : EdgeInsets.zero,
+          child: Row(
+            mainAxisAlignment: leftAlign
+                ? MainAxisAlignment.start
+                : MainAxisAlignment.center,
+            children: [
+              if (iconData != null)
+                Icon(iconData, color: Colors.white, size: 20)
+              else if (iconAsset != null)
+                // Only height is given (not width) so a non-square source
+                // (like the FREE button's turret crop) scales at its own
+                // aspect ratio instead of being squashed into a square box.
+                Image.asset(iconAsset!, height: iconSize),
+              const SizedBox(width: 4),
+              Flexible(
+                child: Text(
+                  label,
+                  textAlign: TextAlign.center,
+                  overflow: TextOverflow.ellipsis,
+                  style: AppFonts.title(color: Colors.white, fontSize: 12),
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );

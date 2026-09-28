@@ -36,6 +36,12 @@ class Strings {
       ? 'Modo vender activo: toca una torreta para venderla'
       : 'Sell mode active: tap a turret to sell it';
 
+  String get leaveGameWarning => _es
+      ? 'CUIDADO: si sales de la pantalla de batalla no se guardarán las '
+          'estadísticas de esta partida.'
+      : "WARNING: if you leave the battle screen, this run's stats won't "
+          'be saved.';
+
   String get settingsTitle => _es ? 'AJUSTES' : 'SETTINGS';
   String get music => _es ? 'Música' : 'Music';
   String get sound => _es ? 'Sonido' : 'Sound';
