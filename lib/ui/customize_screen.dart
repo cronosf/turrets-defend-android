@@ -201,6 +201,14 @@ class _CustomizeScreenState extends State<CustomizeScreen> {
           // "coming soon" note alongside Basic — there's nothing to buy
           // there yet, but Basic still shows what "no skin" looks like.
           final isComingSoon = selectedItems.isEmpty;
+          // A 'bundle' purchase (e.g. the War Orc pack) isn't itself a
+          // thing you equip — it just grants the separate mob_skin items
+          // it bundles (see migration_add_orcs2_mob_skin.sql's trigger
+          // fix), which show up and get equipped under their own
+          // categories instead. So here it only ever shows as owned, with
+          // no Basic card (there's no "unequip a bundle" state) and no
+          // Equip button on its own card.
+          final isBundleCategory = _selectedCategory == 'bundle';
           // Basic (no skin equipped) is "equipped" whenever this equip
           // slot has no row in user_equipped_items yet, or an explicit
           // null.
@@ -283,21 +291,24 @@ class _CustomizeScreenState extends State<CustomizeScreen> {
                                   mainAxisExtent: cardExtent,
                                 ),
                             children: [
-                              _OwnedItemCard(
-                                s: s,
-                                imagePath: _basicImagePathFor(
-                                  _selectedCategory,
-                                  currentSubSlot,
+                              if (!isBundleCategory)
+                                _OwnedItemCard(
+                                  s: s,
+                                  imagePath: _basicImagePathFor(
+                                    _selectedCategory,
+                                    currentSubSlot,
+                                  ),
+                                  name: s.basicItemName,
+                                  description: s.basicItemDescription,
+                                  equipped: basicEquipped,
+                                  busy:
+                                      _equippingBasicCategory ==
+                                      equipCategoryKey,
+                                  equippedLabel: s.equippedLabel,
+                                  equipLabel: s.equipAction,
+                                  onTap: () =>
+                                      _equip(equipCategoryKey, null, s),
                                 ),
-                                name: s.basicItemName,
-                                description: s.basicItemDescription,
-                                equipped: basicEquipped,
-                                busy:
-                                    _equippingBasicCategory == equipCategoryKey,
-                                equippedLabel: s.equippedLabel,
-                                equipLabel: s.equipAction,
-                                onTap: () => _equip(equipCategoryKey, null, s),
-                              ),
                               for (final item in selectedItems)
                                 _OwnedItemCard(
                                   s: s,
@@ -317,11 +328,15 @@ class _CustomizeScreenState extends State<CustomizeScreen> {
                                       (item['id'] as num).toInt(),
                                   equippedLabel: s.equippedLabel,
                                   equipLabel: s.equipAction,
-                                  onTap: () => _equip(
-                                    equipCategoryKey,
-                                    (item['id'] as num).toInt(),
-                                    s,
-                                  ),
+                                  acquiredOnly: isBundleCategory,
+                                  acquiredLabel: s.acquiredLabel,
+                                  onTap: isBundleCategory
+                                      ? null
+                                      : () => _equip(
+                                          equipCategoryKey,
+                                          (item['id'] as num).toInt(),
+                                          s,
+                                        ),
                                 ),
                             ],
                           );
@@ -361,6 +376,8 @@ class _OwnedItemCard extends StatelessWidget {
     required this.equippedLabel,
     required this.equipLabel,
     required this.onTap,
+    this.acquiredOnly = false,
+    this.acquiredLabel,
   });
 
   final Strings s;
@@ -371,7 +388,14 @@ class _OwnedItemCard extends StatelessWidget {
   final bool busy;
   final String equippedLabel;
   final String equipLabel;
-  final VoidCallback onTap;
+  final VoidCallback? onTap;
+
+  /// True for a 'bundle' purchase — it's never equipped/unequipped itself
+  /// (see the isBundleCategory comment where this card is built), so it
+  /// always shows [acquiredLabel] instead of the usual Equip/Equipped
+  /// states, with no tappable button at all.
+  final bool acquiredOnly;
+  final String? acquiredLabel;
 
   @override
   Widget build(BuildContext context) {
@@ -409,7 +433,21 @@ class _OwnedItemCard extends StatelessWidget {
           ),
         ],
         const SizedBox(height: 8),
-        if (busy)
+        if (acquiredOnly)
+          Container(
+            height: 34,
+            alignment: Alignment.center,
+            decoration: BoxDecoration(
+              color: Colors.white.withValues(alpha: 0.05),
+              borderRadius: BorderRadius.circular(10),
+              border: Border.all(color: Colors.white24),
+            ),
+            child: Text(
+              acquiredLabel ?? '',
+              style: const TextStyle(color: Colors.white54, fontSize: 12),
+            ),
+          )
+        else if (busy)
           const SizedBox(
             height: 34,
             child: Center(

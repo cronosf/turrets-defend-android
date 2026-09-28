@@ -55,8 +55,13 @@ class EnemyComponent extends PositionComponent
     double artworkTopFraction = 0;
     if (skinKey == kOrc2AssetKey) {
       // See kOrc2AssetKey's doc comment — its 3 designs are rolled per
-      // spawn rather than being one fixed MobSkinType.
-      final variantIndex = resolveOrc2VariantIndex(game.economy.wave, _rng);
+      // spawn rather than being one fixed MobSkinType, and which ones are
+      // even in play depends on which kind this enemy is (ground always
+      // gets the mildest design; hybrid rolls between the two tougher
+      // ones).
+      final variantIndex = type.kind == EnemyKind.ground
+          ? resolveOrc2GroundVariantIndex()
+          : resolveOrc2HybridVariantIndex(game.economy.wave, _rng);
       frames = await GameAssets.loadFrames(kOrc2VariantDirs[variantIndex]);
       artworkTopFraction = kOrc2VariantTopFractions[variantIndex];
     } else {

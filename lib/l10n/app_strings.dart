@@ -319,6 +319,7 @@ class Strings {
       ? 'Todavía no tienes items comprados.'
       : "You don't own any items yet.";
   String get equippedLabel => _es ? 'Equipado' : 'Equipped';
+  String get acquiredLabel => _es ? 'Adquirido' : 'Acquired';
   String get equipAction => _es ? 'Equipar' : 'Equip';
   String get goToShop => _es ? 'Ir a la tienda' : 'Go to shop';
   String get basicItemName => _es ? 'Básico' : 'Basic';
@@ -493,8 +494,9 @@ class Strings {
         case 'boss_skin_viking':
           return "Changes the first boss's look to this variant.";
         case 'mob_skin_orc2_ground':
+          return 'Replaces ground mobs with this war orc.';
         case 'mob_skin_orc2_hybrid':
-          return 'Replaces these mobs with a randomly-picked war orc — 3 different designs.';
+          return 'Replaces hybrid mobs with a war orc — includes 2 tougher-looking designs, shown at random.';
         case 'bundle_orcs2':
           return 'War Orc skin for both ground and hybrid mobs, bundled at a discount.';
       }

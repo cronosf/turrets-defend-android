@@ -66,12 +66,14 @@ const Map<String, MobSkinType> kMobSkinTypes = {
   ),
 };
 
-/// The "orcs_2" bundle skin (bought once in the shop — see
+/// The "War Orc" skin (bought once in the shop as a bundle — see
 /// migration_add_orcs2_mob_skin.sql — but equipped independently per
 /// EnemyKind like any other mob_skin) isn't a single fixed [MobSkinType]
 /// like the ones in [kMobSkinTypes]: which of its 3 orc designs actually
-/// shows is rolled per spawn instead of fixed at equip time, via
-/// [resolveOrc2VariantIndex]. See EnemyComponent.onLoad for where this
+/// shows is rolled per spawn instead of fixed at equip time, and differs
+/// by kind — ground always gets the same (mildest) design, hybrid rolls
+/// between the two tougher ones. See [resolveOrc2GroundVariantIndex] /
+/// [resolveOrc2HybridVariantIndex] and EnemyComponent.onLoad, where this
 /// branches off from the normal kMobSkinTypes lookup.
 const String kOrc2AssetKey = 'mob_orc2';
 
@@ -99,12 +101,17 @@ const List<String> kOrc2VariantDirs = [
 /// box top. Measured directly off the padded frames.
 const List<double> kOrc2VariantTopFractions = [0.1232, 0.1101, 0.1128];
 
-/// Rolls which of the 3 orc_2 designs a freshly-spawned enemy should use:
-/// waves 1-30 pick uniformly at random among all three (so all 3 designs
-/// show up while a run is still building up), wave 31+ always the last/
-/// toughest-looking one (3_ORK, the armored one with the battle-axe) to
-/// match how much tankier mobs already are that far into an endless run.
-int resolveOrc2VariantIndex(int wave, math.Random rng) {
+/// Ground mobs equipped with this skin always use the mildest design —
+/// 1_ORK (index 0) — no randomness on that side, unlike hybrid below.
+int resolveOrc2GroundVariantIndex() => 0;
+
+/// Hybrid mobs equipped with this skin pick between the two tougher-
+/// looking designs, 2_ORK and 3_ORK (indices 1-2): random between the two
+/// through wave 30 (so both show up while a run is still building up),
+/// then always the toughest-looking one (3_ORK, armored with a battle-axe)
+/// from wave 31 on, matching how much tankier mobs already are that deep
+/// into an endless run.
+int resolveOrc2HybridVariantIndex(int wave, math.Random rng) {
   if (wave > 30) return kOrc2VariantDirs.length - 1;
-  return rng.nextInt(kOrc2VariantDirs.length);
+  return 1 + rng.nextInt(kOrc2VariantDirs.length - 1);
 }
