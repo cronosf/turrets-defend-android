@@ -57,6 +57,17 @@ class BossType {
   /// they reach the base). Only set for skins whose source kit actually
   /// ships an attack animation (currently the 3 goblin-family and 3 human
   /// reward boss_skin variants — see kBossSkinVariants).
+  ///
+  /// BossComponent always renders both animations into the exact same
+  /// fixed size (derived from [aspectRatio], i.e. the *walk* crop's own
+  /// proportions) — when processing these frames, crop tight to the
+  /// attack pose's own bounding box and leave it at that pose's natural
+  /// (usually wider, because of the outstretched weapon) aspect ratio.
+  /// Padding it to match the walk crop's aspect instead looks tidier on
+  /// paper but actually shrinks the character once Flame stretches that
+  /// now-padded canvas into the same box — a real bug that shipped once
+  /// already. A little squish/stretch from the aspect mismatch is far
+  /// less noticeable than the boss visibly shrinking every ~2 seconds.
   final String? attackFramesDirectory;
 
   /// Fraction (0-1) of empty transparent space above the actual artwork

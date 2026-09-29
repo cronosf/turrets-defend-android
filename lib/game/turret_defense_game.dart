@@ -668,24 +668,29 @@ class TurretDefenseGame extends FlameGame {
   static const _baseFxRoundPause = 0.7;
 
   /// Queues one round of the base-destroyed explosion sequence (see the
-  /// doc comment on _pendingBaseFx) — several small blasts scattered along
-  /// the base's width at staggered delays, then one bigger one roughly
-  /// centered. Reuses the same explosion1 frames every other explosion in
-  /// the game already uses, just fired several times with jittered
-  /// position/size/timing instead of needing any new art or effect
-  /// system. Called again by _tickNextBaseFxRound once this round's blasts
-  /// finish, looping for as long as economy.gameOver stays true.
+  /// doc comment on _pendingBaseFx) — several small blasts scattered across
+  /// the whole gray turret-tray area (not just a single line along the
+  /// base) at staggered delays, then one bigger one roughly centered in
+  /// that same area. Reuses the same explosion1 frames every other
+  /// explosion in the game already uses, just fired several times with
+  /// jittered position/size/timing instead of needing any new art or
+  /// effect system. Called again by _tickNextBaseFxRound once this round's
+  /// blasts finish, looping for as long as economy.gameOver stays true.
   void _queueBaseFxRound() {
     const smallCount = 6;
     const stagger = 0.14;
-    final baseY = baseLineY - 12;
+    // Same bounds _relayout() gives _trayBg — the base band plus the
+    // whole grid/tray panel below it, not just the thin base strip itself.
+    final trayTop = grid.topY - 34;
+    final trayBottom = size.y - 10;
     for (var i = 0; i < smallCount; i++) {
       final delay = i * stagger + _random.nextDouble() * 0.06;
       final x = 24 + _random.nextDouble() * (size.x - 48);
+      final y = trayTop + 14 + _random.nextDouble() * (trayBottom - trayTop - 28);
       final blastSize = 34.0 + _random.nextDouble() * 22.0;
       _pendingBaseFx.add((
         delay: delay,
-        position: Vector2(x, baseY),
+        position: Vector2(x, y),
         size: Vector2.all(blastSize),
         tint: _baseFxTints[_random.nextInt(_baseFxTints.length)],
       ));
@@ -693,7 +698,7 @@ class TurretDefenseGame extends FlameGame {
     final finalDelay = smallCount * stagger + 0.22;
     _pendingBaseFx.add((
       delay: finalDelay,
-      position: Vector2(size.x / 2, baseY),
+      position: Vector2(size.x / 2, (trayTop + trayBottom) / 2),
       size: Vector2.all(96),
       tint: _baseFxTints[0],
     ));
