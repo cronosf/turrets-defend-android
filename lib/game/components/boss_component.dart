@@ -186,33 +186,37 @@ class BossComponent extends PositionComponent
     }
   }
 
-  /// Keeps _sprite's own size fit ("contain", not stretched) to whichever
-  /// frame is currently showing, inside the boss's own fixed [size] box.
+  /// Keeps _sprite's rendered *height* pinned to the boss's own fixed
+  /// [size] box, whatever frame is currently showing, instead of letting
+  /// it shrink to "contain" a wider frame.
   ///
   /// The walk and attack animations' frames don't all share the same
   /// aspect ratio (the walk crop is tight and fairly consistent frame to
   /// frame; the attack pose swings a weapon out, so its own bbox varies
-  /// far more — see BossType.attackFramesDirectory's doc comment). Simply
-  /// stretching every frame to fill [size] (SpriteAnimationComponent's
-  /// default, and what _sprite is constructed with) distorts non-uniformly
-  /// whenever a frame's own aspect doesn't match the box's — which for a
-  /// wide, weapon-extended attack frame stretched into the walk crop's
-  /// portrait box reads as the character suddenly shrinking. Recomputing
-  /// _sprite's size every frame to fit within [size] while preserving the
-  /// current frame's own aspect (and staying centered, since anchor is
-  /// already Anchor.center) avoids that distortion entirely — a boss whose
-  /// skin has no attack animation never actually changes frame aspect, so
-  /// this is a no-op for it after the first call.
+  /// far more — see BossType.attackFramesDirectory's doc comment).
+  /// Stretching every frame to fill [size] (SpriteAnimationComponent's
+  /// default) distorts it non-uniformly whenever the aspect doesn't match.
+  /// The first fix for that — scaling each frame down to fit *within* the
+  /// box, preserving its own aspect — avoided the distortion but traded it
+  /// for a different shrink: the widest attack frame (weapon fully
+  /// extended, near the end of the swing) has a much shorter, wider bbox
+  /// than the walk crop, so fitting it by *width* left its height (and so
+  /// the character) visibly shorter than while walking. Fitting by height
+  /// instead keeps the character's own height pinned to exactly what it
+  /// is while walking no matter which frame is showing — the tradeoff is
+  /// that a wide frame's width can extend past the nominal box (the
+  /// weapon swings a bit into the surrounding open lane instead of being
+  /// squeezed to fit), which reads far better than the character itself
+  /// changing size. A boss whose skin has no attack animation never
+  /// actually changes frame aspect, so this is a no-op for it after the
+  /// first call (width always comes out equal to [size].x).
   void _fitSpriteToCurrentFrame() {
     final frame = _sprite.animationTicker?.getSprite();
     if (frame == null) return;
     final frameSize = frame.srcSize;
     if (frameSize.x <= 0 || frameSize.y <= 0) return;
-    final boxAspect = size.x / size.y;
     final frameAspect = frameSize.x / frameSize.y;
-    _sprite.size = frameAspect > boxAspect
-        ? Vector2(size.x, size.x / frameAspect)
-        : Vector2(size.y * frameAspect, size.y);
+    _sprite.size = Vector2(size.y * frameAspect, size.y);
   }
 
   /// Swaps the walk loop for the one-shot attack swing every
