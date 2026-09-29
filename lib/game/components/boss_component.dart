@@ -216,7 +216,15 @@ class BossComponent extends PositionComponent
     final frameSize = frame.srcSize;
     if (frameSize.x <= 0 || frameSize.y <= 0) return;
     final frameAspect = frameSize.x / frameSize.y;
-    _sprite.size = Vector2(size.y * frameAspect, size.y);
+    // A frame wider than the walk box itself — the attack swing's widest
+    // poses, weapon fully extended — still renders a visibly wider
+    // silhouette even with height pinned, which alone reads as the boss
+    // growing slightly. A small extra shrink just for those frames (never
+    // narrower/normal ones, so walking and the rest of the swing are
+    // untouched) keeps that in check.
+    final boxAspect = size.x / size.y;
+    final height = frameAspect > boxAspect ? size.y * 0.94 : size.y;
+    _sprite.size = Vector2(height * frameAspect, height);
   }
 
   /// Swaps the walk loop for the one-shot attack swing every

@@ -490,15 +490,19 @@ class Strings {
         case 'boss_skin_golem3':
           return "Changes the Golem boss's look to this variant.";
         case 'boss_skin_goblin_chief':
-          return "Changes the Goblin boss's look to this variant.";
+          return "Changes the Goblin boss's look to this variant, with a "
+              'special attack animation.';
         case 'boss_skin_ogre_shaman':
-          return "Changes the Ogre boss's look to this variant.";
+          return "Changes the Ogre boss's look to this variant, with a "
+              'special attack animation.';
         case 'boss_skin_orc_warrior':
-          return "Changes the Orc boss's look to this variant.";
+          return "Changes the Orc boss's look to this variant, with a "
+              'special attack animation.';
         case 'boss_skin_caveman':
         case 'boss_skin_giant_goblin':
         case 'boss_skin_viking':
-          return "Changes the first boss's look to this variant.";
+          return "Changes the first boss's look to this variant, with a "
+              'special attack animation.';
         case 'mob_skin_orc2_ground':
           return 'Replaces ground mobs with this war orc.';
         case 'mob_skin_orc2_hybrid':
