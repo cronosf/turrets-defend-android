@@ -116,6 +116,7 @@ class BossComponent extends PositionComponent
       position: size / 2,
     );
     add(_sprite);
+    _fitSpriteToCurrentFrame();
 
     // Half as wide as the boss itself (centered) — at full boss width this
     // read as an oversized UI element rather than a health bar.
@@ -177,11 +178,41 @@ class BossComponent extends PositionComponent
       _hasAppeared = true;
     }
     _updateAttackCycle(dt);
+    _fitSpriteToCurrentFrame();
     if (position.y >= game.baseLineY) {
       _dead = true;
       game.onBossReachedBase(this);
       removeFromParent();
     }
+  }
+
+  /// Keeps _sprite's own size fit ("contain", not stretched) to whichever
+  /// frame is currently showing, inside the boss's own fixed [size] box.
+  ///
+  /// The walk and attack animations' frames don't all share the same
+  /// aspect ratio (the walk crop is tight and fairly consistent frame to
+  /// frame; the attack pose swings a weapon out, so its own bbox varies
+  /// far more — see BossType.attackFramesDirectory's doc comment). Simply
+  /// stretching every frame to fill [size] (SpriteAnimationComponent's
+  /// default, and what _sprite is constructed with) distorts non-uniformly
+  /// whenever a frame's own aspect doesn't match the box's — which for a
+  /// wide, weapon-extended attack frame stretched into the walk crop's
+  /// portrait box reads as the character suddenly shrinking. Recomputing
+  /// _sprite's size every frame to fit within [size] while preserving the
+  /// current frame's own aspect (and staying centered, since anchor is
+  /// already Anchor.center) avoids that distortion entirely — a boss whose
+  /// skin has no attack animation never actually changes frame aspect, so
+  /// this is a no-op for it after the first call.
+  void _fitSpriteToCurrentFrame() {
+    final frame = _sprite.animationTicker?.getSprite();
+    if (frame == null) return;
+    final frameSize = frame.srcSize;
+    if (frameSize.x <= 0 || frameSize.y <= 0) return;
+    final boxAspect = size.x / size.y;
+    final frameAspect = frameSize.x / frameSize.y;
+    _sprite.size = frameAspect > boxAspect
+        ? Vector2(size.x, size.x / frameAspect)
+        : Vector2(size.y * frameAspect, size.y);
   }
 
   /// Swaps the walk loop for the one-shot attack swing every
