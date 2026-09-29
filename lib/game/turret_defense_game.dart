@@ -62,6 +62,31 @@ class TurretDefenseGame extends FlameGame {
   final List<RectangleComponent> _slotVisuals = [];
   final List<({int row, int col})> _slotVisualCoords = [];
 
+  // Base-destroyed sequence (see _queueBaseFxRound) — a Mega Man
+  // "Maverick"-style death: several small explosions rippling across the
+  // base in quick succession, then one bigger one, all reusing the
+  // existing explosion1 frames/FxComponent (no new assets, cheap). Each
+  // pending blast just counts its own delay down in _tickPendingBaseFx;
+  // _loseOverlayDelay holds off the 'lose' overlay until the first round is
+  // done playing so it isn't dimmed by the overlay's backdrop the instant
+  // the base dies. After that first round, it just keeps looping — the
+  // base stays "on fire" behind the lose overlay until the player leaves
+  // (Play Again resets gameOver, going home tears down this whole game
+  // instance — either way this loop has nothing left to gate on and just
+  // stops).
+  final List<({double delay, Vector2 position, Vector2 size, Color tint})>
+      _pendingBaseFx = [];
+  bool _baseDestroyedFxStarted = false;
+  double _loseOverlayDelay = 0;
+  double _nextBaseFxRoundTimer = 0;
+
+  // A couple of warm flame tones so the burst doesn't read as one flat
+  // color — the underlying frames (explosion1) are actually a pale cream
+  // puff shape with no fire coloring of their own (see FxComponent's
+  // `tint` param), so this is what actually makes the base-destroyed
+  // sequence look like fire rather than smoke.
+  static const _baseFxTints = [Color(0xFFFF8A34), Color(0xFFE0432A), Color(0xFFFFC24D)];
+
   double get baseLineY => grid.topY - 6;
 
   bool _waveActive = false;
@@ -261,6 +286,11 @@ class TurretDefenseGame extends FlameGame {
     overlays.remove('lose');
     economy.resetRun();
     started = true;
+    _baseDestroyedFxStarted = false;
+    _firstBaseFxRoundQueued = false;
+    _pendingBaseFx.clear();
+    _loseOverlayDelay = 0;
+    _nextBaseFxRoundTimer = 0;
     GameAudio.instance.playBattleMusicForWave(economy.wave);
     _dirtBg.sprite = _dirtSprites[0];
     _trayBg.sprite = _traySprites[0];
@@ -301,7 +331,15 @@ class TurretDefenseGame extends FlameGame {
     super.update(dt);
     if (!isLoaded) return;
     if (economy.gameOver) {
-      if (!overlays.isActive('lose')) {
+      if (!_baseDestroyedFxStarted) {
+        _baseDestroyedFxStarted = true;
+        _queueBaseFxRound();
+      }
+      _tickPendingBaseFx(dt);
+      _tickNextBaseFxRound(dt);
+      if (_loseOverlayDelay > 0) {
+        _loseOverlayDelay -= dt;
+      } else if (!overlays.isActive('lose')) {
         overlays.add('lose');
         GameAudio.instance.stopMusic();
         GameAudio.instance.playBarrierRises();
@@ -609,13 +647,90 @@ class TurretDefenseGame extends FlameGame {
     ));
   }
 
-  void spawnExplosion(Vector2 position, {Vector2? size}) {
+  void spawnExplosion(Vector2 position, {Vector2? size, Color? tint}) {
     world.add(FxComponent(
       frames: _explosionFrames,
       position: position,
       size: size ?? Vector2(50, 50),
       stepTime: 0.02,
+      tint: tint,
     ));
+  }
+
+  // Whether _loseOverlayDelay has been set yet — only the very first round
+  // needs to (that's what actually delays the overlay); every round after
+  // that just keeps the fire going behind an overlay that's already shown.
+  bool _firstBaseFxRoundQueued = false;
+
+  // Pause after a round's last (big) blast finishes before the next round
+  // starts — keeps the loop reading as a rhythmic "still burning" flicker
+  // rather than one continuous blast.
+  static const _baseFxRoundPause = 0.7;
+
+  /// Queues one round of the base-destroyed explosion sequence (see the
+  /// doc comment on _pendingBaseFx) — several small blasts scattered along
+  /// the base's width at staggered delays, then one bigger one roughly
+  /// centered. Reuses the same explosion1 frames every other explosion in
+  /// the game already uses, just fired several times with jittered
+  /// position/size/timing instead of needing any new art or effect
+  /// system. Called again by _tickNextBaseFxRound once this round's blasts
+  /// finish, looping for as long as economy.gameOver stays true.
+  void _queueBaseFxRound() {
+    const smallCount = 6;
+    const stagger = 0.14;
+    final baseY = baseLineY - 12;
+    for (var i = 0; i < smallCount; i++) {
+      final delay = i * stagger + _random.nextDouble() * 0.06;
+      final x = 24 + _random.nextDouble() * (size.x - 48);
+      final blastSize = 34.0 + _random.nextDouble() * 22.0;
+      _pendingBaseFx.add((
+        delay: delay,
+        position: Vector2(x, baseY),
+        size: Vector2.all(blastSize),
+        tint: _baseFxTints[_random.nextInt(_baseFxTints.length)],
+      ));
+    }
+    final finalDelay = smallCount * stagger + 0.22;
+    _pendingBaseFx.add((
+      delay: finalDelay,
+      position: Vector2(size.x / 2, baseY),
+      size: Vector2.all(96),
+      tint: _baseFxTints[0],
+    ));
+    if (!_firstBaseFxRoundQueued) {
+      _firstBaseFxRoundQueued = true;
+      _loseOverlayDelay = finalDelay + 0.5;
+    }
+    _nextBaseFxRoundTimer = finalDelay + _baseFxRoundPause;
+  }
+
+  void _tickNextBaseFxRound(double dt) {
+    _nextBaseFxRoundTimer -= dt;
+    if (_nextBaseFxRoundTimer <= 0) {
+      _queueBaseFxRound();
+    }
+  }
+
+  void _tickPendingBaseFx(double dt) {
+    if (_pendingBaseFx.isEmpty) return;
+    // Records are immutable, so decrement-then-filter (rather than
+    // filtering off a stale delay) — each survivor's delay is only ever
+    // reduced by dt exactly once per call either way.
+    for (var i = 0; i < _pendingBaseFx.length; i++) {
+      final fx = _pendingBaseFx[i];
+      _pendingBaseFx[i] = (
+        delay: fx.delay - dt,
+        position: fx.position,
+        size: fx.size,
+        tint: fx.tint,
+      );
+    }
+    _pendingBaseFx.removeWhere((fx) {
+      if (fx.delay > 0) return false;
+      spawnExplosion(fx.position, size: fx.size, tint: fx.tint);
+      GameAudio.instance.playBarrierLowered();
+      return true;
+    });
   }
 
   void onEnemyReachedBase(EnemyComponent enemy) {

@@ -12,6 +12,7 @@ class BossType {
     this.directionRow,
     this.frameCount,
     this.walkFramesDirectory,
+    this.attackFramesDirectory,
     this.artworkTopFraction = 0,
     this.aspectRatio = 1,
   }) : assert(
@@ -47,6 +48,16 @@ class BossType {
   /// relative to assets/images/ — used when a kit already ships one PNG
   /// per frame (e.g. "0_Golem_Walking_000.png", "_001.png", ...).
   final String? walkFramesDirectory;
+
+  /// Optional one-shot "weapon swing" animation (same
+  /// directory-of-frames convention as [walkFramesDirectory]) that
+  /// BossComponent periodically plays in place of the walk loop while the
+  /// boss is on screen and approaching — purely a visual flourish, not
+  /// tied to any actual attack/damage (bosses don't deal damage until
+  /// they reach the base). Only set for skins whose source kit actually
+  /// ships an attack animation (currently the 3 goblin-family and 3 human
+  /// reward boss_skin variants — see kBossSkinVariants).
+  final String? attackFramesDirectory;
 
   /// Fraction (0-1) of empty transparent space above the actual artwork
   /// within each frame — art kits commonly leave padding so a taller pose
@@ -162,6 +173,7 @@ const Map<String, BossType> kBossSkinVariants = {
     id: 'caveman',
     slotId: 'golem',
     walkFramesDirectory: 'bosses/human_caveman',
+    attackFramesDirectory: 'bosses/human_caveman_attack',
     artworkTopFraction: 0,
     aspectRatio: 267 / 443,
   ),
@@ -169,6 +181,7 @@ const Map<String, BossType> kBossSkinVariants = {
     id: 'giant_goblin',
     slotId: 'golem',
     walkFramesDirectory: 'bosses/human_giant_goblin',
+    attackFramesDirectory: 'bosses/human_giant_goblin_attack',
     artworkTopFraction: 0,
     aspectRatio: 286 / 441,
   ),
@@ -176,6 +189,7 @@ const Map<String, BossType> kBossSkinVariants = {
     id: 'viking',
     slotId: 'golem',
     walkFramesDirectory: 'bosses/human_viking',
+    attackFramesDirectory: 'bosses/human_viking_attack',
     artworkTopFraction: 0.0023,
     aspectRatio: 278 / 435,
   ),
@@ -187,6 +201,7 @@ const Map<String, BossType> kBossSkinVariants = {
     id: 'goblin_chief',
     slotId: 'goblin',
     walkFramesDirectory: 'bosses/goblin_skin_chief',
+    attackFramesDirectory: 'bosses/goblin_skin_chief_attack',
     artworkTopFraction: 0,
     aspectRatio: 249 / 312,
   ),
@@ -194,6 +209,7 @@ const Map<String, BossType> kBossSkinVariants = {
     id: 'ogre_shaman',
     slotId: 'ogre',
     walkFramesDirectory: 'bosses/goblin_skin_female',
+    attackFramesDirectory: 'bosses/goblin_skin_female_attack',
     artworkTopFraction: 0,
     aspectRatio: 233 / 326,
   ),
@@ -201,6 +217,7 @@ const Map<String, BossType> kBossSkinVariants = {
     id: 'orc_warrior',
     slotId: 'orc',
     walkFramesDirectory: 'bosses/goblin_skin_male',
+    attackFramesDirectory: 'bosses/goblin_skin_male_attack',
     artworkTopFraction: 0,
     aspectRatio: 253 / 289,
   ),

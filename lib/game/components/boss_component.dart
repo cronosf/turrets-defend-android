@@ -38,6 +38,18 @@ class BossComponent extends PositionComponent
   late final TextComponent _hpLabel;
   late final TextComponent _hpLabelShadow;
 
+  // Periodic weapon-swing flourish while approaching — see
+  // BossType.attackFramesDirectory's doc comment. null when this boss's
+  // skin doesn't ship one (most don't), in which case the whole cycle
+  // below is just skipped every frame.
+  SpriteAnimation? _walkAnimation;
+  SpriteAnimation? _attackAnimation;
+  double _attackAnimDuration = 0;
+  double _attackCycleTimer = 0;
+  double _attackTimeLeft = 0;
+  static const _attackCycleInterval = 2.0;
+  static const _attackStepTime = 0.07;
+
   BossComponent({
     required this.type,
     required this.maxHp,
@@ -82,8 +94,23 @@ class BossComponent extends PositionComponent
             row: type.directionRow!,
             columns: type.frameCount!,
           );
+    _walkAnimation = SpriteAnimation.spriteList(frames, stepTime: 0.12, loop: true);
+
+    final attackDir = type.attackFramesDirectory;
+    if (attackDir != null) {
+      final attackFrames = await GameAssets.loadFrames(attackDir);
+      if (attackFrames.isNotEmpty) {
+        _attackAnimation = SpriteAnimation.spriteList(
+          attackFrames,
+          stepTime: _attackStepTime,
+          loop: false,
+        );
+        _attackAnimDuration = attackFrames.length * _attackStepTime;
+      }
+    }
+
     _sprite = SpriteAnimationComponent(
-      animation: SpriteAnimation.spriteList(frames, stepTime: 0.12, loop: true),
+      animation: _walkAnimation,
       size: size,
       anchor: Anchor.center,
       position: size / 2,
@@ -149,10 +176,37 @@ class BossComponent extends PositionComponent
     if (!_hasAppeared && _visibleTopY >= 0) {
       _hasAppeared = true;
     }
+    _updateAttackCycle(dt);
     if (position.y >= game.baseLineY) {
       _dead = true;
       game.onBossReachedBase(this);
       removeFromParent();
+    }
+  }
+
+  /// Swaps the walk loop for the one-shot attack swing every
+  /// [_attackCycleInterval] seconds while the boss is visible and
+  /// approaching, then swaps back once it's played through — purely a
+  /// visual flourish (see BossType.attackFramesDirectory), the boss keeps
+  /// advancing at its normal speed the whole time either way. A no-op for
+  /// every boss whose skin doesn't ship an attack animation.
+  void _updateAttackCycle(double dt) {
+    final attackAnimation = _attackAnimation;
+    if (attackAnimation == null || !_hasAppeared) return;
+
+    if (_attackTimeLeft > 0) {
+      _attackTimeLeft -= dt;
+      if (_attackTimeLeft <= 0) {
+        _sprite.animation = _walkAnimation;
+      }
+      return;
+    }
+
+    _attackCycleTimer += dt;
+    if (_attackCycleTimer >= _attackCycleInterval) {
+      _attackCycleTimer = 0;
+      _sprite.animation = attackAnimation;
+      _attackTimeLeft = _attackAnimDuration;
     }
   }
 
