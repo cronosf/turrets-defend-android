@@ -81,3 +81,5 @@ app.*.map.json
 /assets/logros/
 /assets/mobs/
 /assets/rank_logo/
+/assets/attack_effects/
+/assets/turrets/

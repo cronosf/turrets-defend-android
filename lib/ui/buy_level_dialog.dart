@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../game/turret_defense_game.dart';
 import '../l10n/app_strings.dart';
+import '../models/turret_skins.dart';
 import '../models/turret_stats.dart';
 import '../theme/app_fonts.dart';
 
@@ -59,6 +60,7 @@ Future<void> showBuyLevelDialog(BuildContext context, TurretDefenseGame game) {
                       for (var level = 1; level <= maxDirectBuyLevel; level++)
                         _LevelTile(
                           level: level,
+                          frontAsset: kTurretSkins[economy.equippedTurretSkinKey]?.frontAsset,
                           cost: levelBuyCost(level),
                           canAfford: economy.money >= levelBuyCost(level),
                           onTap: () {
@@ -91,12 +93,18 @@ Future<void> showBuyLevelDialog(BuildContext context, TurretDefenseGame game) {
 class _LevelTile extends StatelessWidget {
   const _LevelTile({
     required this.level,
+    this.frontAsset,
     required this.cost,
     required this.canAfford,
     required this.onTap,
   });
 
   final int level;
+
+  /// Front-view warrior sprite (see TurretSkinType.frontAsset) when a
+  /// warrior turret skin is equipped; null keeps the classic per-level
+  /// turret art.
+  final String? frontAsset;
   final int cost;
   final bool canAfford;
   final VoidCallback onTap;
@@ -119,7 +127,9 @@ class _LevelTile extends StatelessWidget {
             children: [
               Expanded(
                 child: Image.asset(
-                  'assets/images/turrets/t$level/T$level-Shoot_00.png',
+                  frontAsset != null
+                      ? 'assets/images/$frontAsset'
+                      : 'assets/images/turrets/t$level/T$level-Shoot_00.png',
                   fit: BoxFit.contain,
                 ),
               ),

@@ -56,6 +56,18 @@ class Economy extends ChangeNotifier {
     notifyListeners();
   }
 
+  /// The equipped turret_skin's `asset_key` when it's one of the warrior
+  /// skins in models/turret_skins.dart (null for no skin, or a legacy
+  /// hue-tint skin — those still go through [equippedTurretHue]). Drives
+  /// TurretComponent's art, the shot effect and the Buy sheet's sprites.
+  String? equippedTurretSkinKey;
+
+  void setEquippedTurretSkinKey(String? key) {
+    if (equippedTurretSkinKey == key) return;
+    equippedTurretSkinKey = key;
+    notifyListeners();
+  }
+
   /// Same idea as [equippedTurretHue] but for the equipped `bullet_effect`
   /// skin, applied to the projectile sprite (see ProjectileComponent) only
   /// as a fallback when there's no pre-baked sprite for [equippedBulletAssetKey].

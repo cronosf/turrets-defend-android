@@ -118,6 +118,7 @@ class _HomeScreenState extends State<HomeScreen> {
   Future<void> _syncEquippedSkins() async {
     if (!ApiClient.hasToken) {
       _economy.setEquippedTurretHue(null);
+      _economy.setEquippedTurretSkinKey(null);
       _economy.setEquippedBulletHue(null);
       _economy.setEquippedBulletAssetKey(null);
       for (final kind in EnemyKind.values.map((k) => k.name)) {
@@ -159,7 +160,9 @@ class _HomeScreenState extends State<HomeScreen> {
         }
       }
 
-      _economy.setEquippedTurretHue(_metaFor(items, equippedTurretSkinId).hue);
+      final turretMeta = _metaFor(items, equippedTurretSkinId);
+      _economy.setEquippedTurretHue(turretMeta.hue);
+      _economy.setEquippedTurretSkinKey(turretMeta.assetKey);
       final bulletMeta = _metaFor(items, equippedBulletSkinId);
       _economy.setEquippedBulletHue(bulletMeta.hue);
       _economy.setEquippedBulletAssetKey(bulletMeta.assetKey);

@@ -68,7 +68,9 @@ class EnemyComponent extends PositionComponent
       artworkTopFraction = kOrc2VariantTopFractions[variantIndex];
     } else {
       final skin = skinKey != null ? kMobSkinTypes[skinKey] : null;
-      frames = skin != null
+      frames = skin?.framesDirectory != null
+          ? await GameAssets.loadFrames(skin!.framesDirectory!)
+          : skin != null
           ? await GameAssets.loadSheetRow(
               skin.walkSheetPath,
               frameWidth: skin.frameSize,

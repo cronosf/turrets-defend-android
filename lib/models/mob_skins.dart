@@ -13,7 +13,9 @@ import 'enemy_types.dart';
 class MobSkinType {
   const MobSkinType({
     required this.kind,
-    required this.walkSheetPath,
+    this.walkSheetPath = '',
+    this.framesDirectory,
+    this.sizeScale = 1,
     this.frameSize = 64,
     this.directionRow = 1,
     this.frameCount = 6,
@@ -23,8 +25,18 @@ class MobSkinType {
   /// Which enemies this skin replaces when equipped.
   final EnemyKind kind;
 
-  /// Relative to assets/images/.
+  /// Relative to assets/images/. Unused (empty) when [framesDirectory] is
+  /// set instead.
   final String walkSheetPath;
+
+  /// For skins shipped as one PNG per frame (e.g. the fairies) rather than
+  /// a sheet: the folder under assets/images/ holding the looping frames
+  /// (see GameAssets.loadFrames). Takes priority over [walkSheetPath].
+  final String? framesDirectory;
+
+  /// Multiplier on the shared mob_skin render size (TurretDefenseGame's
+  /// _mobSkinSize) for art that needs to read smaller/larger.
+  final double sizeScale;
 
   // Sheet layout (see GameAssets.loadSheetRow) — kits in this family are
   // packed as a grid of fixed-size frames (rows = facing direction), but
@@ -64,7 +76,19 @@ const Map<String, MobSkinType> kMobSkinTypes = {
     walkSheetPath: 'mobs/slime/Slime3_Walk.png',
     frameCount: 8,
   ),
+  // Flying skins (EnemyKind.fly): frames are pre-cropped square with the
+  // art flush against the top edge, so no artworkTopFraction is needed and
+  // the HP bar sits right on the fairy. Size matches the War Orc's
+  // (see TurretDefenseGame._orcSkinSizeScale), then -10% like the orcs.
+  'mob_fairy1': MobSkinType(kind: EnemyKind.fly, framesDirectory: 'mobs/fairy/1', sizeScale: kFairySkinSizeScale),
+  'mob_fairy2': MobSkinType(kind: EnemyKind.fly, framesDirectory: 'mobs/fairy/2', sizeScale: kFairySkinSizeScale),
+  'mob_fairy3': MobSkinType(kind: EnemyKind.fly, framesDirectory: 'mobs/fairy/3', sizeScale: kFairySkinSizeScale),
 };
+
+/// War Orc render scale (vs. the shared mob_skin size) — shrunk by 15% and
+/// then another 10%. Fairies use the same value so both read equal in size.
+const double kOrcSkinSizeScale = 0.85 * 0.9;
+const double kFairySkinSizeScale = kOrcSkinSizeScale;
 
 /// The "War Orc" skin (bought once in the shop as a bundle — see
 /// migration_add_orcs2_mob_skin.sql — but equipped independently per

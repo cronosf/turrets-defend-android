@@ -4,6 +4,7 @@ import 'package:flutter/material.dart' show Colors, FontWeight, Paint, TextStyle
 
 import '../../game_assets.dart';
 import '../../l10n/app_strings.dart';
+import '../../models/turret_skins.dart';
 import '../../models/turret_stats.dart';
 import '../../theme/hue_rotate.dart';
 import '../turret_defense_game.dart';
@@ -23,6 +24,8 @@ class TurretComponent extends PositionComponent
   late final double _shootAnimDuration;
 
   late SpriteAnimationComponent _sprite;
+  SpriteAnimation? _skinIdle;
+  SpriteAnimation? _skinAttack;
   late TextComponent _levelLabel;
   late TextComponent _levelLabelShadow;
   AppLanguage? _labelLanguage;
@@ -49,16 +52,36 @@ class TurretComponent extends PositionComponent
 
   @override
   Future<void> onLoad() async {
-    final frames = await GameAssets.loadFrames(stats.assetDir);
     const stepTime = 0.03;
-    _shootAnimDuration = frames.length * stepTime;
-    _sprite = SpriteAnimationComponent(
-      animation: SpriteAnimation.spriteList(frames, stepTime: stepTime, loop: false),
-      size: size,
-      anchor: Anchor.center,
-      position: size / 2,
-      playing: false,
-    );
+    final skin = kTurretSkins[game.economy.equippedTurretSkinKey];
+    if (skin != null) {
+      // Warrior skin: a looping idle plus a one-shot swing on every shot.
+      // Frames are 278x191 with the character ~0.97 of the height, drawn
+      // at 0.3 so the warrior stands ~56px tall — a bit larger than the
+      // old 50px turret — while the swing's sideways reach (mostly
+      // transparent) extends past the cell without touching the hitbox.
+      final idle = await GameAssets.loadFrames(skin.idleDir);
+      final attack = await GameAssets.loadFrames(skin.attackDir);
+      _skinIdle = SpriteAnimation.spriteList(idle, stepTime: 0.07, loop: true);
+      _skinAttack = SpriteAnimation.spriteList(attack, stepTime: stepTime, loop: false);
+      _shootAnimDuration = attack.length * stepTime;
+      _sprite = SpriteAnimationComponent(
+        animation: _skinIdle,
+        size: Vector2(278 * 0.3, 191 * 0.3),
+        anchor: Anchor.center,
+        position: Vector2(size.x / 2, size.y / 2 - 4),
+      );
+    } else {
+      final frames = await GameAssets.loadFrames(stats.assetDir);
+      _shootAnimDuration = frames.length * stepTime;
+      _sprite = SpriteAnimationComponent(
+        animation: SpriteAnimation.spriteList(frames, stepTime: stepTime, loop: false),
+        size: size,
+        anchor: Anchor.center,
+        position: size / 2,
+        playing: false,
+      );
+    }
     add(_sprite);
     _applyTurretSkin();
 
@@ -116,8 +139,12 @@ class TurretComponent extends PositionComponent
     if (_firingTimeLeft > 0) {
       _firingTimeLeft -= dt;
       if (_firingTimeLeft <= 0) {
-        _sprite.playing = false;
-        _sprite.animationTicker?.reset();
+        if (_skinIdle != null) {
+          _sprite.animation = _skinIdle;
+        } else {
+          _sprite.playing = false;
+          _sprite.animationTicker?.reset();
+        }
       }
     }
 
@@ -134,6 +161,9 @@ class TurretComponent extends PositionComponent
         game.fireProjectileFromTurret(this, target, stats.damage);
         _cooldown = stats.fireInterval;
         _firingTimeLeft = _shootAnimDuration;
+        if (_skinAttack != null) {
+          _sprite.animation = _skinAttack;
+        }
         _sprite.playing = true;
         _sprite.animationTicker?.reset();
       }

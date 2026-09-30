@@ -456,6 +456,18 @@ class Strings {
           return 'War Orc';
         case 'bundle_orcs2':
           return 'War Orc Pack';
+        case 'turret_skin_warrior_black':
+          return 'Black Warrior';
+        case 'turret_skin_warrior_blue':
+          return 'Neon Blue Warrior';
+        case 'turret_skin_warrior_red':
+          return 'Fuchsia Red Warrior';
+        case 'mob_skin_fairy1':
+          return 'Fire Fairy';
+        case 'mob_skin_fairy2':
+          return 'Frost Fairy';
+        case 'mob_skin_fairy3':
+          return 'Forest Fairy';
       }
     }
     return fallback;
@@ -509,6 +521,19 @@ class Strings {
           return 'Replaces hybrid mobs with a war orc — includes 2 tougher-looking designs, shown at random.';
         case 'bundle_orcs2':
           return 'War Orc skin for both ground and hybrid mobs, bundled at a discount.';
+        case 'turret_skin_warrior_black':
+          return 'Turns all your turrets into a black warrior, with a new '
+              'black-and-white water attack effect and a swing animation.';
+        case 'turret_skin_warrior_blue':
+          return 'Turns all your turrets into a neon blue warrior, with a new '
+              'blue water attack effect and a swing animation.';
+        case 'turret_skin_warrior_red':
+          return 'Turns all your turrets into a fuchsia red warrior, with a '
+              'new fiery attack effect and a swing animation.';
+        case 'mob_skin_fairy1':
+        case 'mob_skin_fairy2':
+        case 'mob_skin_fairy3':
+          return 'Replaces the classic flying mobs with this fairy.';
       }
     }
     return fallback;

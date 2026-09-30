@@ -25,6 +25,14 @@ class ProjectileComponent extends SpriteComponent
   /// up.
   final double? _tintHue;
 
+  /// Animated shot effect (a turret skin's attack effect — see
+  /// models/turret_skins.dart). When set it replaces the static [sprite]:
+  /// the frames loop while the shot flies and are drawn pointing right, so
+  /// the shot is rotated straight along its heading instead of the
+  /// "sprite points up" +90° offset the static projectile art needs.
+  final List<Sprite>? effectFrames;
+  final Vector2? effectSize;
+
   // Field is private (_tintHue) but the constructor param must stay public
   // so other files can pass it — an initializing formal (this._tintHue)
   // would force callers to use the private name too.
@@ -34,6 +42,8 @@ class ProjectileComponent extends SpriteComponent
     required this.target,
     required this.damage,
     required Vector2 position,
+    this.effectFrames,
+    this.effectSize,
   })  : _tintHue = tintHue, // ignore: prefer_initializing_formals
         super(
           sprite: sprite,
@@ -45,6 +55,16 @@ class ProjectileComponent extends SpriteComponent
   @override
   Future<void> onLoad() async {
     super.onLoad();
+    final frames = effectFrames;
+    if (frames != null && frames.isNotEmpty) {
+      sprite = null;
+      size = effectSize ?? Vector2(36, 18);
+      add(SpriteAnimationComponent(
+        animation: SpriteAnimation.spriteList(frames, stepTime: 0.03, loop: true),
+        size: size,
+      ));
+      return;
+    }
     final hue = _tintHue;
     if (hue != null) {
       paint = Paint()..colorFilter = hueRotateFilter(hue, baseHueTurns: kProjectileBaseHueTurns);
@@ -70,6 +90,6 @@ class ProjectileComponent extends SpriteComponent
 
     delta.scale(1 / distance);
     position += delta * speed * dt;
-    angle = math.atan2(delta.y, delta.x) + math.pi / 2;
+    angle = math.atan2(delta.y, delta.x) + (effectFrames != null ? 0 : math.pi / 2);
   }
 }

@@ -12,10 +12,12 @@ import '../models/boss_types.dart';
 import '../models/economy.dart';
 import '../models/enemy_types.dart';
 import '../models/mob_skins.dart';
+import '../models/turret_skins.dart';
 import '../models/turret_stats.dart';
 import 'components/boss_component.dart';
 import 'components/enemy_component.dart';
 import 'components/fx_component.dart';
+import 'components/level_up_fx_component.dart';
 import 'components/projectile_component.dart';
 import 'components/targetable.dart';
 import 'components/turret_component.dart';
@@ -58,6 +60,8 @@ class TurretDefenseGame extends FlameGame {
   late Map<String, Sprite> _bulletSkinSprites;
 
   late List<Sprite> _hitFxFrames;
+  List<Sprite>? _turretSkinEffectFrames;
+  late Sprite _levelUpBubble;
   late List<Sprite> _explosionFrames;
   final List<RectangleComponent> _slotVisuals = [];
   final List<({int row, int col})> _slotVisualCoords = [];
@@ -152,7 +156,7 @@ class TurretDefenseGame extends FlameGame {
   // type.baseSpeed * speedMul, identical to every other skin — nothing
   // skin-specific touches speed), scaling this down should fix the "feels
   // too fast" perception along with the requested size reduction.
-  static const double _orcSkinSizeScale = 0.85;
+  static const double _orcSkinSizeScale = kOrcSkinSizeScale;
 
   @override
   Future<void> onLoad() async {
@@ -178,6 +182,11 @@ class TurretDefenseGame extends FlameGame {
       for (final key in _bulletSkinAssetKeys) key: await GameAssets.loadSprite('shop/$key.png'),
     };
     _hitFxFrames = await GameAssets.loadFrames('explosion2');
+    _levelUpBubble = await GameAssets.loadSprite('ui/levelup_bubble.png');
+    final turretSkin = kTurretSkins[economy.equippedTurretSkinKey];
+    if (turretSkin != null) {
+      _turretSkinEffectFrames = await GameAssets.loadFrames(turretSkin.effectDir);
+    }
     _explosionFrames = await GameAssets.loadFrames('explosion1');
 
     _dirtBg = SpriteComponent(sprite: _dirtSprites[0], priority: -10);
@@ -593,7 +602,7 @@ class TurretDefenseGame extends FlameGame {
     final hasMobSkin = equippedSkinKey != null;
     final mobSkinSize = equippedSkinKey == kOrc2AssetKey
         ? _mobSkinSize * _orcSkinSizeScale
-        : _mobSkinSize;
+        : _mobSkinSize * (kMobSkinTypes[equippedSkinKey]?.sizeScale ?? 1);
     final enemySize = hasMobSkin ? Vector2.all(mobSkinSize) : null;
 
     final enemy = EnemyComponent(
@@ -623,6 +632,7 @@ class TurretDefenseGame extends FlameGame {
 
   void fireProjectileFromTurret(TurretComponent turret, Targetable target, double damage) {
     final muzzle = turret.position - Vector2(0, 22);
+    final turretSkin = kTurretSkins[economy.equippedTurretSkinKey];
     final assetKey = economy.equippedBulletAssetKey;
     final skinSprite = assetKey != null ? _bulletSkinSprites[assetKey] : null;
     world.add(ProjectileComponent(
@@ -634,6 +644,10 @@ class TurretDefenseGame extends FlameGame {
       target: target,
       damage: damage,
       position: muzzle,
+      effectFrames: _turretSkinEffectFrames,
+      effectSize: turretSkin == null
+          ? null
+          : Vector2(turretSkin.effectSize.$1, turretSkin.effectSize.$2),
     ));
     GameAudio.instance.playTurretShot(turret.tier);
   }
@@ -820,6 +834,12 @@ class TurretDefenseGame extends FlameGame {
       occupant.removeFromParent();
       turret.removeFromParent();
       spawnTurretAt(targetSlot.row, targetSlot.col, turret.tier + 1);
+      world.add(LevelUpFxComponent(
+        cellCenter: grid.slotCenter(targetSlot.row, targetSlot.col),
+        cellSize: TurretGrid.slotSize,
+        bubble: _levelUpBubble,
+        text: 'LVL UP!',
+      ));
     } else {
       turret.position = grid.slotCenter(oldRow, oldCol);
     }
