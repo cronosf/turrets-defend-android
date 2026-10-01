@@ -72,7 +72,7 @@ class TurretComponent extends PositionComponent
         animation: _skinIdle,
         size: Vector2(278 * 0.209, 191 * 0.209),
         anchor: Anchor.center,
-        position: Vector2(size.x / 2, size.y / 2 - 5),
+        position: Vector2(size.x / 2, size.y / 2 - 3),
       );
     } else {
       final frames = await GameAssets.loadFrames(stats.assetDir);
@@ -95,17 +95,20 @@ class TurretComponent extends PositionComponent
       fontSize: 12,
       fontWeight: FontWeight.bold,
     );
+    // Warrior art ends higher in the cell than the classic turret, so its level
+    // label sits 3px higher to stay snug under the warrior's feet.
+    final labelLift = _skinIdle != null ? 3.0 : 0.0;
     _levelLabelShadow = TextComponent(
       text: labelText,
       textRenderer: TextPaint(style: labelStyle.copyWith(color: Colors.black)),
       anchor: Anchor.topCenter,
-      position: Vector2(size.x / 2 + 1, size.y - 5),
+      position: Vector2(size.x / 2 + 1, size.y - 5 - labelLift),
     );
     _levelLabel = TextComponent(
       text: labelText,
       textRenderer: TextPaint(style: labelStyle),
       anchor: Anchor.topCenter,
-      position: Vector2(size.x / 2, size.y - 6),
+      position: Vector2(size.x / 2, size.y - 6 - labelLift),
     );
     add(_levelLabelShadow);
     add(_levelLabel);
@@ -128,7 +131,7 @@ class TurretComponent extends PositionComponent
       _shootAnimDuration = attack.length * stepTime;
       _sprite
         ..size = Vector2(278 * 0.209, 191 * 0.209)
-        ..position = Vector2(size.x / 2, size.y / 2 - 5)
+        ..position = Vector2(size.x / 2, size.y / 2 - 3)
         ..animation = _skinIdle
         ..playing = true;
     } else {
@@ -142,6 +145,9 @@ class TurretComponent extends PositionComponent
         ..animation = SpriteAnimation.spriteList(frames, stepTime: stepTime, loop: false)
         ..playing = false;
     }
+    final lift = skin != null ? 3.0 : 0.0;
+    _levelLabelShadow.position = Vector2(size.x / 2 + 1, size.y - 5 - lift);
+    _levelLabel.position = Vector2(size.x / 2, size.y - 6 - lift);
     _appliedSkinKey = key;
     _reskinning = false;
   }
