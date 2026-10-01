@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../l10n/app_strings.dart';
 import '../models/economy.dart';
+import '../models/turret_skins.dart';
 import '../theme/app_fonts.dart';
 
 class BottomControls extends StatelessWidget {
@@ -59,7 +60,10 @@ class BottomControls extends StatelessWidget {
                         // this icon's size left a lot of empty box pushing
                         // the label oddly far right. See
                         // assets/images/ui/FreeTurretIcon.png's own crop.
-                        iconAsset: 'assets/images/ui/FreeTurretIcon.png',
+                        // A warrior turret skin swaps in its front-view sprite.
+                        iconAsset: kTurretSkins[economy.equippedTurretSkinKey] != null
+                            ? 'assets/images/${kTurretSkins[economy.equippedTurretSkinKey]!.frontAsset}'
+                            : 'assets/images/ui/FreeTurretIcon.png',
                         // "GRATIS" runs noticeably wider than "FREE" — a
                         // smaller icon leaves it enough room to never need
                         // the ellipsis fallback.
