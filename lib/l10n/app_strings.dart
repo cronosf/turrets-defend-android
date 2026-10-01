@@ -325,6 +325,9 @@ class Strings {
       ? 'Todavía no tienes items comprados.'
       : "You don't own any items yet.";
   String get equippedLabel => _es ? 'Equipado' : 'Equipped';
+  String get warriorEffectHint => _es
+      ? 'Para ver el nuevo efecto de ataque del guerrero, equipa el disparo Básico en Disparos.'
+      : "To see the warrior's new attack effect, equip the Basic shot under Bullets.";
   String get acquiredLabel => _es ? 'Adquirido' : 'Acquired';
   String get equipAction => _es ? 'Equipar' : 'Equip';
   String get goToShop => _es ? 'Ir a la tienda' : 'Go to shop';

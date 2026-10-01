@@ -63,7 +63,7 @@ class _CustomizeScreenState extends State<CustomizeScreen> {
   /// [itemId] null means "equip Basic" (the unmodified default look) —
   /// the server already treats a null shop_item_id as an explicit
   /// unequip for that category.
-  Future<void> _equip(String category, int? itemId, Strings s) async {
+  Future<void> _equip(String category, int? itemId, Strings s, {String? sku}) async {
     setState(() {
       if (itemId == null) {
         _equippingBasicCategory = category;
@@ -77,6 +77,16 @@ class _CustomizeScreenState extends State<CustomizeScreen> {
         body: {'category': category, 'shop_item_id': itemId},
       );
       await _reload();
+      if (mounted && (sku?.startsWith('turret_skin_warrior') ?? false)) {
+        ScaffoldMessenger.of(context)
+          ..hideCurrentSnackBar()
+          ..showSnackBar(
+            SnackBar(
+              content: Text(s.warriorEffectHint),
+              duration: const Duration(seconds: 6),
+            ),
+          );
+      }
     } on ApiException catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context)
@@ -336,6 +346,7 @@ class _CustomizeScreenState extends State<CustomizeScreen> {
                                           equipCategoryKey,
                                           (item['id'] as num).toInt(),
                                           s,
+                                          sku: item['sku']?.toString(),
                                         ),
                                 ),
                             ],
