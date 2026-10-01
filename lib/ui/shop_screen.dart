@@ -26,6 +26,9 @@ class ShopScreen extends StatefulWidget {
 class _ShopScreenState extends State<ShopScreen> {
   late Future<List<Map<String, dynamic>>> _items;
   final Set<int> _purchasing = {};
+  // Shop item ids the player already owns (from GET /profile) — those
+  // cards show "Acquired" instead of a Buy button so nothing is bought twice.
+  Set<int> _ownedIds = {};
   String _selectedCategory = shopCategoryOrder.first;
   // Remembers the last sub-slot picked per category (mob_skin's kind /
   // boss_skin's slot — see shopSubSlotsFor) so switching categories and
@@ -50,7 +53,21 @@ class _ShopScreenState extends State<ShopScreen> {
   Future<List<Map<String, dynamic>>> _fetchItems() async {
     final data = await ApiClient.get('/shop/items') as Map<String, dynamic>;
     final list = data['items'] as List<dynamic>? ?? [];
+    await _loadOwned();
     return list.cast<Map<String, dynamic>>();
+  }
+
+  Future<void> _loadOwned() async {
+    if (!ApiClient.hasToken) return;
+    try {
+      final profile = await ApiClient.get('/profile') as Map<String, dynamic>;
+      _ownedIds = (profile['items'] as List<dynamic>? ?? [])
+          .map((e) => ((e as Map<String, dynamic>)['id'] as num?)?.toInt())
+          .whereType<int>()
+          .toSet();
+    } catch (_) {
+      // Best-effort — the server still has the final say on duplicates.
+    }
   }
 
   Future<void> _reload() async {
@@ -65,6 +82,7 @@ class _ShopScreenState extends State<ShopScreen> {
       return;
     }
     final itemId = (item['id'] as num).toInt();
+    if (_ownedIds.contains(itemId)) return;
     setState(() => _purchasing.add(itemId));
     try {
       final order = await ApiClient.post(
@@ -98,6 +116,7 @@ class _ShopScreenState extends State<ShopScreen> {
       if (!mounted) return;
       ScaffoldMessenger.of(context)
           .showSnackBar(SnackBar(content: Text(s.purchaseSuccess)));
+      await _loadOwned();
     } on ApiException catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context)
@@ -266,6 +285,10 @@ class _ShopScreenState extends State<ShopScreen> {
                                                     ?.toString() ??
                                                 'USD',
                                           ),
+                                          owned: _ownedIds.contains(
+                                            (item['id'] as num).toInt(),
+                                          ),
+                                          acquiredLabel: s.acquiredLabel,
                                           busy: _purchasing.contains(
                                             (item['id'] as num).toInt(),
                                           ),
@@ -306,6 +329,8 @@ class _ShopItemCard extends StatelessWidget {
     required this.buyLabel,
     required this.busy,
     required this.onBuy,
+    required this.owned,
+    required this.acquiredLabel,
   });
 
   final Strings s;
@@ -315,6 +340,8 @@ class _ShopItemCard extends StatelessWidget {
   final String buyLabel;
   final bool busy;
   final VoidCallback? onBuy;
+  final bool owned;
+  final String acquiredLabel;
 
   static const _gold = Color(0xFFFFC94D);
 
@@ -362,7 +389,7 @@ class _ShopItemCard extends StatelessWidget {
           // than expected and the card would overflow into the row below.
           height: 40,
           child: ElevatedButton(
-            onPressed: onBuy,
+            onPressed: owned ? null : onBuy,
             style: ElevatedButton.styleFrom(
               backgroundColor: _gold,
               foregroundColor: const Color(0xFF241a11),
@@ -371,8 +398,12 @@ class _ShopItemCard extends StatelessWidget {
                 borderRadius: BorderRadius.circular(10),
               ),
               tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+              disabledBackgroundColor: owned ? const Color(0xFF3F6B3A) : null,
+              disabledForegroundColor: owned ? Colors.white : null,
             ),
-            child: busy
+            child: owned
+                ? Text(acquiredLabel, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold))
+                : busy
                 ? const SizedBox(
                     width: 16,
                     height: 16,
