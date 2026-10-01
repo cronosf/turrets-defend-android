@@ -11,6 +11,7 @@ class TurretSkinType {
     required this.frontAsset,
     required this.effectDir,
     required this.effectSize,
+    required this.attackSound,
   });
 
   /// Looping idle frames (back view), relative to assets/images/.
@@ -29,6 +30,10 @@ class TurretSkinType {
   /// On-screen size of the shot effect (width x height in game pixels) —
   /// matches the frames' own aspect so nothing gets stretched.
   final (double, double) effectSize;
+
+  /// Shot sound (file under assets/audio/) played instead of the regular
+  /// turret shot sound whenever the warrior's own attack effect is active.
+  final String attackSound;
 }
 
 const Map<String, TurretSkinType> kTurretSkins = {
@@ -38,6 +43,7 @@ const Map<String, TurretSkinType> kTurretSkins = {
     frontAsset: 'turrets/warrior_front/warrior_black.png',
     effectDir: 'fx/fx_water_black',
     effectSize: (36, 18),
+    attackSound: 'warrior_punch.wav',
   ),
   'turret_warrior_blue': TurretSkinType(
     idleDir: 'turrets/warrior_blue_idle',
@@ -45,6 +51,7 @@ const Map<String, TurretSkinType> kTurretSkins = {
     frontAsset: 'turrets/warrior_front/warrior_blue.png',
     effectDir: 'fx/fx_water_blue',
     effectSize: (36, 18),
+    attackSound: 'warrior_punch.wav',
   ),
   'turret_warrior_red': TurretSkinType(
     idleDir: 'turrets/warrior_red_idle',
@@ -52,5 +59,16 @@ const Map<String, TurretSkinType> kTurretSkins = {
     frontAsset: 'turrets/warrior_front/warrior_red.png',
     effectDir: 'fx/fx_flame_fuchsia',
     effectSize: (46, 21),
+    attackSound: 'warrior_flame.wav',
+  ),
+  // Intense red: original red-fire effect (the fuchsia skin's flame is
+  // recolored; this one keeps flame10's own colors).
+  'turret_warrior_scarlet': TurretSkinType(
+    idleDir: 'turrets/warrior_scarlet_idle',
+    attackDir: 'turrets/warrior_scarlet_attack',
+    frontAsset: 'turrets/warrior_front/warrior_scarlet.png',
+    effectDir: 'fx/fx_flame_red',
+    effectSize: (46, 21),
+    attackSound: 'warrior_flame.wav',
   ),
 };

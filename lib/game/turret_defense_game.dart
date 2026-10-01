@@ -654,7 +654,11 @@ class TurretDefenseGame extends FlameGame {
           ? null
           : Vector2(turretSkin.effectSize.$1, turretSkin.effectSize.$2),
     ));
-    GameAudio.instance.playTurretShot(turret.tier);
+    if (turretSkin != null) {
+      GameAudio.instance.playWarriorAttack(turretSkin.attackSound);
+    } else {
+      GameAudio.instance.playTurretShot(turret.tier);
+    }
   }
 
   void spawnHitFx(Vector2 position) {
@@ -803,7 +807,23 @@ class TurretDefenseGame extends FlameGame {
     if (!economy.spend(cost)) return false;
     economy.turretsPurchased++;
     spawnTurretAt(slot.row, slot.col, level);
+    _warriorGreeting(slot.row, slot.col);
     return true;
+  }
+
+  static const _warriorGreetings = ['To defend!', 'I joined!', "Let's go!"];
+
+  /// A freshly bought/claimed warrior says a random line in a speech
+  /// bubble (bubble only — no level-up aura). No-op without a warrior skin.
+  void _warriorGreeting(int row, int col) {
+    if (!kTurretSkins.containsKey(economy.equippedTurretSkinKey)) return;
+    world.add(LevelUpFxComponent(
+      cellCenter: grid.slotCenter(row, col),
+      cellSize: TurretGrid.slotSize,
+      bubble: _levelUpBubble,
+      text: _warriorGreetings[math.Random().nextInt(_warriorGreetings.length)],
+      aura: false,
+    ));
   }
 
   void claimFreeTurret() {
@@ -811,6 +831,7 @@ class TurretDefenseGame extends FlameGame {
     if (slot == null) return;
     if (!economy.claimFreeTurret()) return;
     spawnTurretAt(slot.row, slot.col, 1);
+    _warriorGreeting(slot.row, slot.col);
   }
 
   void sellTurret(TurretComponent turret) {
@@ -843,7 +864,7 @@ class TurretDefenseGame extends FlameGame {
         cellCenter: grid.slotCenter(targetSlot.row, targetSlot.col),
         cellSize: TurretGrid.slotSize,
         bubble: _levelUpBubble,
-        text: 'LVL UP!',
+        text: 'LVL UP ${turret.tier + 1}!',
       ));
     } else {
       turret.position = grid.slotCenter(oldRow, oldCol);

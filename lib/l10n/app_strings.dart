@@ -465,6 +465,8 @@ class Strings {
           return 'Neon Blue Warrior';
         case 'turret_skin_warrior_red':
           return 'Fuchsia Red Warrior';
+        case 'turret_skin_warrior_scarlet':
+          return 'Intense Red Warrior';
         case 'mob_skin_fairy1':
           return 'Fire Fairy';
         case 'mob_skin_fairy2':
@@ -526,13 +528,20 @@ class Strings {
           return 'War Orc skin for both ground and hybrid mobs, bundled at a discount.';
         case 'turret_skin_warrior_black':
           return 'Turns all your turrets into a black warrior, with a new '
-              'black-and-white water attack effect and a swing animation.';
+              'black-and-white water attack effect and sound, a swing '
+              'animation, and a level-up animation and speech bubbles.';
         case 'turret_skin_warrior_blue':
           return 'Turns all your turrets into a neon blue warrior, with a new '
-              'blue water attack effect and a swing animation.';
+              'blue water attack effect and sound, a swing animation, and a '
+              'level-up animation and speech bubbles.';
         case 'turret_skin_warrior_red':
           return 'Turns all your turrets into a fuchsia red warrior, with a '
-              'new fiery attack effect and a swing animation.';
+              'new fiery attack effect and sound, a swing animation, and a '
+              'level-up animation and speech bubbles.';
+        case 'turret_skin_warrior_scarlet':
+          return 'Turns all your turrets into an intense red warrior, with a '
+              'new red fire attack effect and sound, a swing animation, and a '
+              'level-up animation and speech bubbles.';
         case 'mob_skin_fairy1':
         case 'mob_skin_fairy2':
         case 'mob_skin_fairy3':

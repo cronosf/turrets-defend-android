@@ -16,11 +16,15 @@ class LevelUpFxComponent extends PositionComponent {
     required double cellSize,
     required this.bubble,
     required this.text,
+    this.aura = true,
   })  : _cell = cellSize,
         super(position: cellCenter, anchor: Anchor.center, priority: 30, size: Vector2.all(cellSize));
 
   final Sprite bubble;
   final String text;
+
+  /// false = speech bubble only (no golden aura/rings/sparks).
+  final bool aura;
   final double _cell;
 
   static const double _duration = 1.3;
@@ -41,52 +45,54 @@ class LevelUpFxComponent extends PositionComponent {
     final p = (_t / _duration).clamp(0.0, 1.0);
     final center = Offset(_cell / 2, _cell / 2);
 
-    // --- Aura over the cell (clipped to it so it reads as "this square").
-    final rect = RRect.fromRectAndRadius(
-      Rect.fromCenter(center: center, width: _cell + 6, height: _cell + 6),
-      const Radius.circular(10),
-    );
-    final fade = p < 0.2 ? p / 0.2 : (1 - (p - 0.2) / 0.8);
-    canvas.save();
-    canvas.clipRRect(rect);
-    final glow = Paint()
-      ..shader = Gradient.radial(
-        center,
-        _cell * 0.75,
-        [_gold.withValues(alpha: 0.75 * fade), _gold.withValues(alpha: 0.0)],
+    if (aura) {
+      // --- Aura over the cell (clipped to it so it reads as "this square").
+      final rect = RRect.fromRectAndRadius(
+        Rect.fromCenter(center: center, width: _cell + 6, height: _cell + 6),
+        const Radius.circular(10),
       );
-    canvas.drawRect(rect.outerRect, glow);
-    // Two rings expanding outward, staggered.
-    for (var i = 0; i < 2; i++) {
-      final rp = ((p - i * 0.22) / 0.6).clamp(0.0, 1.0);
-      if (rp <= 0 || rp >= 1) continue;
-      canvas.drawCircle(
-        center,
-        _cell * (0.15 + 0.6 * rp),
+      final fade = p < 0.2 ? p / 0.2 : (1 - (p - 0.2) / 0.8);
+      canvas.save();
+      canvas.clipRRect(rect);
+      final glow = Paint()
+        ..shader = Gradient.radial(
+          center,
+          _cell * 0.75,
+          [_gold.withValues(alpha: 0.75 * fade), _gold.withValues(alpha: 0.0)],
+        );
+      canvas.drawRect(rect.outerRect, glow);
+      // Two rings expanding outward, staggered.
+      for (var i = 0; i < 2; i++) {
+        final rp = ((p - i * 0.22) / 0.6).clamp(0.0, 1.0);
+        if (rp <= 0 || rp >= 1) continue;
+        canvas.drawCircle(
+          center,
+          _cell * (0.15 + 0.6 * rp),
+          Paint()
+            ..style = PaintingStyle.stroke
+            ..strokeWidth = 3 * (1 - rp) + 0.6
+            ..color = Colors.white.withValues(alpha: 0.85 * (1 - rp)),
+        );
+      }
+      canvas.restore();
+      canvas.drawRRect(
+        rect,
         Paint()
           ..style = PaintingStyle.stroke
-          ..strokeWidth = 3 * (1 - rp) + 0.6
-          ..color = Colors.white.withValues(alpha: 0.85 * (1 - rp)),
+          ..strokeWidth = 2
+          ..color = _gold.withValues(alpha: 0.9 * fade),
       );
-    }
-    canvas.restore();
-    canvas.drawRRect(
-      rect,
-      Paint()
-        ..style = PaintingStyle.stroke
-        ..strokeWidth = 2
-        ..color = _gold.withValues(alpha: 0.9 * fade),
-    );
 
-    // --- Sparks rising from the cell.
-    final sparkPaint = Paint();
-    for (var i = 0; i < _sparks; i++) {
-      final phase = (p * 1.4 - i * 0.07).clamp(0.0, 1.0);
-      if (phase <= 0 || phase >= 1) continue;
-      final dx = (i - (_sparks - 1) / 2) * (_cell / _sparks) * 1.1;
-      final dy = _cell * 0.4 - phase * _cell * 1.1;
-      sparkPaint.color = _gold.withValues(alpha: 1 - phase);
-      _drawStar(canvas, Offset(center.dx + dx + math.sin(phase * 6 + i) * 3, center.dy + dy), 3.2 * (1 - phase * 0.4), sparkPaint);
+      // --- Sparks rising from the cell.
+      final sparkPaint = Paint();
+      for (var i = 0; i < _sparks; i++) {
+        final phase = (p * 1.4 - i * 0.07).clamp(0.0, 1.0);
+        if (phase <= 0 || phase >= 1) continue;
+        final dx = (i - (_sparks - 1) / 2) * (_cell / _sparks) * 1.1;
+        final dy = _cell * 0.4 - phase * _cell * 1.1;
+        sparkPaint.color = _gold.withValues(alpha: 1 - phase);
+        _drawStar(canvas, Offset(center.dx + dx + math.sin(phase * 6 + i) * 3, center.dy + dy), 3.2 * (1 - phase * 0.4), sparkPaint);
+      }
     }
 
     // --- "LVL UP!" bubble floating up above the cell.

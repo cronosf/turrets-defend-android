@@ -96,8 +96,8 @@ class TurretComponent extends PositionComponent
       fontWeight: FontWeight.bold,
     );
     // Warrior art ends higher in the cell than the classic turret, so its level
-    // label sits 3px higher to stay snug under the warrior's feet.
-    final labelLift = _skinIdle != null ? 3.0 : 0.0;
+    // label sits 4px higher to stay snug under the warrior's feet.
+    final labelLift = _skinIdle != null ? 4.0 : 0.0;
     _levelLabelShadow = TextComponent(
       text: labelText,
       textRenderer: TextPaint(style: labelStyle.copyWith(color: Colors.black)),
@@ -145,7 +145,7 @@ class TurretComponent extends PositionComponent
         ..animation = SpriteAnimation.spriteList(frames, stepTime: stepTime, loop: false)
         ..playing = false;
     }
-    final lift = skin != null ? 3.0 : 0.0;
+    final lift = skin != null ? 4.0 : 0.0;
     _levelLabelShadow.position = Vector2(size.x / 2 + 1, size.y - 5 - lift);
     _levelLabel.position = Vector2(size.x / 2, size.y - 6 - lift);
     _appliedSkinKey = key;

@@ -90,6 +90,8 @@ class GameAudio {
   _SfxPool? _turretShot;
   _SfxPool? _turretLaser;
   _SfxPool? _turretBlaster;
+  _SfxPool? _warriorPunch;
+  _SfxPool? _warriorFlame;
   _SfxPool? _mobDeath;
   _SfxPool? _barrierLowered;
   _SfxPool? _barrierRises;
@@ -170,6 +172,12 @@ class GameAudio {
           minPlayers: 3,
           maxPlayers: 10,
         );
+      }),
+      _guard(() async {
+        _warriorPunch = await _buildSfxPool('warrior_punch.wav', minPlayers: 3, maxPlayers: 10);
+      }),
+      _guard(() async {
+        _warriorFlame = await _buildSfxPool('warrior_flame.wav', minPlayers: 3, maxPlayers: 8);
       }),
       _guard(() async {
         _mobDeath = await _buildSfxPool(
@@ -325,6 +333,13 @@ class GameAudio {
         ? _turretLaser
         : _turretBlaster;
     await _startPooled(sfx);
+  });
+
+  /// Shot sound for the warrior turret skins (see TurretSkinType.attackSound)
+  /// — replaces the regular tier-based turret shot sound.
+  Future<void> playWarriorAttack(String file) => _guard(() async {
+    if (!(_economy?.soundOn ?? true)) return;
+    await _startPooled(file == 'warrior_flame.wav' ? _warriorFlame : _warriorPunch);
   });
 
   Future<void> playMobDeath() => _guard(() async {
