@@ -60,7 +60,10 @@ class TurretDefenseGame extends FlameGame {
   late Map<String, Sprite> _bulletSkinSprites;
 
   late List<Sprite> _hitFxFrames;
-  List<Sprite>? _turretSkinEffectFrames;
+  // Every warrior skin's shot-effect frames, keyed by turret skin asset_key —
+  // preloaded for all of them (rather than just the equipped one) because the
+  // equipped skin can still be synced after this game's onLoad runs.
+  final Map<String, List<Sprite>> _turretSkinEffectFrames = {};
   late Sprite _levelUpBubble;
   late List<Sprite> _explosionFrames;
   final List<RectangleComponent> _slotVisuals = [];
@@ -183,9 +186,8 @@ class TurretDefenseGame extends FlameGame {
     };
     _hitFxFrames = await GameAssets.loadFrames('explosion2');
     _levelUpBubble = await GameAssets.loadSprite('ui/levelup_bubble.png');
-    final turretSkin = kTurretSkins[economy.equippedTurretSkinKey];
-    if (turretSkin != null) {
-      _turretSkinEffectFrames = await GameAssets.loadFrames(turretSkin.effectDir);
+    for (final entry in kTurretSkins.entries) {
+      _turretSkinEffectFrames[entry.key] = await GameAssets.loadFrames(entry.value.effectDir);
     }
     _explosionFrames = await GameAssets.loadFrames('explosion1');
 
@@ -632,7 +634,10 @@ class TurretDefenseGame extends FlameGame {
 
   void fireProjectileFromTurret(TurretComponent turret, Targetable target, double damage) {
     final muzzle = turret.position - Vector2(0, 22);
-    final turretSkin = kTurretSkins[economy.equippedTurretSkinKey];
+    // The warrior's own attack effect only shows while the bullet slot is on
+    // Basic; any equipped bullet_effect takes over the shot instead.
+    final turretSkinKey = economy.equippedTurretSkinKey;
+    final turretSkin = economy.equippedBulletAssetKey == null ? kTurretSkins[turretSkinKey] : null;
     final assetKey = economy.equippedBulletAssetKey;
     final skinSprite = assetKey != null ? _bulletSkinSprites[assetKey] : null;
     world.add(ProjectileComponent(
@@ -644,7 +649,7 @@ class TurretDefenseGame extends FlameGame {
       target: target,
       damage: damage,
       position: muzzle,
-      effectFrames: _turretSkinEffectFrames,
+      effectFrames: turretSkin == null ? null : _turretSkinEffectFrames[turretSkinKey],
       effectSize: turretSkin == null
           ? null
           : Vector2(turretSkin.effectSize.$1, turretSkin.effectSize.$2),
