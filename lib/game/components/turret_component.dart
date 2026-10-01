@@ -21,11 +21,13 @@ class TurretComponent extends PositionComponent
   late TurretStats stats;
   double _cooldown = 0;
   double _firingTimeLeft = 0;
-  late final double _shootAnimDuration;
+  late double _shootAnimDuration;
 
   late SpriteAnimationComponent _sprite;
   SpriteAnimation? _skinIdle;
   SpriteAnimation? _skinAttack;
+  String? _appliedSkinKey;
+  bool _reskinning = false;
   late TextComponent _levelLabel;
   late TextComponent _levelLabelShadow;
   AppLanguage? _labelLanguage;
@@ -53,7 +55,8 @@ class TurretComponent extends PositionComponent
   @override
   Future<void> onLoad() async {
     const stepTime = 0.03;
-    final skin = kTurretSkins[game.economy.equippedTurretSkinKey];
+    _appliedSkinKey = game.economy.equippedTurretSkinKey;
+    final skin = kTurretSkins[_appliedSkinKey];
     if (skin != null) {
       // Warrior skin: a looping idle plus a one-shot swing on every shot.
       // Frames are 278x191 with the character ~0.97 of the height, drawn
@@ -112,6 +115,37 @@ class TurretComponent extends PositionComponent
     stats = TurretStats(tier);
   }
 
+  Future<void> _reskin() async {
+    _reskinning = true;
+    final key = game.economy.equippedTurretSkinKey;
+    final skin = kTurretSkins[key];
+    const stepTime = 0.03;
+    if (skin != null) {
+      final idle = await GameAssets.loadFrames(skin.idleDir);
+      final attack = await GameAssets.loadFrames(skin.attackDir);
+      _skinIdle = SpriteAnimation.spriteList(idle, stepTime: 0.07, loop: true);
+      _skinAttack = SpriteAnimation.spriteList(attack, stepTime: stepTime, loop: false);
+      _shootAnimDuration = attack.length * stepTime;
+      _sprite
+        ..size = Vector2(278 * 0.255, 191 * 0.255)
+        ..position = Vector2(size.x / 2, size.y / 2 - 3)
+        ..animation = _skinIdle
+        ..playing = true;
+    } else {
+      final frames = await GameAssets.loadFrames(stats.assetDir);
+      _skinIdle = null;
+      _skinAttack = null;
+      _shootAnimDuration = frames.length * stepTime;
+      _sprite
+        ..size = size.clone()
+        ..position = size / 2
+        ..animation = SpriteAnimation.spriteList(frames, stepTime: stepTime, loop: false)
+        ..playing = false;
+    }
+    _appliedSkinKey = key;
+    _reskinning = false;
+  }
+
   /// Applies (or clears) the equipped turret skin's hue-rotate filter.
   /// Runtime tinting rather than pre-baked art means the same equipped
   /// skin uniformly reskins every tier, not just tier 1.
@@ -130,6 +164,13 @@ class TurretComponent extends PositionComponent
       final labelText = Strings(_labelLanguage!).turretLevel(tier);
       _levelLabel.text = labelText;
       _levelLabelShadow.text = labelText;
+    }
+
+    // The equipped skin is synced from the server *while* the run is
+    // starting (HomeScreen._play doesn't await it), so the first turret can
+    // load before the new skin key arrives — rebuild its art when it does.
+    if (game.economy.equippedTurretSkinKey != _appliedSkinKey && !_reskinning) {
+      _reskin();
     }
 
     if (game.economy.equippedTurretHue != _appliedTurretHue) {
