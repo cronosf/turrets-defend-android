@@ -551,6 +551,89 @@ class Strings {
     return fallback;
   }
 
+  // --- Panel administrativo -------------------------------------------------
+  String get adminPanelTitle => _es ? 'Panel Administrativo' : 'Admin Panel';
+  String get adminSearchHint =>
+      _es ? 'Buscar usuario (nombre, usuario o correo)…' : 'Search user (name, username or email)…';
+  String get adminSearchEmpty =>
+      _es ? 'Escribe para buscar un usuario' : 'Type to search for a user';
+  String get adminNoResults => _es ? 'Sin resultados' : 'No results';
+  String get adminTabGrant => _es ? 'Entregar' : 'Grant';
+  String get adminTabItems => _es ? 'Sus items' : 'Their items';
+  String get adminTabSanctions => _es ? 'Castigos' : 'Sanctions';
+  String get adminTabHistory => _es ? 'Historial' : 'History';
+  String get adminRoleAdmin => 'ADMIN';
+  String get adminStatusActive => _es ? 'Activo' : 'Active';
+  String get adminStatusSuspended => _es ? 'Suspendido' : 'Suspended';
+  String get adminStatusBanned => _es ? 'Baneado' : 'Banned';
+  String get adminLoginBlocked => _es ? 'Ingreso bloqueado' : 'Login blocked';
+  String adminSuspendedUntil(String date) =>
+      _es ? 'Suspendido hasta $date' : 'Suspended until $date';
+  String get adminFilterItems => _es ? 'Filtrar items…' : 'Filter items…';
+  String get adminAll => _es ? 'Todos' : 'All';
+  String get adminGrantButton => _es ? 'Entregar' : 'Grant';
+  String get adminAlreadyOwned => _es ? 'Ya lo tiene' : 'Owned';
+  String get adminInactiveItem => _es ? 'Inactivo en tienda' : 'Hidden in shop';
+  String adminGrantConfirm(String item, String user) => _es
+      ? '¿Entregar "$item" a @$user?'
+      : 'Grant "$item" to @$user?';
+  String adminGranted(String item) =>
+      _es ? '"$item" entregado' : '"$item" granted';
+  String get adminNoItems =>
+      _es ? 'Este usuario aún no tiene items' : 'This user has no items yet';
+  String get adminEquipped => _es ? 'Equipado' : 'Equipped';
+  String get adminRemoveItem => _es ? 'Quitar' : 'Remove';
+  String adminRemoveConfirm(String item, String user) => _es
+      ? '¿Quitar "$item" de @$user? Si lo tiene equipado, volverá al aspecto básico.'
+      : 'Remove "$item" from @$user? If equipped, it goes back to the basic look.';
+  String adminRemoved(String item) =>
+      _es ? '"$item" quitado' : '"$item" removed';
+  String get adminReasonLabel =>
+      _es ? 'Motivo (se le muestra al usuario)' : 'Reason (shown to the user)';
+  String get adminSuspendTitle => _es ? 'Suspender temporalmente' : 'Suspend temporarily';
+  String adminDays(int n) => _es ? '$n d' : '${n}d';
+  String get adminSuspendButton => _es ? 'Suspender' : 'Suspend';
+  String get adminBanTitle => _es ? 'Banear' : 'Ban';
+  String get adminBanHint => _es
+      ? 'Permanente: el usuario no puede entrar y desaparece del ranking.'
+      : 'Permanent: the user cannot log in and disappears from the ranking.';
+  String get adminBanButton => _es ? 'Banear cuenta' : 'Ban account';
+  String get adminBlockTitle => _es ? 'Bloquear ingreso' : 'Block login';
+  String get adminBlockHint => _es
+      ? 'Le impide iniciar sesión (y cierra su sesión abierta) sin banear la cuenta.'
+      : "Stops them from logging in (and ends their open session) without banning the account.";
+  String get adminBlockButton => _es ? 'Bloquear ingreso' : 'Block login';
+  String get adminUnblockButton => _es ? 'Desbloquear ingreso' : 'Unblock login';
+  String get adminRestoreButton =>
+      _es ? 'Levantar suspensión / ban' : 'Lift suspension / ban';
+  String get adminCannotSanctionAdmin => _es
+      ? 'No puedes sancionar a un administrador.'
+      : 'You cannot sanction an administrator.';
+  String get adminSanctionApplied => _es ? 'Sanción aplicada' : 'Sanction applied';
+  String get adminConfirm => _es ? 'Confirmar' : 'Confirm';
+  String get adminNoHistory =>
+      _es ? 'Sin acciones registradas' : 'No actions recorded';
+  String adminActionLabel(String action) {
+    switch (action) {
+      case 'grant_item':
+        return _es ? 'Item entregado' : 'Item granted';
+      case 'revoke_item':
+        return _es ? 'Item quitado' : 'Item removed';
+      case 'suspend':
+        return _es ? 'Suspensión' : 'Suspension';
+      case 'ban':
+        return _es ? 'Ban' : 'Ban';
+      case 'block_login':
+        return _es ? 'Ingreso bloqueado' : 'Login blocked';
+      case 'unblock_login':
+        return _es ? 'Ingreso desbloqueado' : 'Login unblocked';
+      case 'restore':
+        return _es ? 'Cuenta restaurada' : 'Account restored';
+      default:
+        return action;
+    }
+  }
+
   // --- Ranking nacional --------------------------------------------------
   String get nationalRankingTitle => menuNationalRanking;
   String get nationalRankingNoCountry => _es

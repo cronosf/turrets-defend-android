@@ -6,6 +6,7 @@ import '../services/api_client.dart';
 import '../services/nav_guard.dart';
 import '../theme/app_fonts.dart';
 import 'achievements_screen.dart';
+import 'admin_panel_screen.dart';
 import 'avatar_initials.dart';
 import 'customize_screen.dart';
 import 'edit_profile_screen.dart';
@@ -229,6 +230,19 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     );
                   },
                 ),
+                if (user['role'] == 'admin')
+                  _MenuTile(
+                    icon: Icons.admin_panel_settings_rounded,
+                    label: s.adminPanelTitle,
+                    onTap: () {
+                      if (!NavGuard.allow()) return;
+                      Navigator.of(context).push(
+                        MaterialPageRoute(
+                          builder: (_) => AdminPanelScreen(economy: widget.economy),
+                        ),
+                      );
+                    },
+                  ),
                 AnimatedBuilder(
                   animation: widget.economy,
                   builder: (context, _) {
