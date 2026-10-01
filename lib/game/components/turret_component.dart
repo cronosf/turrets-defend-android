@@ -60,7 +60,7 @@ class TurretComponent extends PositionComponent
     if (skin != null) {
       // Warrior skin: a looping idle plus a one-shot swing on every shot.
       // Frames are 278x191 with the character ~0.97 of the height, drawn
-      // at 0.255 so the warrior stands ~48px tall (15% under the first
+      // at 0.209 so the warrior stands ~39px tall (33% under the first
       // pass) — while the swing's sideways reach (mostly
       // transparent) extends past the cell without touching the hitbox.
       final idle = await GameAssets.loadFrames(skin.idleDir);
@@ -70,9 +70,9 @@ class TurretComponent extends PositionComponent
       _shootAnimDuration = attack.length * stepTime;
       _sprite = SpriteAnimationComponent(
         animation: _skinIdle,
-        size: Vector2(278 * 0.255, 191 * 0.255),
+        size: Vector2(278 * 0.209, 191 * 0.209),
         anchor: Anchor.center,
-        position: Vector2(size.x / 2, size.y / 2 - 3),
+        position: Vector2(size.x / 2, size.y / 2 - 5),
       );
     } else {
       final frames = await GameAssets.loadFrames(stats.assetDir);
@@ -127,8 +127,8 @@ class TurretComponent extends PositionComponent
       _skinAttack = SpriteAnimation.spriteList(attack, stepTime: stepTime, loop: false);
       _shootAnimDuration = attack.length * stepTime;
       _sprite
-        ..size = Vector2(278 * 0.255, 191 * 0.255)
-        ..position = Vector2(size.x / 2, size.y / 2 - 3)
+        ..size = Vector2(278 * 0.209, 191 * 0.209)
+        ..position = Vector2(size.x / 2, size.y / 2 - 5)
         ..animation = _skinIdle
         ..playing = true;
     } else {
