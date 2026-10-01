@@ -26,6 +26,7 @@ class BossBanner extends StatelessWidget {
           ),
           child: Text(
             s.bossFightTitle,
+            textAlign: TextAlign.center,
             style: AppFonts.title(color: const Color(0xFFE05A3A), fontSize: 28, letterSpacing: 2),
           ),
         ),

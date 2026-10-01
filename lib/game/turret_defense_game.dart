@@ -66,6 +66,7 @@ class TurretDefenseGame extends FlameGame {
   final Map<String, List<Sprite>> _turretSkinEffectFrames = {};
   late Sprite _levelUpBubble;
   late List<Sprite> _explosionFrames;
+  late List<Sprite> _baseExplosionFrames;
   final List<RectangleComponent> _slotVisuals = [];
   final List<({int row, int col})> _slotVisualCoords = [];
 
@@ -81,18 +82,11 @@ class TurretDefenseGame extends FlameGame {
   // (Play Again resets gameOver, going home tears down this whole game
   // instance — either way this loop has nothing left to gate on and just
   // stops).
-  final List<({double delay, Vector2 position, Vector2 size, Color tint})>
+  final List<({double delay, Vector2 position, Vector2 size})>
       _pendingBaseFx = [];
   bool _baseDestroyedFxStarted = false;
   double _loseOverlayDelay = 0;
   double _nextBaseFxRoundTimer = 0;
-
-  // A couple of warm flame tones so the burst doesn't read as one flat
-  // color — the underlying frames (explosion1) are actually a pale cream
-  // puff shape with no fire coloring of their own (see FxComponent's
-  // `tint` param), so this is what actually makes the base-destroyed
-  // sequence look like fire rather than smoke.
-  static const _baseFxTints = [Color(0xFFFF8A34), Color(0xFFE0432A), Color(0xFFFFC24D)];
 
   double get baseLineY => grid.topY - 6;
 
@@ -190,6 +184,7 @@ class TurretDefenseGame extends FlameGame {
       _turretSkinEffectFrames[entry.key] = await GameAssets.loadFrames(entry.value.effectDir);
     }
     _explosionFrames = await GameAssets.loadFrames('explosion1');
+    _baseExplosionFrames = await GameAssets.loadFrames('explosion_circle');
 
     _dirtBg = SpriteComponent(sprite: _dirtSprites[0], priority: -10);
     _trayBg = SpriteComponent(sprite: _traySprites[0], priority: -10);
@@ -655,7 +650,7 @@ class TurretDefenseGame extends FlameGame {
           : Vector2(turretSkin.effectSize.$1, turretSkin.effectSize.$2),
     ));
     if (turretSkin != null) {
-      GameAudio.instance.playWarriorAttack(turretSkin.attackSound);
+      GameAudio.instance.playWarriorAttack(turretSkin.soundForTier(turret.tier));
     } else {
       GameAudio.instance.playTurretShot(turret.tier);
     }
@@ -690,6 +685,10 @@ class TurretDefenseGame extends FlameGame {
   // rather than one continuous blast.
   static const _baseFxRoundPause = 0.7;
 
+  // The circle-explosion art only fills the middle ~half of its square
+  // frame, so blasts are drawn this much bigger than their nominal size.
+  static const _baseFxScale = 2.2;
+
   /// Queues one round of the base-destroyed explosion sequence (see the
   /// doc comment on _pendingBaseFx) — several small blasts scattered across
   /// the whole gray turret-tray area (not just a single line along the
@@ -710,20 +709,18 @@ class TurretDefenseGame extends FlameGame {
       final delay = i * stagger + _random.nextDouble() * 0.06;
       final x = 24 + _random.nextDouble() * (size.x - 48);
       final y = trayTop + 14 + _random.nextDouble() * (trayBottom - trayTop - 28);
-      final blastSize = 34.0 + _random.nextDouble() * 22.0;
+      final blastSize = (34.0 + _random.nextDouble() * 22.0) * _baseFxScale;
       _pendingBaseFx.add((
         delay: delay,
         position: Vector2(x, y),
         size: Vector2.all(blastSize),
-        tint: _baseFxTints[_random.nextInt(_baseFxTints.length)],
       ));
     }
     final finalDelay = smallCount * stagger + 0.22;
     _pendingBaseFx.add((
       delay: finalDelay,
       position: Vector2(size.x / 2, (trayTop + trayBottom) / 2),
-      size: Vector2.all(96),
-      tint: _baseFxTints[0],
+      size: Vector2.all(96 * _baseFxScale),
     ));
     if (!_firstBaseFxRoundQueued) {
       _firstBaseFxRoundQueued = true;
@@ -750,12 +747,16 @@ class TurretDefenseGame extends FlameGame {
         delay: fx.delay - dt,
         position: fx.position,
         size: fx.size,
-        tint: fx.tint,
       );
     }
     _pendingBaseFx.removeWhere((fx) {
       if (fx.delay > 0) return false;
-      spawnExplosion(fx.position, size: fx.size, tint: fx.tint);
+      world.add(FxComponent(
+        frames: _baseExplosionFrames,
+        position: fx.position,
+        size: fx.size,
+        stepTime: 0.05,
+      ));
       GameAudio.instance.playBarrierLowered();
       return true;
     });

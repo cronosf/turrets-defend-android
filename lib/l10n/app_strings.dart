@@ -53,7 +53,7 @@ class Strings {
   String get close => _es ? 'CERRAR' : 'CLOSE';
 
   String get baseDestroyed => _es ? 'BASE DESTRUIDA' : 'BASE DESTROYED';
-  String get bossFightTitle => _es ? 'COMBATE CON JEFE' : 'BOSS FIGHT';
+  String get bossFightTitle => _es ? 'COMBATE\nCON JEFE' : 'BOSS FIGHT';
   String get bossLevelLabel => _es ? 'NIVEL DE BOSS' : 'BOSS LEVEL';
   String bossLevelLabelFor(int n) => '$bossLevelLabel $n';
   String get bossDefeatedTitle => _es ? 'BOSS ELIMINADO' : 'BOSS DEFEATED';

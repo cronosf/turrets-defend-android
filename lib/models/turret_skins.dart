@@ -12,6 +12,7 @@ class TurretSkinType {
     required this.effectDir,
     required this.effectSize,
     required this.attackSound,
+    this.attackSoundHigh,
   });
 
   /// Looping idle frames (back view), relative to assets/images/.
@@ -34,6 +35,14 @@ class TurretSkinType {
   /// Shot sound (file under assets/audio/) played instead of the regular
   /// turret shot sound whenever the warrior's own attack effect is active.
   final String attackSound;
+
+  /// Optional alternate sound for turrets of level [highTierFrom] and up.
+  final String? attackSoundHigh;
+
+  static const int highTierFrom = 7;
+
+  String soundForTier(int tier) =>
+      tier >= highTierFrom ? (attackSoundHigh ?? attackSound) : attackSound;
 }
 
 const Map<String, TurretSkinType> kTurretSkins = {
@@ -43,7 +52,8 @@ const Map<String, TurretSkinType> kTurretSkins = {
     frontAsset: 'turrets/warrior_front/warrior_black.png',
     effectDir: 'fx/fx_water_black',
     effectSize: (36, 18),
-    attackSound: 'warrior_punch.wav',
+    attackSound: 'warrior_splash.wav',
+    attackSoundHigh: 'warrior_drown.wav',
   ),
   'turret_warrior_blue': TurretSkinType(
     idleDir: 'turrets/warrior_blue_idle',
@@ -51,7 +61,8 @@ const Map<String, TurretSkinType> kTurretSkins = {
     frontAsset: 'turrets/warrior_front/warrior_blue.png',
     effectDir: 'fx/fx_water_blue',
     effectSize: (36, 18),
-    attackSound: 'warrior_punch.wav',
+    attackSound: 'warrior_splash.wav',
+    attackSoundHigh: 'warrior_drown.wav',
   ),
   'turret_warrior_red': TurretSkinType(
     idleDir: 'turrets/warrior_red_idle',
