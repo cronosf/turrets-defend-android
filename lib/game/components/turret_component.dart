@@ -72,7 +72,7 @@ class TurretComponent extends PositionComponent
         animation: _skinIdle,
         size: Vector2(278 * 0.209, 191 * 0.209),
         anchor: Anchor.center,
-        position: Vector2(size.x / 2, size.y / 2 - 3),
+        position: Vector2(size.x / 2, size.y / 2 - 5),
       );
     } else {
       final frames = await GameAssets.loadFrames(stats.assetDir);
@@ -131,7 +131,7 @@ class TurretComponent extends PositionComponent
       _shootAnimDuration = attack.length * stepTime;
       _sprite
         ..size = Vector2(278 * 0.209, 191 * 0.209)
-        ..position = Vector2(size.x / 2, size.y / 2 - 3)
+        ..position = Vector2(size.x / 2, size.y / 2 - 5)
         ..animation = _skinIdle
         ..playing = true;
     } else {
