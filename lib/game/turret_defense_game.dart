@@ -126,7 +126,7 @@ class TurretDefenseGame extends FlameGame {
   static const double _bossApproachSpeed = 40;
   static const double _bossSpeed = 4.5;
   static const double _bossFightSeconds = 30;
-  static const double _bossHpGrowthPerEncounter = 0.6;
+  static const double _bossHpGrowthPerEncounter = 0.4;
   // 0.9 * 0.45 (a further 55% cut requested after seeing the portrait
   // golem at 0.9 — it dominated the whole screen vertically).
   static const double _bossWidthFraction = 0.4;
