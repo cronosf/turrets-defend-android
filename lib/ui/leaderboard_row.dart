@@ -93,7 +93,7 @@ class LeaderboardHeader extends StatelessWidget {
         children: [
           const SizedBox(width: _rankColumnWidth),
           Expanded(
-            child: Text(playerLabel ?? '', textAlign: TextAlign.center, style: _labelStyle),
+            child: Text(playerLabel ?? '', textAlign: TextAlign.left, style: _labelStyle),
           ),
           if (countryLabel != null) ...[
             SizedBox(
@@ -315,10 +315,11 @@ class LeaderboardRow extends StatelessWidget {
           Expanded(
             child: FittedBox(
               fit: BoxFit.scaleDown,
+              alignment: Alignment.centerLeft,
               child: Text(
                 username,
                 maxLines: 1,
-                textAlign: TextAlign.center,
+                textAlign: TextAlign.left,
                 style: TextStyle(
                   color: Colors.white,
                   fontSize: 14,
