@@ -17,6 +17,11 @@ class Economy extends ChangeNotifier {
   int score = 0;
   int turretsPurchased = 0;
   int bestWave = 0;
+
+  /// Bosses defeated this run / the most ever in one run (the ranking's
+  /// "Boss" column).
+  int bossesDefeated = 0;
+  int bestBosses = 0;
   int bestScore = 0;
   int lastWave = 0;
   int lastScore = 0;
@@ -126,6 +131,7 @@ class Economy extends ChangeNotifier {
     _prefs = await SharedPreferences.getInstance();
     bestWave = _prefs?.getInt('best_wave') ?? 0;
     bestScore = _prefs?.getInt('best_score') ?? 0;
+    bestBosses = _prefs?.getInt('best_bosses') ?? 0;
     lastWave = _prefs?.getInt('last_wave') ?? 0;
     lastScore = _prefs?.getInt('last_score') ?? 0;
     musicOn = _prefs?.getBool('music_on') ?? true;
@@ -144,6 +150,7 @@ class Economy extends ChangeNotifier {
   }
 
   void resetRun() {
+    bossesDefeated = 0;
     money = startMoney;
     baseHp = maxBaseHp;
     wave = 1;
@@ -211,6 +218,10 @@ class Economy extends ChangeNotifier {
     if (score > bestScore) {
       bestScore = score;
       _prefs?.setInt('best_score', bestScore);
+    }
+    if (bossesDefeated > bestBosses) {
+      bestBosses = bossesDefeated;
+      _prefs?.setInt('best_bosses', bestBosses);
     }
   }
 

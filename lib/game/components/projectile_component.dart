@@ -1,4 +1,5 @@
 import 'dart:math' as math;
+import 'dart:ui' show Canvas, Color, FilterQuality, Offset, StrokeCap;
 
 import 'package:flame/components.dart';
 import 'package:flutter/material.dart' show Paint;
@@ -33,6 +34,13 @@ class ProjectileComponent extends SpriteComponent
   final List<Sprite>? effectFrames;
   final Vector2? effectSize;
 
+  /// When set, this shot is a spinning shuriken with a [trailColor] comet
+  /// trail instead of the regular projectile (see models/turret_skins.dart).
+  final Color? trailColor;
+  final List<Vector2> _trail = [];
+  double _spin = 0;
+  static const int _trailLength = 9;
+
   // Field is private (_tintHue) but the constructor param must stay public
   // so other files can pass it — an initializing formal (this._tintHue)
   // would force callers to use the private name too.
@@ -44,6 +52,7 @@ class ProjectileComponent extends SpriteComponent
     required Vector2 position,
     this.effectFrames,
     this.effectSize,
+    this.trailColor,
   })  : _tintHue = tintHue, // ignore: prefer_initializing_formals
         super(
           sprite: sprite,
@@ -55,6 +64,11 @@ class ProjectileComponent extends SpriteComponent
   @override
   Future<void> onLoad() async {
     super.onLoad();
+    if (trailColor != null) {
+      size = Vector2(22, 22);
+      paint = Paint()..filterQuality = FilterQuality.medium;
+      return;
+    }
     final frames = effectFrames;
     if (frames != null && frames.isNotEmpty) {
       sprite = null;
@@ -89,7 +103,46 @@ class ProjectileComponent extends SpriteComponent
     }
 
     delta.scale(1 / distance);
+    if (trailColor != null) {
+      _trail.add(position.clone());
+      if (_trail.length > _trailLength) _trail.removeAt(0);
+      _spin += dt * 20;
+    }
     position += delta * speed * dt;
-    angle = math.atan2(delta.y, delta.x) + (effectFrames != null ? 0 : math.pi / 2);
+    if (trailColor == null) {
+      angle = math.atan2(delta.y, delta.x) + (effectFrames != null ? 0 : math.pi / 2);
+    }
+  }
+
+  @override
+  void render(Canvas canvas) {
+    final color = trailColor;
+    if (color == null) {
+      super.render(canvas);
+      return;
+    }
+    final center = Offset(size.x / 2, size.y / 2);
+    // Soft comet trail: oldest point faint and thin, newest brighter/thicker.
+    final n = _trail.length;
+    for (var i = 0; i < n; i++) {
+      final from = _trail[i] - position;
+      final to = (i + 1 < n ? _trail[i + 1] : position) - position;
+      final t = (i + 1) / n;
+      final paintLine = Paint()
+        ..color = color.withValues(alpha: 0.5 * t)
+        ..strokeWidth = 1.2 + 4.5 * t
+        ..strokeCap = StrokeCap.round;
+      canvas.drawLine(
+        Offset(from.x, from.y) + center,
+        Offset(to.x, to.y) + center,
+        paintLine,
+      );
+    }
+    canvas.save();
+    canvas.translate(center.dx, center.dy);
+    canvas.rotate(_spin);
+    canvas.translate(-center.dx, -center.dy);
+    super.render(canvas);
+    canvas.restore();
   }
 }

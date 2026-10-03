@@ -1,3 +1,4 @@
+import '../models/turret_skins.dart' show kShurikenSound;
 import 'dart:async';
 
 import 'package:flame_audio/flame_audio.dart';
@@ -93,6 +94,7 @@ class GameAudio {
   _SfxPool? _warriorSplash;
   _SfxPool? _warriorDrown;
   _SfxPool? _warriorFlame;
+  _SfxPool? _shurikenThrow;
   _SfxPool? _mobDeath;
   _SfxPool? _barrierLowered;
   _SfxPool? _barrierRises;
@@ -179,6 +181,9 @@ class GameAudio {
       }),
       _guard(() async {
         _warriorDrown = await _buildSfxPool('warrior_drown.wav', minPlayers: 2, maxPlayers: 6);
+      }),
+      _guard(() async {
+        _shurikenThrow = await _buildSfxPool(kShurikenSound, minPlayers: 3, maxPlayers: 10);
       }),
       _guard(() async {
         _warriorFlame = await _buildSfxPool('warrior_flame.wav', minPlayers: 3, maxPlayers: 8);
@@ -348,6 +353,8 @@ class GameAudio {
           ? _warriorFlame
           : file == 'warrior_drown.wav'
           ? _warriorDrown
+          : file == kShurikenSound
+          ? _shurikenThrow
           : _warriorSplash,
     );
   });

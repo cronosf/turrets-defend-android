@@ -65,6 +65,7 @@ class TurretDefenseGame extends FlameGame {
   // equipped skin can still be synced after this game's onLoad runs.
   final Map<String, List<Sprite>> _turretSkinEffectFrames = {};
   late Sprite _levelUpBubble;
+  final Map<String, Sprite> _shurikenSprites = {};
   late List<Sprite> _explosionFrames;
   late List<Sprite> _baseExplosionFrames;
   final List<RectangleComponent> _slotVisuals = [];
@@ -120,7 +121,7 @@ class TurretDefenseGame extends FlameGame {
   static const double _bossApproachSpeed = 40;
   static const double _bossSpeed = 4.5;
   static const double _bossFightSeconds = 30;
-  static const double _bossHpGrowthPerEncounter = 0.4;
+  static const double _bossHpGrowthPerEncounter = 0.3;
   // 0.9 * 0.45 (a further 55% cut requested after seeing the portrait
   // golem at 0.9 — it dominated the whole screen vertically).
   static const double _bossWidthFraction = 0.4;
@@ -181,7 +182,11 @@ class TurretDefenseGame extends FlameGame {
     _hitFxFrames = await GameAssets.loadFrames('explosion2');
     _levelUpBubble = await GameAssets.loadSprite('ui/levelup_bubble.png');
     for (final entry in kTurretSkins.entries) {
-      _turretSkinEffectFrames[entry.key] = await GameAssets.loadFrames(entry.value.effectDir);
+      final dir = entry.value.effectDir;
+      if (dir != null) _turretSkinEffectFrames[entry.key] = await GameAssets.loadFrames(dir);
+    }
+    for (final s in [kBasicShuriken, ...kShurikenBullets.values]) {
+      _shurikenSprites[s.sprite] = await GameAssets.loadSprite(s.sprite);
     }
     _explosionFrames = await GameAssets.loadFrames('explosion1');
     _baseExplosionFrames = await GameAssets.loadFrames('explosion_circle');
@@ -512,6 +517,8 @@ class TurretDefenseGame extends FlameGame {
   bool pendingAchievementIsRepeat = false;
 
   void onBossKilled(BossComponent boss) {
+    economy.bossesDefeated++;
+    economy.checkpointProgress();
     economy.addMoney(boss.reward);
     economy.addScore(boss.scoreReward);
     GameAudio.instance.playMobDeath();
@@ -629,27 +636,35 @@ class TurretDefenseGame extends FlameGame {
 
   void fireProjectileFromTurret(TurretComponent turret, Targetable target, double damage) {
     final muzzle = turret.position - Vector2(0, 22);
-    // The warrior's own attack effect only shows while the bullet slot is on
+    // The skin's own attack effect only shows while the bullet slot is on
     // Basic; any equipped bullet_effect takes over the shot instead.
     final turretSkinKey = economy.equippedTurretSkinKey;
-    final turretSkin = economy.equippedBulletAssetKey == null ? kTurretSkins[turretSkinKey] : null;
-    final assetKey = economy.equippedBulletAssetKey;
+    final bulletKey = economy.equippedBulletAssetKey;
+    final turretSkin = bulletKey == null ? kTurretSkins[turretSkinKey] : null;
+    // A shuriken: either the equipped shuriken bullet (any turret skin) or
+    // the Ninja Assassin's own white one while the bullet slot is Basic.
+    final shuriken = kShurikenBullets[bulletKey] ?? turretSkin?.shuriken;
+    final assetKey = bulletKey;
     final skinSprite = assetKey != null ? _bulletSkinSprites[assetKey] : null;
+    final shurikenSprite = shuriken == null ? null : _shurikenSprites[shuriken.sprite];
     world.add(ProjectileComponent(
-      sprite: skinSprite ?? _projectileSprite,
+      sprite: shurikenSprite ?? skinSprite ?? _projectileSprite,
       // Only fall back to the runtime tint when there's no baked sprite
       // for this asset_key — never both, that would double-tint art
       // that's already the right color.
-      tintHue: skinSprite == null ? economy.equippedBulletHue : null,
+      tintHue: (skinSprite == null && shurikenSprite == null) ? economy.equippedBulletHue : null,
       target: target,
       damage: damage,
       position: muzzle,
-      effectFrames: turretSkin == null ? null : _turretSkinEffectFrames[turretSkinKey],
+      trailColor: shurikenSprite == null ? null : shuriken!.trail,
+      effectFrames: (turretSkin == null || shuriken != null) ? null : _turretSkinEffectFrames[turretSkinKey],
       effectSize: turretSkin == null
           ? null
           : Vector2(turretSkin.effectSize.$1, turretSkin.effectSize.$2),
     ));
-    if (turretSkin != null) {
+    if (shuriken != null) {
+      GameAudio.instance.playWarriorAttack(kShurikenSound);
+    } else if (turretSkin != null) {
       GameAudio.instance.playWarriorAttack(turretSkin.soundForTier(turret.tier));
     } else {
       GameAudio.instance.playTurretShot(turret.tier);
@@ -809,6 +824,7 @@ class TurretDefenseGame extends FlameGame {
     economy.turretsPurchased++;
     spawnTurretAt(slot.row, slot.col, level);
     _warriorGreeting(slot.row, slot.col);
+    _pulseEngine();
     return true;
   }
 
@@ -825,6 +841,20 @@ class TurretDefenseGame extends FlameGame {
       text: _warriorGreetings[math.Random().nextInt(_warriorGreetings.length)],
       aura: false,
     ));
+  }
+
+  /// True while the Buy sheet is open (engine paused behind it).
+  bool holdPaused = false;
+
+  /// Lets a just-bought turret actually mount and draw while the engine is
+  /// paused behind the Buy sheet: runs the engine briefly, then re-pauses
+  /// (unless the sheet already closed in the meantime).
+  void _pulseEngine() {
+    if (!holdPaused) return;
+    resumeEngine();
+    Future.delayed(const Duration(milliseconds: 160), () {
+      if (holdPaused) pauseEngine();
+    });
   }
 
   void claimFreeTurret() {

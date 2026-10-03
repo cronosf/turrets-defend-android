@@ -49,6 +49,7 @@ class _RankingScreenState extends State<RankingScreen> {
         body: {
           'wave': widget.economy.bestWave,
           'score': widget.economy.bestScore,
+          'bosses': widget.economy.bestBosses,
         },
       );
     } catch (_) {}
@@ -241,6 +242,7 @@ class _RankingScreenState extends State<RankingScreen> {
                               children: [
                                 LeaderboardHeader(
                                   scoreLabel: s.rankingScoreColumnLabel,
+                                  bossLabel: s.rankingBossColumnLabel,
                                   waveLabel: s.rankingWaveColumnLabel,
                                   countryLabel: s.rankingCountryColumnLabel,
                                 ),
@@ -256,6 +258,10 @@ class _RankingScreenState extends State<RankingScreen> {
                                         ?.toString(),
                                     bestScore:
                                         (entry['best_score'] as num?)
+                                            ?.toInt() ??
+                                        0,
+                                    bestBosses:
+                                        (entry['best_bosses'] as num?)
                                             ?.toInt() ??
                                         0,
                                     bestWave:

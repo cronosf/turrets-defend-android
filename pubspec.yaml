@@ -16,7 +16,7 @@ publish_to: 'none' # Remove this line if you wish to publish to pub.dev
 # https://developer.apple.com/library/archive/documentation/General/Reference/InfoPlistKeyReference/Articles/CoreFoundationKeys.html
 # In Windows, build-name is used as the major, minor, and patch parts
 # of the product and file versions while build-number is used as the build suffix.
-version: 1.0.71+72
+version: 1.0.72+73
 
 environment:
   sdk: ^3.13.3
@@ -121,6 +121,39 @@ flutter:
     - assets/images/bosses/goblin_skin_chief_attack/
     - assets/images/bosses/goblin_skin_female_attack/
     - assets/images/bosses/goblin_skin_male_attack/
+    - assets/images/bosses/death_golem2/
+    - assets/images/bosses/death_golem1/
+    - assets/images/bosses/death_golem3/
+    - assets/images/bosses/death_goblin/
+    - assets/images/bosses/death_ogre/
+    - assets/images/bosses/death_orc/
+    - assets/images/bosses/death_wraith_emerald/
+    - assets/images/bosses/death_wraith_wanderer/
+    - assets/images/bosses/death_wraith_shadow/
+    - assets/images/bosses/death_caveman/
+    - assets/images/bosses/death_giant_goblin/
+    - assets/images/bosses/death_viking/
+    - assets/images/bosses/death_goblin_chief/
+    - assets/images/bosses/death_ogre_shaman/
+    - assets/images/bosses/death_orc_warrior/
+    - assets/images/bosses/death_valkyrie_steel/
+    - assets/images/bosses/death_valkyrie_storm/
+    - assets/images/bosses/death_valkyrie_golden/
+    - assets/images/bosses/death_oracle_ember/
+    - assets/images/bosses/death_oracle_lunar/
+    - assets/images/bosses/death_oracle_starry/
+    - assets/images/bosses/valkyrie_steel/
+    - assets/images/bosses/valkyrie_steel_attack/
+    - assets/images/bosses/valkyrie_storm/
+    - assets/images/bosses/valkyrie_storm_attack/
+    - assets/images/bosses/valkyrie_golden/
+    - assets/images/bosses/valkyrie_golden_attack/
+    - assets/images/bosses/oracle_ember/
+    - assets/images/bosses/oracle_ember_attack/
+    - assets/images/bosses/oracle_lunar/
+    - assets/images/bosses/oracle_lunar_attack/
+    - assets/images/bosses/oracle_starry/
+    - assets/images/bosses/oracle_starry_attack/
     - assets/images/mobs/predator_plant/
     - assets/images/mobs/slime/
     - assets/images/mobs/orcs_2/1/
@@ -184,6 +217,13 @@ flutter:
     - assets/images/turrets/warrior_red_attack/
     - assets/images/turrets/warrior_scarlet_idle/
     - assets/images/turrets/warrior_scarlet_attack/
+    - assets/images/turrets/warrior_black_die/
+    - assets/images/turrets/warrior_blue_die/
+    - assets/images/turrets/warrior_red_die/
+    - assets/images/turrets/warrior_scarlet_die/
+    - assets/images/turrets/ninja_idle/
+    - assets/images/turrets/ninja_attack/
+    - assets/images/turrets/ninja_die/
     - assets/images/fx/fx_flame_red/
     - assets/images/shop/
     - assets/images/ranking/

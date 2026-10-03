@@ -34,6 +34,8 @@ class _ShopScreenState extends State<ShopScreen> {
   // boss_skin's slot — see shopSubSlotsFor) so switching categories and
   // back doesn't reset it to the first tab every time.
   final Map<String, String> _selectedSubSlot = {};
+  // Family filter chips (turret skins: All/Warrior/Ninjas, bullets: All/Shurikens).
+  final Map<String, String> _selectedFilter = {};
 
   void _selectCategory(String category) {
     setState(() => _selectedCategory = category);
@@ -184,6 +186,13 @@ class _ShopScreenState extends State<ShopScreen> {
               : categoryItems
                     .where((item) => shopItemSubSlot(item) == currentSubSlot)
                     .toList();
+          final filters = shopFilterChipsFor(_selectedCategory);
+          final currentFilter = filters == null
+              ? null
+              : (_selectedFilter[_selectedCategory] ?? filters.first);
+          final shownItems = (currentFilter == null || currentFilter == 'all')
+              ? selectedItems
+              : selectedItems.where((item) => shopItemFamily(item) == currentFilter).toList();
 
           return Row(
             children: [
@@ -209,11 +218,24 @@ class _ShopScreenState extends State<ShopScreen> {
                           s: s,
                         ),
                       ),
+                    if (filters != null)
+                      Padding(
+                        padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
+                        child: ShopSubSlotTabs(
+                          category: _selectedCategory,
+                          slots: filters,
+                          selected: currentFilter!,
+                          onSelect: (f) => setState(
+                            () => _selectedFilter[_selectedCategory] = f,
+                          ),
+                          s: s,
+                        ),
+                      ),
                     Expanded(
                       child: RefreshIndicator(
                         onRefresh: _reload,
                         color: const Color(0xFFCB7B2A),
-                        child: selectedItems.isEmpty
+                        child: shownItems.isEmpty
                             ? ListView(
                                 children: [
                                   const SizedBox(height: 80),
@@ -265,7 +287,7 @@ class _ShopScreenState extends State<ShopScreen> {
                                           mainAxisExtent: cardExtent,
                                         ),
                                     children: [
-                                      for (final item in selectedItems)
+                                      for (final item in shownItems)
                                         _ShopItemCard(
                                           s: s,
                                           imagePath: shopItemImagePath(item),

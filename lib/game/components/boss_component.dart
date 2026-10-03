@@ -3,6 +3,7 @@ import 'package:flutter/material.dart'
     show Color, Colors, FontWeight, Paint, TextStyle;
 
 import '../../game_assets.dart';
+import '../../models/boss_death_specs.dart';
 import '../../models/boss_types.dart';
 import '../turret_defense_game.dart';
 import 'targetable.dart';
@@ -31,6 +32,14 @@ class BossComponent extends PositionComponent
   double hp;
   bool _dead = false;
   bool _hasAppeared = false;
+
+  // Death sequence: the boss falls (BossDeathSpec frames), lies there a
+  // moment, and only then explodes and is removed — see _die/_finishDeath.
+  List<Sprite> _deathFrames = const [];
+  bool _dying = false;
+  double _deathTimeLeft = 0;
+  static const _deathStepTime = 0.09;
+  static const _deathHold = 0.35;
 
   late final SpriteAnimationComponent _sprite;
   late final RectangleComponent _hpBarBg;
@@ -109,6 +118,11 @@ class BossComponent extends PositionComponent
       }
     }
 
+    final deathSpec = kBossDeathSpecs[type.id];
+    if (deathSpec != null) {
+      _deathFrames = await GameAssets.loadFrames(deathSpec.dir);
+    }
+
     _sprite = SpriteAnimationComponent(
       animation: _walkAnimation,
       size: size,
@@ -171,6 +185,11 @@ class BossComponent extends PositionComponent
   @override
   void update(double dt) {
     super.update(dt);
+    if (_dying) {
+      _deathTimeLeft -= dt;
+      if (_deathTimeLeft <= 0) _finishDeath();
+      return;
+    }
     if (_dead) return;
 
     position.y += _currentSpeed * dt;
@@ -270,6 +289,31 @@ class BossComponent extends PositionComponent
   void _die() {
     if (_dead) return;
     _dead = true;
+    final spec = kBossDeathSpecs[type.id];
+    if (spec == null || _deathFrames.isEmpty) {
+      _finishDeath();
+      return;
+    }
+    // Swap the walking sprite and the HP bar for the falling animation,
+    // bottom-aligned with the boss's feet (see BossDeathSpec).
+    _sprite.removeFromParent();
+    _hpBarBg.removeFromParent();
+    _hpBarFill.removeFromParent();
+    _hpLabel.removeFromParent();
+    _hpLabelShadow.removeFromParent();
+    final height = size.y * spec.heightFactor;
+    add(SpriteAnimationComponent(
+      animation: SpriteAnimation.spriteList(_deathFrames, stepTime: _deathStepTime, loop: false),
+      size: Vector2(height * spec.aspect, height),
+      anchor: Anchor.bottomCenter,
+      position: Vector2(size.x / 2, size.y + size.y * spec.bottomFactor),
+    ));
+    _dying = true;
+    _deathTimeLeft = _deathFrames.length * _deathStepTime + _deathHold;
+  }
+
+  void _finishDeath() {
+    _dying = false;
     game.onBossKilled(this);
     game.spawnExplosion(position.clone(), size: Vector2(size.x * 0.7, size.x * 0.7));
     removeFromParent();

@@ -50,6 +50,7 @@ class LeaderboardPagination extends StatelessWidget {
 const double _rankColumnWidth = 36;
 const double _countryColumnWidth = 40;
 const double _scoreColumnWidth = 64;
+const double _bossColumnWidth = 44;
 const double _waveColumnWidth = 48;
 
 /// Header labels shown once above the leaderboard list, aligned over
@@ -62,10 +63,12 @@ class LeaderboardHeader extends StatelessWidget {
     super.key,
     required this.scoreLabel,
     required this.waveLabel,
+    required this.bossLabel,
     this.countryLabel,
   });
 
   final String scoreLabel;
+  final String bossLabel;
   final String waveLabel;
   final String? countryLabel;
 
@@ -94,6 +97,11 @@ class LeaderboardHeader extends StatelessWidget {
           SizedBox(
             width: _scoreColumnWidth,
             child: Text(scoreLabel, textAlign: TextAlign.right, style: _labelStyle),
+          ),
+          const SizedBox(width: 10),
+          SizedBox(
+            width: _bossColumnWidth,
+            child: Text(bossLabel, textAlign: TextAlign.right, style: _labelStyle),
           ),
           const SizedBox(width: 10),
           SizedBox(
@@ -238,6 +246,7 @@ class LeaderboardRow extends StatelessWidget {
     required this.username,
     required this.bestScore,
     required this.bestWave,
+    this.bestBosses = 0,
     this.countryCode,
     this.isVip = false,
   });
@@ -246,6 +255,7 @@ class LeaderboardRow extends StatelessWidget {
   final String username;
   final int bestScore;
   final int bestWave;
+  final int bestBosses;
   final String? countryCode;
   final bool isVip;
 
@@ -319,6 +329,19 @@ class LeaderboardRow extends StatelessWidget {
             width: _scoreColumnWidth,
             child: Text(
               '$bestScore',
+              textAlign: TextAlign.right,
+              style: TextStyle(
+                color: scoreColor,
+                fontSize: 14,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+          ),
+          const SizedBox(width: 10),
+          SizedBox(
+            width: _bossColumnWidth,
+            child: Text(
+              '$bestBosses',
               textAlign: TextAlign.right,
               style: TextStyle(
                 color: scoreColor,

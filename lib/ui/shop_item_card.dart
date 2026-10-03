@@ -51,6 +51,35 @@ List<String>? shopSubSlotsFor(String category) {
   }
 }
 
+/// Filter chips for categories whose items belong to a character family
+/// (turret skins: warrior/ninja, bullets: shurikens). Unlike
+/// [shopSubSlotsFor] these are display filters only — never equip slots.
+/// 'all' (the first entry) shows everything.
+List<String>? shopFilterChipsFor(String category) {
+  switch (category) {
+    case 'turret_skin':
+      return const ['all', 'warrior', 'ninja'];
+    case 'bullet_effect':
+      return const ['all', 'shuriken'];
+    default:
+      return null;
+  }
+}
+
+/// Which [shopFilterChipsFor] family an item belongs to, from its
+/// `asset_key`; 'other' for items outside every named family.
+String shopItemFamily(Map<String, dynamic> item) {
+  final rawMetadata = item['metadata'];
+  if (rawMetadata is! String || rawMetadata.isEmpty) return 'other';
+  try {
+    final key = (jsonDecode(rawMetadata) as Map<String, dynamic>)['asset_key']?.toString() ?? '';
+    if (key.startsWith('turret_warrior')) return 'warrior';
+    if (key.startsWith('turret_ninja')) return 'ninja';
+    if (key.startsWith('bullet_shuriken')) return 'shuriken';
+  } catch (_) {}
+  return 'other';
+}
+
 /// An item's sub-slot key, read from its own metadata (`kind` for
 /// mob_skin items, `slot` for boss_skin items) — null for categories
 /// without sub-slots, or a malformed/legacy row missing the field.

@@ -74,8 +74,14 @@ Future<void> showBuyLevelDialog(BuildContext context, TurretDefenseGame game) {
                                   .showSnackBar(SnackBar(content: Text(s.notEnoughMoneyMessage)));
                               return;
                             }
+                            // The sheet stays open so several turrets can be
+                            // bought in a row; it only closes once nothing
+                            // more can be bought (board full, or not even
+                            // enough money for a level-1 turret).
                             game.buyTurretAtLevel(level);
-                            Navigator.of(sheetContext).pop();
+                            if (!game.hasEmptySlot || economy.money < levelBuyCost(1)) {
+                              Navigator.of(sheetContext).pop();
+                            }
                           },
                         ),
                     ],

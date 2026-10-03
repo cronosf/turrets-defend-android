@@ -58,9 +58,11 @@ class MobSkinType {
 // "plant1") — this is also what names the shop preview icon
 // (assets/images/shop/$asset_key.png), so the two have to match.
 const Map<String, MobSkinType> kMobSkinTypes = {
-  'mob_plant1': MobSkinType(kind: EnemyKind.ground, walkSheetPath: 'mobs/predator_plant/Plant1_Walk.png'),
-  'mob_plant2': MobSkinType(kind: EnemyKind.ground, walkSheetPath: 'mobs/predator_plant/Plant2_Walk.png'),
-  'mob_plant3': MobSkinType(kind: EnemyKind.ground, walkSheetPath: 'mobs/predator_plant/Plant3_Walk.png'),
+  // artworkTopFraction: the plants' art starts ~20-23% down their 64px
+  // frame, so the HP bar hugs the plant instead of floating above empty space.
+  'mob_plant1': MobSkinType(kind: EnemyKind.ground, walkSheetPath: 'mobs/predator_plant/Plant1_Walk.png', artworkTopFraction: 0.2),
+  'mob_plant2': MobSkinType(kind: EnemyKind.ground, walkSheetPath: 'mobs/predator_plant/Plant2_Walk.png', artworkTopFraction: 0.215),
+  'mob_plant3': MobSkinType(kind: EnemyKind.ground, walkSheetPath: 'mobs/predator_plant/Plant3_Walk.png', artworkTopFraction: 0.23),
   'mob_slime1': MobSkinType(
     kind: EnemyKind.hybrid,
     walkSheetPath: 'mobs/slime/Slime1_Walk.png',

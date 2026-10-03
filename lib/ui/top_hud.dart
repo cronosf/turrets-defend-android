@@ -10,10 +10,16 @@ import '../theme/app_fonts.dart';
 const _enemyIconAsset = 'assets/images/enemies/ground/redbeetle/RedBeetle-move_00.png';
 
 class TopHud extends StatelessWidget {
-  const TopHud({super.key, required this.economy, required this.onSettingsTap});
+  const TopHud({
+    super.key,
+    required this.economy,
+    required this.onSettingsTap,
+    required this.onPauseTap,
+  });
 
   final Economy economy;
   final VoidCallback onSettingsTap;
+  final VoidCallback onPauseTap;
 
   @override
   Widget build(BuildContext context) {
@@ -77,6 +83,11 @@ class TopHud extends StatelessWidget {
                     Text(
                       '${economy.waveEnemiesResolved}/${economy.waveEnemiesTotal}',
                       style: AppFonts.title(color: Colors.white, fontSize: 14),
+                    ),
+                    const Spacer(),
+                    GestureDetector(
+                      onTap: onPauseTap,
+                      child: Image.asset('assets/images/ui/PauseIcon.png', width: 30, height: 30),
                     ),
                   ],
                 ),

@@ -149,6 +149,32 @@ const List<BossType> kBossTypes = [
     artworkTopFraction: 0.0069,
     aspectRatio: 222 / 291,
   ),
+  // Three valkyries after the wraiths (324x420 / 342x420 / 326x420 crops).
+  // Each has a sword-slash attack animation.
+  BossType(
+    id: 'valkyrie_steel',
+    slotId: 'valkyrie_steel',
+    walkFramesDirectory: 'bosses/valkyrie_steel',
+    attackFramesDirectory: 'bosses/valkyrie_steel_attack',
+    artworkTopFraction: 0.0048,
+    aspectRatio: 0.771429,
+  ),
+  BossType(
+    id: 'valkyrie_storm',
+    slotId: 'valkyrie_storm',
+    walkFramesDirectory: 'bosses/valkyrie_storm',
+    attackFramesDirectory: 'bosses/valkyrie_storm_attack',
+    artworkTopFraction: 0.019,
+    aspectRatio: 0.814286,
+  ),
+  BossType(
+    id: 'valkyrie_golden',
+    slotId: 'valkyrie_golden',
+    walkFramesDirectory: 'bosses/valkyrie_golden',
+    attackFramesDirectory: 'bosses/valkyrie_golden_attack',
+    artworkTopFraction: 0.0071,
+    aspectRatio: 0.77619,
+  ),
 ];
 
 /// Purchasable (or, for the 3 "boss_caveman"/"boss_giant_goblin"/
@@ -203,6 +229,32 @@ const Map<String, BossType> kBossSkinVariants = {
     attackFramesDirectory: 'bosses/human_viking_attack',
     artworkTopFraction: 0.0023,
     aspectRatio: 278 / 435,
+  ),
+  // Purchasable Dark Oracle skins for the three wraith slots (oracle 1/2/3 ->
+  // emerald/wanderer/shadow), each with a staff-slash attack animation.
+  'boss_oracle_ember': BossType(
+    id: 'oracle_ember',
+    slotId: 'wraith_emerald',
+    walkFramesDirectory: 'bosses/oracle_ember',
+    attackFramesDirectory: 'bosses/oracle_ember_attack',
+    artworkTopFraction: 0.0119,
+    aspectRatio: 0.757143,
+  ),
+  'boss_oracle_lunar': BossType(
+    id: 'oracle_lunar',
+    slotId: 'wraith_wanderer',
+    walkFramesDirectory: 'bosses/oracle_lunar',
+    attackFramesDirectory: 'bosses/oracle_lunar_attack',
+    artworkTopFraction: 0.0119,
+    aspectRatio: 0.72619,
+  ),
+  'boss_oracle_starry': BossType(
+    id: 'oracle_starry',
+    slotId: 'wraith_shadow',
+    walkFramesDirectory: 'bosses/oracle_starry',
+    attackFramesDirectory: 'bosses/oracle_starry_attack',
+    artworkTopFraction: 0.0167,
+    aspectRatio: 0.771429,
   ),
   // Purchasable skins for the goblin/ogre/orc slots (previously basic-only)
   // — a single "goblin" character kit reused across all three slots per

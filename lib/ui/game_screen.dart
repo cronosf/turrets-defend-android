@@ -6,6 +6,7 @@ import '../game/turret_defense_game.dart';
 import '../l10n/app_strings.dart';
 import '../models/economy.dart';
 import '../services/api_client.dart';
+import '../theme/app_fonts.dart';
 import 'base_health_bar.dart';
 import 'boss_banner.dart';
 import 'boss_defeated_overlay.dart';
@@ -30,6 +31,11 @@ class GameScreen extends StatefulWidget {
 class _GameScreenState extends State<GameScreen> with WidgetsBindingObserver {
   late final TurretDefenseGame _game;
   bool _wasGameOver = false;
+
+  // Player-triggered pause (the || button). Flame only auto-resumes an
+  // engine it paused itself on backgrounding, so a manual pause survives
+  // minimizing the app or opening another one.
+  bool _paused = false;
 
   // PopScope's canPop has to actually be true for a follow-up
   // Navigator.pop() (after the player confirms leaving) to go through —
@@ -93,6 +99,7 @@ class _GameScreenState extends State<GameScreen> with WidgetsBindingObserver {
     ApiClient.post('/stats/run', body: {
       'wave': widget.economy.wave,
       'score': widget.economy.score,
+      'bosses': widget.economy.bossesDefeated,
     }).catchError((_) {});
   }
 
@@ -111,16 +118,28 @@ class _GameScreenState extends State<GameScreen> with WidgetsBindingObserver {
     _wasGameOver = isOver;
   }
 
+  void _togglePause() {
+    if (widget.economy.gameOver) return;
+    setState(() => _paused = !_paused);
+    if (_paused) {
+      _game.pauseEngine();
+    } else {
+      _game.resumeEngine();
+    }
+  }
+
   Future<void> _openSettings() async {
     _game.pauseEngine();
     await showSettingsDialog(context, widget.economy);
-    _game.resumeEngine();
+    if (!_paused) _game.resumeEngine();
   }
 
   Future<void> _openBuyMenu() async {
     _game.pauseEngine();
+    _game.holdPaused = true;
     await showBuyLevelDialog(context, _game);
-    _game.resumeEngine();
+    _game.holdPaused = false;
+    if (!_paused) _game.resumeEngine();
   }
 
   /// Backing out mid-run (system back gesture/button) would otherwise
@@ -208,7 +227,7 @@ class _GameScreenState extends State<GameScreen> with WidgetsBindingObserver {
       if (mounted) Navigator.of(context).pop();
       return;
     }
-    _game.resumeEngine();
+    if (!_paused) _game.resumeEngine();
   }
 
   @override
@@ -251,17 +270,49 @@ class _GameScreenState extends State<GameScreen> with WidgetsBindingObserver {
                     child: TopHud(
                       economy: widget.economy,
                       onSettingsTap: _openSettings,
+                      onPauseTap: _togglePause,
                     ),
                   ),
+                  if (_paused)
+                    Positioned.fill(
+                      child: GestureDetector(
+                        behavior: HitTestBehavior.opaque,
+                        onTap: _togglePause,
+                        child: Container(
+                          color: Colors.black.withValues(alpha: 0.6),
+                          child: Center(
+                            child: Column(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                const Icon(Icons.play_circle_fill_rounded, color: Color(0xFFF7931E), size: 84),
+                                const SizedBox(height: 10),
+                                Text(
+                                  Strings(widget.economy.language).pausedTitle,
+                                  style: AppFonts.title(color: Colors.white, fontSize: 26, letterSpacing: 3),
+                                ),
+                                const SizedBox(height: 4),
+                                Text(
+                                  Strings(widget.economy.language).pausedHint,
+                                  style: const TextStyle(color: Colors.white70, fontSize: 13),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
                 ],
               ),
             ),
             BaseHealthBar(economy: widget.economy),
-            BottomControls(
+            IgnorePointer(
+              ignoring: _paused,
+              child: BottomControls(
               economy: widget.economy,
               onBuy: _openBuyMenu,
               onFree: _game.claimFreeTurret,
               onToggleSell: widget.economy.toggleSellMode,
+            ),
             ),
           ],
         ),

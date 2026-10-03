@@ -26,6 +26,10 @@ class TurretComponent extends PositionComponent
   late SpriteAnimationComponent _sprite;
   SpriteAnimation? _skinIdle;
   SpriteAnimation? _skinAttack;
+  SpriteAnimation? _skinDie;
+  Vector2 _dieSize = Vector2.zero();
+  double _skinTopY = 0;
+  bool _died = false;
   String? _appliedSkinKey;
   bool _reskinning = false;
   late TextComponent _levelLabel;
@@ -58,19 +62,14 @@ class TurretComponent extends PositionComponent
     _appliedSkinKey = game.economy.equippedTurretSkinKey;
     final skin = kTurretSkins[_appliedSkinKey];
     if (skin != null) {
-      // Warrior skin: a looping idle plus a one-shot swing on every shot.
-      // Frames are 278x191 with the character ~0.97 of the height, drawn
-      // at 0.209 so the warrior stands ~39px tall (33% under the first
-      // pass) — while the swing's sideways reach (mostly
-      // transparent) extends past the cell without touching the hitbox.
-      final idle = await GameAssets.loadFrames(skin.idleDir);
-      final attack = await GameAssets.loadFrames(skin.attackDir);
-      _skinIdle = SpriteAnimation.spriteList(idle, stepTime: 0.07, loop: true);
-      _skinAttack = SpriteAnimation.spriteList(attack, stepTime: stepTime, loop: false);
-      _shootAnimDuration = attack.length * stepTime;
+      // Character skin (warrior/ninja): a looping idle, a one-shot swing on
+      // every shot, and a death animation when the base falls. The swing's
+      // sideways reach (mostly transparent) extends past the cell without
+      // touching the hitbox.
+      await _loadSkinArt(skin);
       _sprite = SpriteAnimationComponent(
         animation: _skinIdle,
-        size: Vector2(278 * 0.209, 191 * 0.209),
+        size: Vector2(skin.boardSize.$1, skin.boardSize.$2),
         anchor: Anchor.center,
         position: Vector2(size.x / 2, size.y / 2 - 5),
       );
@@ -118,19 +117,48 @@ class TurretComponent extends PositionComponent
     stats = TurretStats(tier);
   }
 
+  Future<void> _loadSkinArt(TurretSkinType skin) async {
+    const stepTime = 0.03;
+    final idle = await GameAssets.loadFrames(skin.idleDir);
+    final attack = await GameAssets.loadFrames(skin.attackDir);
+    final die = await GameAssets.loadFrames(skin.dieDir);
+    _skinIdle = SpriteAnimation.spriteList(idle, stepTime: skin.idleStepTime, loop: true);
+    _skinAttack = SpriteAnimation.spriteList(attack, stepTime: stepTime, loop: false);
+    _skinDie = SpriteAnimation.spriteList(die, stepTime: 0.08, loop: false);
+    _shootAnimDuration = attack.length * stepTime;
+    // The death canvas shares the idle frames' pixel scale and top-left
+    // corner (it may only be taller), so its on-screen size follows from the
+    // ratio of the two frame sizes.
+    final idleSrc = idle.first.srcSize;
+    final dieSrc = die.first.srcSize;
+    _dieSize = Vector2(
+      skin.boardSize.$1 * dieSrc.x / idleSrc.x,
+      skin.boardSize.$2 * dieSrc.y / idleSrc.y,
+    );
+    _skinTopY = size.y / 2 - 5 - skin.boardSize.$2 / 2;
+  }
+
+  /// Base destroyed: the character falls and stays down on its last frame.
+  void _startDeath() {
+    _died = true;
+    _sprite
+      ..animation = _skinDie
+      ..anchor = Anchor.topCenter
+      ..size = _dieSize.clone()
+      ..position = Vector2(size.x / 2, _skinTopY)
+      ..playing = true;
+  }
+
   Future<void> _reskin() async {
     _reskinning = true;
     final key = game.economy.equippedTurretSkinKey;
     final skin = kTurretSkins[key];
     const stepTime = 0.03;
     if (skin != null) {
-      final idle = await GameAssets.loadFrames(skin.idleDir);
-      final attack = await GameAssets.loadFrames(skin.attackDir);
-      _skinIdle = SpriteAnimation.spriteList(idle, stepTime: 0.07, loop: true);
-      _skinAttack = SpriteAnimation.spriteList(attack, stepTime: stepTime, loop: false);
-      _shootAnimDuration = attack.length * stepTime;
+      await _loadSkinArt(skin);
       _sprite
-        ..size = Vector2(278 * 0.209, 191 * 0.209)
+        ..anchor = Anchor.center
+        ..size = Vector2(skin.boardSize.$1, skin.boardSize.$2)
         ..position = Vector2(size.x / 2, size.y / 2 - 5)
         ..animation = _skinIdle
         ..playing = true;
@@ -138,6 +166,7 @@ class TurretComponent extends PositionComponent
       final frames = await GameAssets.loadFrames(stats.assetDir);
       _skinIdle = null;
       _skinAttack = null;
+      _skinDie = null;
       _shootAnimDuration = frames.length * stepTime;
       _sprite
         ..size = size.clone()
@@ -175,7 +204,7 @@ class TurretComponent extends PositionComponent
     // The equipped skin is synced from the server *while* the run is
     // starting (HomeScreen._play doesn't await it), so the first turret can
     // load before the new skin key arrives — rebuild its art when it does.
-    if (game.economy.equippedTurretSkinKey != _appliedSkinKey && !_reskinning) {
+    if (!_died && game.economy.equippedTurretSkinKey != _appliedSkinKey && !_reskinning) {
       _reskin();
     }
 
@@ -183,7 +212,9 @@ class TurretComponent extends PositionComponent
       _applyTurretSkin();
     }
 
-    if (_firingTimeLeft > 0) {
+    if (game.economy.gameOver && !_died && _skinDie != null) _startDeath();
+
+    if (!_died && _firingTimeLeft > 0) {
       _firingTimeLeft -= dt;
       if (_firingTimeLeft <= 0) {
         if (_skinIdle != null) {

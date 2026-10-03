@@ -53,6 +53,8 @@ class Strings {
   String get close => _es ? 'CERRAR' : 'CLOSE';
 
   String get baseDestroyed => _es ? 'BASE DESTRUIDA' : 'BASE DESTROYED';
+  String get pausedTitle => _es ? 'PAUSA' : 'PAUSED';
+  String get pausedHint => _es ? 'Toca para continuar' : 'Tap to resume';
   String get bossFightTitle => _es ? 'COMBATE\nCON JEFE' : 'BOSS FIGHT';
   String get bossLevelLabel => _es ? 'NIVEL DE BOSS' : 'BOSS LEVEL';
   String bossLevelLabelFor(int n) => '$bossLevelLabel $n';
@@ -186,6 +188,7 @@ class Strings {
   // "SCORE" reads the same in Spanish, so it's never translated — only the
   // wave column label switches (OLA/WAVE).
   String get rankingScoreColumnLabel => 'SCORE';
+  String get rankingBossColumnLabel => _es ? 'JEFE' : 'BOSS';
   String get rankingWaveColumnLabel => _es ? 'OLA' : 'WAVE';
   String get rankingCountryColumnLabel => _es ? 'País' : 'Ctry';
 
@@ -390,6 +393,24 @@ class Strings {
           return _es ? 'Espectro Errante' : 'Wandering Wraith';
         case 'wraith_shadow':
           return _es ? 'Espectro Sombrío' : 'Shadow Wraith';
+        case 'valkyrie_steel':
+          return _es ? 'Valquiria de Acero' : 'Steel Valkyrie';
+        case 'valkyrie_storm':
+          return _es ? 'Valquiria de Tormenta' : 'Storm Valkyrie';
+        case 'valkyrie_golden':
+          return _es ? 'Valquiria Dorada' : 'Golden Valkyrie';
+      }
+    }
+    if (category == 'turret_skin' || category == 'bullet_effect') {
+      switch (subSlot) {
+        case 'all':
+          return _es ? 'Todos' : 'All';
+        case 'warrior':
+          return _es ? 'Guerreros' : 'Warriors';
+        case 'ninja':
+          return _es ? 'Ninjas' : 'Ninjas';
+        case 'shuriken':
+          return _es ? 'Shurikens' : 'Shurikens';
       }
     }
     // Other boss slot ids are proper nouns — same spelling in both
@@ -459,6 +480,26 @@ class Strings {
           return 'War Orc';
         case 'bundle_orcs2':
           return 'War Orc Pack';
+        case 'turret_skin_ninja_assassin':
+          return 'Ninja Assassin';
+        case 'bullet_fx_shuriken_red':
+          return 'Red Shuriken';
+        case 'bullet_fx_shuriken_blue':
+          return 'Blue Shuriken';
+        case 'bullet_fx_shuriken_fuchsia':
+          return 'Fuchsia Shuriken';
+        case 'bullet_fx_shuriken_green':
+          return 'Green Shuriken';
+        case 'bullet_fx_shuriken_orange':
+          return 'Orange Shuriken';
+        case 'bullet_fx_shuriken_cyan':
+          return 'Cyan Shuriken';
+        case 'boss_skin_oracle_ember':
+          return 'Ember Oracle';
+        case 'boss_skin_oracle_lunar':
+          return 'Lunar Oracle';
+        case 'boss_skin_oracle_starry':
+          return 'Starry Oracle';
         case 'turret_skin_warrior_black':
           return 'Black Warrior';
         case 'turret_skin_warrior_blue':
@@ -526,6 +567,31 @@ class Strings {
           return 'Replaces hybrid mobs with a war orc — includes 2 tougher-looking designs, shown at random.';
         case 'bundle_orcs2':
           return 'War Orc skin for both ground and hybrid mobs, bundled at a discount.';
+        case 'turret_skin_ninja_assassin':
+          return 'Turns all your turrets into the Ninja Assassin, with a '
+              'slash animation, a shuriken attack with a trail and knife '
+              'sound, and a falling animation when your base is destroyed.';
+        case 'bullet_fx_shuriken_red':
+          return 'Red shuriken with a comet trail — the Ninja Assassin\'s shot.';
+        case 'bullet_fx_shuriken_blue':
+          return 'Blue shuriken with a comet trail — the Ninja Assassin\'s shot.';
+        case 'bullet_fx_shuriken_fuchsia':
+          return 'Fuchsia shuriken with a comet trail — the Ninja Assassin\'s shot.';
+        case 'bullet_fx_shuriken_green':
+          return 'Green shuriken with a comet trail — the Ninja Assassin\'s shot.';
+        case 'bullet_fx_shuriken_orange':
+          return 'Orange shuriken with a comet trail — the Ninja Assassin\'s shot.';
+        case 'bullet_fx_shuriken_cyan':
+          return 'Cyan shuriken with a comet trail — the Ninja Assassin\'s shot.';
+        case 'boss_skin_oracle_ember':
+          return "Changes the Emerald Wraith boss's look to the Ember Oracle, "
+              'with a special attack animation.';
+        case 'boss_skin_oracle_lunar':
+          return "Changes the Wandering Wraith boss's look to the Lunar Oracle, "
+              'with a special attack animation.';
+        case 'boss_skin_oracle_starry':
+          return "Changes the Shadow Wraith boss's look to the Starry Oracle, "
+              'with a special attack animation.';
         case 'turret_skin_warrior_black':
           return 'Turns all your turrets into a black warrior, with a new '
               'black-and-white water attack effect and sound, a swing '

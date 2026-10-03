@@ -27,6 +27,7 @@ class _CustomizeScreenState extends State<CustomizeScreen> {
   // Remembers the last sub-slot picked per category (mob_skin's kind /
   // boss_skin's slot — see shopSubSlotsFor), same idea as ShopScreen.
   final Map<String, String> _selectedSubSlot = {};
+  final Map<String, String> _selectedFilter = {};
 
   /// The actual key used with `/profile/equip` and to read equipped state
   /// — plain category for slot-less categories, "category:subSlot" for
@@ -129,6 +130,12 @@ class _CustomizeScreenState extends State<CustomizeScreen> {
             return 'assets/images/bosses/ogre/0_Ogre_Walking_000.png';
           case 'orc':
             return 'assets/images/bosses/orc/0_Orc_Walking_000.png';
+          case 'valkyrie_steel':
+            return 'assets/images/bosses/valkyrie_steel/valkyrie_steel_00.png';
+          case 'valkyrie_storm':
+            return 'assets/images/bosses/valkyrie_storm/valkyrie_storm_00.png';
+          case 'valkyrie_golden':
+            return 'assets/images/bosses/valkyrie_golden/valkyrie_golden_00.png';
           case 'wraith_emerald':
             return 'assets/images/bosses/wraith_emerald/Wraith_01_Moving Forward_000.png';
           case 'wraith_wanderer':
@@ -206,11 +213,18 @@ class _CustomizeScreenState extends State<CustomizeScreen> {
               : categoryItems
                     .where((item) => shopItemSubSlot(item) == currentSubSlot)
                     .toList();
+          final filters = shopFilterChipsFor(_selectedCategory);
+          final currentFilter = filters == null
+              ? null
+              : (_selectedFilter[_selectedCategory] ?? filters.first);
+          final shownItems = (currentFilter == null || currentFilter == 'all')
+              ? selectedItems
+              : selectedItems.where((item) => shopItemFamily(item) == currentFilter).toList();
           // A sub-slot (or whole category) with nothing purchasable yet
           // (e.g. boss_skin's goblin/ogre/orc, mob_skin's flying) gets a
           // "coming soon" note alongside Basic — there's nothing to buy
           // there yet, but Basic still shows what "no skin" looks like.
-          final isComingSoon = selectedItems.isEmpty;
+          final isComingSoon = shownItems.isEmpty;
           // A 'bundle' purchase (e.g. the War Orc pack) isn't itself a
           // thing you equip — it just grants the separate mob_skin items
           // it bundles (see migration_add_orcs2_mob_skin.sql's trigger
@@ -251,6 +265,19 @@ class _CustomizeScreenState extends State<CustomizeScreen> {
                             selected: currentSubSlot!,
                             onSelect: (slot) => setState(
                               () => _selectedSubSlot[_selectedCategory] = slot,
+                            ),
+                            s: s,
+                          ),
+                        ),
+                      if (filters != null)
+                        Padding(
+                          padding: const EdgeInsets.only(bottom: 12),
+                          child: ShopSubSlotTabs(
+                            category: _selectedCategory,
+                            slots: filters,
+                            selected: currentFilter!,
+                            onSelect: (f) => setState(
+                              () => _selectedFilter[_selectedCategory] = f,
                             ),
                             s: s,
                           ),
@@ -319,7 +346,7 @@ class _CustomizeScreenState extends State<CustomizeScreen> {
                                   onTap: () =>
                                       _equip(equipCategoryKey, null, s),
                                 ),
-                              for (final item in selectedItems)
+                              for (final item in shownItems)
                                 _OwnedItemCard(
                                   s: s,
                                   imagePath: shopItemImagePath(item),
