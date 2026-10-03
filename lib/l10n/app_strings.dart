@@ -792,6 +792,13 @@ class Strings {
                 'reciben la insignia especial Black VIP, sin importar su '
                 'puesto.',
           ),
+          (
+            'Conexión a internet',
+            'El ranking solo se guarda cuando tu dispositivo tiene acceso a '
+                'internet. Sin conexión puedes jugar la partida completa con '
+                'normalidad, pero no se guardarán los puntajes ni el '
+                'resultado de esa partida.',
+          ),
         ]
       : const [
           (
@@ -851,6 +858,13 @@ class Strings {
                 'Silver, and 5th Bronze. Players with standout store '
                 'purchases also earn the special Black VIP badge, no matter '
                 'their rank.',
+          ),
+          (
+            'Internet connection',
+            'The ranking is only saved when your device has internet '
+                'access. Without a connection you can still play the whole '
+                'match as usual, but your scores and the result of that '
+                'match will not be saved.',
           ),
         ];
 }
