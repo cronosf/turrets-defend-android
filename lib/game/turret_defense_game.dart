@@ -662,9 +662,12 @@ class TurretDefenseGame extends FlameGame {
           ? null
           : Vector2(turretSkin.effectSize.$1, turretSkin.effectSize.$2),
     ));
-    if (shuriken != null) {
+    // The knife sound belongs to the Ninja Assassin skin alone: a shuriken
+    // bullet fired from any other turret keeps that turret's regular sound.
+    final ninjaEquipped = kTurretSkins[turretSkinKey]?.family == 'ninja';
+    if (shuriken != null && ninjaEquipped) {
       GameAudio.instance.playWarriorAttack(kShurikenSound);
-    } else if (turretSkin != null) {
+    } else if (turretSkin != null && shuriken == null) {
       GameAudio.instance.playWarriorAttack(turretSkin.soundForTier(turret.tier));
     } else {
       GameAudio.instance.playTurretShot(turret.tier);
