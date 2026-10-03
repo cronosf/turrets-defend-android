@@ -120,7 +120,7 @@ class _RankingScreenState extends State<RankingScreen> {
                     onRefresh: _reload,
                     color: const Color(0xFFCB7B2A),
                     child: ListView(
-                      padding: const EdgeInsets.all(20),
+                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 20),
                       children: [
                         _StatCard(
                           icon: Icons.star_rounded,
@@ -242,6 +242,7 @@ class _RankingScreenState extends State<RankingScreen> {
                               children: [
                                 LeaderboardHeader(
                                   scoreLabel: s.rankingScoreColumnLabel,
+                                  playerLabel: s.rankingPlayerColumnLabel,
                                   bossLabel: s.rankingBossColumnLabel,
                                   waveLabel: s.rankingWaveColumnLabel,
                                   countryLabel: s.rankingCountryColumnLabel,

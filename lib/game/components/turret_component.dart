@@ -141,6 +141,7 @@ class TurretComponent extends PositionComponent
   /// Base destroyed: the character falls and stays down on its last frame.
   void _startDeath() {
     _died = true;
+    game.showTurretBubble(row, col, 'Oh nooo !', duration: 2.2);
     _sprite
       ..animation = _skinDie
       ..anchor = Anchor.topCenter

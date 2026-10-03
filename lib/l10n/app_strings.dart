@@ -188,6 +188,7 @@ class Strings {
   // "SCORE" reads the same in Spanish, so it's never translated — only the
   // wave column label switches (OLA/WAVE).
   String get rankingScoreColumnLabel => 'SCORE';
+  String get rankingPlayerColumnLabel => _es ? 'JUGADOR' : 'PLAYER';
   String get rankingBossColumnLabel => _es ? 'JEFE' : 'BOSS';
   String get rankingWaveColumnLabel => _es ? 'OLA' : 'WAVE';
   String get rankingCountryColumnLabel => _es ? 'País' : 'Ctry';

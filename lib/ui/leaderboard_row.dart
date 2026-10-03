@@ -47,11 +47,15 @@ class LeaderboardPagination extends StatelessWidget {
 
 /// Column widths shared by [LeaderboardHeader] and [LeaderboardRow] so the
 /// header labels line up exactly over their values.
-const double _rankColumnWidth = 36;
-const double _countryColumnWidth = 40;
-const double _scoreColumnWidth = 64;
-const double _bossColumnWidth = 44;
-const double _waveColumnWidth = 48;
+const double _rankColumnWidth = 32;
+const double _countryColumnWidth = 34;
+const double _scoreColumnWidth = 58;
+const double _bossColumnWidth = 38;
+const double _waveColumnWidth = 40;
+// Gap between columns, and the row's own side padding — kept tight so a
+// full 12-character username (the maximum) fits in the flexible name column.
+const double _colGap = 4;
+const double _rowSidePadding = 8;
 
 /// Header labels shown once above the leaderboard list, aligned over
 /// [LeaderboardRow]'s columns. [countryLabel] is only passed by the global
@@ -64,9 +68,11 @@ class LeaderboardHeader extends StatelessWidget {
     required this.scoreLabel,
     required this.waveLabel,
     required this.bossLabel,
+    this.playerLabel,
     this.countryLabel,
   });
 
+  final String? playerLabel;
   final String scoreLabel;
   final String bossLabel;
   final String waveLabel;
@@ -82,31 +88,33 @@ class LeaderboardHeader extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.only(left: 14, right: 14, bottom: 6),
+      padding: const EdgeInsets.only(left: _rowSidePadding, right: _rowSidePadding, bottom: 6),
       child: Row(
         children: [
           const SizedBox(width: _rankColumnWidth),
-          const Expanded(child: SizedBox.shrink()),
+          Expanded(
+            child: Text(playerLabel ?? '', textAlign: TextAlign.center, style: _labelStyle),
+          ),
           if (countryLabel != null) ...[
             SizedBox(
               width: _countryColumnWidth,
               child: Text(countryLabel!, textAlign: TextAlign.center, style: _labelStyle),
             ),
-            const SizedBox(width: 10),
+            const SizedBox(width: _colGap),
           ],
           SizedBox(
             width: _scoreColumnWidth,
-            child: Text(scoreLabel, textAlign: TextAlign.right, style: _labelStyle),
+            child: Text(scoreLabel, textAlign: TextAlign.center, style: _labelStyle),
           ),
-          const SizedBox(width: 10),
+          const SizedBox(width: _colGap),
           SizedBox(
             width: _bossColumnWidth,
-            child: Text(bossLabel, textAlign: TextAlign.right, style: _labelStyle),
+            child: Text(bossLabel, textAlign: TextAlign.center, style: _labelStyle),
           ),
-          const SizedBox(width: 10),
+          const SizedBox(width: _colGap),
           SizedBox(
             width: _waveColumnWidth,
-            child: Text(waveLabel, textAlign: TextAlign.right, style: _labelStyle),
+            child: Text(waveLabel, textAlign: TextAlign.center, style: _labelStyle),
           ),
         ],
       ),
@@ -280,7 +288,7 @@ class LeaderboardRow extends StatelessWidget {
 
     return Container(
       margin: const EdgeInsets.only(bottom: 8),
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+      padding: const EdgeInsets.symmetric(horizontal: _rowSidePadding, vertical: 10),
       decoration: highlightColor != null
           ? BoxDecoration(
               color: highlightColor.withValues(alpha: 0.12),
@@ -300,18 +308,23 @@ class LeaderboardRow extends StatelessWidget {
                 ? _ShimmerTrophy(assetPath: trophyAsset)
                 : Text(
                     '#$rank',
+                    textAlign: TextAlign.center,
                     style: const TextStyle(color: Colors.white54, fontWeight: FontWeight.bold),
                   ),
           ),
           Expanded(
-            child: Text(
-              username,
-              style: TextStyle(
-                color: Colors.white,
-                fontSize: 14,
-                fontWeight: highlightColor != null ? FontWeight.bold : FontWeight.normal,
+            child: FittedBox(
+              fit: BoxFit.scaleDown,
+              child: Text(
+                username,
+                maxLines: 1,
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 14,
+                  fontWeight: highlightColor != null ? FontWeight.bold : FontWeight.normal,
+                ),
               ),
-              overflow: TextOverflow.ellipsis,
             ),
           ),
           if (showCountry) ...[
@@ -323,13 +336,13 @@ class LeaderboardRow extends StatelessWidget {
                 style: const TextStyle(color: Colors.white70, fontSize: 12, fontWeight: FontWeight.w600),
               ),
             ),
-            const SizedBox(width: 10),
+            const SizedBox(width: _colGap),
           ],
           SizedBox(
             width: _scoreColumnWidth,
             child: Text(
               '$bestScore',
-              textAlign: TextAlign.right,
+              textAlign: TextAlign.center,
               style: TextStyle(
                 color: scoreColor,
                 fontSize: 14,
@@ -337,12 +350,12 @@ class LeaderboardRow extends StatelessWidget {
               ),
             ),
           ),
-          const SizedBox(width: 10),
+          const SizedBox(width: _colGap),
           SizedBox(
             width: _bossColumnWidth,
             child: Text(
               '$bestBosses',
-              textAlign: TextAlign.right,
+              textAlign: TextAlign.center,
               style: TextStyle(
                 color: scoreColor,
                 fontSize: 14,
@@ -350,12 +363,12 @@ class LeaderboardRow extends StatelessWidget {
               ),
             ),
           ),
-          const SizedBox(width: 10),
+          const SizedBox(width: _colGap),
           SizedBox(
             width: _waveColumnWidth,
             child: Text(
               '$bestWave',
-              textAlign: TextAlign.right,
+              textAlign: TextAlign.center,
               style: TextStyle(
                 color: scoreColor,
                 fontSize: 14,

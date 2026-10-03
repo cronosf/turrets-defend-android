@@ -186,10 +186,11 @@ class _NationalRankingScreenState extends State<NationalRankingScreen> {
                           // instead (see below) — same reasoning as
                           // RankingScreen.
                           return ListView(
-                            padding: const EdgeInsets.all(20),
+                            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 20),
                             children: [
                               LeaderboardHeader(
                                 scoreLabel: s.rankingScoreColumnLabel,
+                                playerLabel: s.rankingPlayerColumnLabel,
                                 bossLabel: s.rankingBossColumnLabel,
                                 waveLabel: s.rankingWaveColumnLabel,
                               ),

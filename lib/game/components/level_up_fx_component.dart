@@ -17,6 +17,7 @@ class LevelUpFxComponent extends PositionComponent {
     required this.bubble,
     required this.text,
     this.aura = true,
+    this.duration = _defaultDuration,
   })  : _cell = cellSize,
         super(position: cellCenter, anchor: Anchor.center, priority: 30, size: Vector2.all(cellSize));
 
@@ -27,7 +28,8 @@ class LevelUpFxComponent extends PositionComponent {
   final bool aura;
   final double _cell;
 
-  static const double _duration = 1.3;
+  static const double _defaultDuration = 1.3;
+  final double duration;
   double _t = 0;
 
   static const _gold = Color(0xFFFFD34D);
@@ -37,12 +39,12 @@ class LevelUpFxComponent extends PositionComponent {
   void update(double dt) {
     super.update(dt);
     _t += dt;
-    if (_t >= _duration) removeFromParent();
+    if (_t >= duration) removeFromParent();
   }
 
   @override
   void render(Canvas canvas) {
-    final p = (_t / _duration).clamp(0.0, 1.0);
+    final p = (_t / duration).clamp(0.0, 1.0);
     final center = Offset(_cell / 2, _cell / 2);
 
     if (aura) {

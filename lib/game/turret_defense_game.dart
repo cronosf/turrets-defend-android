@@ -831,7 +831,20 @@ class TurretDefenseGame extends FlameGame {
     return true;
   }
 
-  static const _warriorGreetings = ['To defend!', 'I joined!', "Let's go!"];
+  static const _warriorGreetings = ['To defend !', 'I joined !', "Let's go !"];
+
+  /// A speech bubble over a board cell (no aura) — used for the join
+  /// greetings and the "Oh nooo !" when the base falls.
+  void showTurretBubble(int row, int col, String text, {double duration = 1.3}) {
+    world.add(LevelUpFxComponent(
+      cellCenter: grid.slotCenter(row, col),
+      cellSize: TurretGrid.slotSize,
+      bubble: _levelUpBubble,
+      text: text,
+      aura: false,
+      duration: duration,
+    ));
+  }
 
   /// A freshly bought/claimed warrior says a random line in a speech
   /// bubble (bubble only — no level-up aura). No-op without a warrior skin.
@@ -898,7 +911,7 @@ class TurretDefenseGame extends FlameGame {
         cellCenter: grid.slotCenter(targetSlot.row, targetSlot.col),
         cellSize: TurretGrid.slotSize,
         bubble: _levelUpBubble,
-        text: 'LVL UP ${turret.tier + 1}!',
+        text: 'LVL UP ${turret.tier + 1} !',
       ));
     } else {
       turret.position = grid.slotCenter(oldRow, oldCol);
