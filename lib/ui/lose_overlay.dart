@@ -28,7 +28,7 @@ class LoseOverlay extends StatelessWidget {
     final economy = game.economy;
     final s = Strings(economy.language);
     return Container(
-      color: Colors.black.withValues(alpha: 0.78),
+      color: Colors.black.withValues(alpha: 0.28),
       alignment: Alignment.center,
       child: Container(
         margin: const EdgeInsets.symmetric(horizontal: 36),
